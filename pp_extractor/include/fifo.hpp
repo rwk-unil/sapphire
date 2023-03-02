@@ -66,14 +66,14 @@ private:
     }
 
 protected:
-    const size_t size;
-    const size_t mid;
+    size_t size;
+    size_t mid;
     /// @brief FIFO Items
     std::deque<FIFOItem> items;
     /// @brief Kept items surrounding predicate
     std::vector<T> kept_items;
     /// @brief Predicate that tells us when to keep
-    const Pred p;
+    Pred p;
 };
 
 #endif /* __GENERIC_KEEP_FIFO_HPP__ */

@@ -92,9 +92,9 @@ private:
     }
 
 protected:
-    const size_t size;
-    const size_t mid;
-    const float pp_threshold;
+    size_t size;
+    size_t mid;
+    float pp_threshold;
     /// @note uint32_t to save space (a whole human chromosome will not have more positions than uint32_t can represent)
     std::deque<uint32_t> entries;
     std::deque<float> pp;
@@ -109,7 +109,7 @@ public:
     bool operator()(HetInfo hi) const { return !(std::isnan(hi.pp)) && hi.pp < pp_threshold; }
 
 protected:
-    const float pp_threshold;
+    float pp_threshold;
 };
 
 class SampleBlock {
