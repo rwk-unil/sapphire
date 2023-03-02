@@ -10,6 +10,25 @@
 
 constexpr size_t PLOIDY_2 = 2;
 
+class GlobalAppOptions
+{
+public:
+    GlobalAppOptions() {
+        app.add_option("-f,--file", filename, "Input file name");
+        app.add_option("-o,--output", ofname, "Output file name");
+        app.add_option("-s,--start", start, "Starting sample position");
+        app.add_option("-e,--end", end, "End sample position (excluded)");
+    }
+
+    CLI::App app{"PP Extractor app"};
+    std::string filename = "-";
+    std::string ofname = "-";
+    size_t start = 0;
+    size_t end = -1;
+};
+
+GlobalAppOptions global_app_options;
+
 class Het_Fifo {
 public:
     Het_Fifo(const size_t size, const float pp_threshold) :
@@ -533,22 +552,12 @@ protected:
 };
 
 int main(int argc, char**argv) {
-    CLI::App app{"Utility app"};
-    std::string filename = "-";
-    app.add_option("-f,--file", filename, "Input file name");
-    std::string ofname = "-";
-    app.add_option("-o,--output", ofname, "Output file name");
-    size_t start = -1;
-    size_t end = -1;
-    app.add_option("-s,--start", start, "Starting sample position");
-    app.add_option("-e,--end", end, "End sample position (excluded)");
-
+    CLI::App& app = global_app_options.app;
+    auto& start = global_app_options.start;
+    auto& end = global_app_options.end;
+    auto& filename = global_app_options.filename;
+    auto& ofname = global_app_options.ofname;
     CLI11_PARSE(app, argc, argv);
-
-    if (!(start+1) || !(end+1)) {
-        std::cerr << "Please provide start and end indices" << std::endl;
-        exit(app.exit(CLI::CallForHelp()));
-    }
 
     if (filename.compare("-") == 0) {
         std::cerr << "Requires filename\n";
