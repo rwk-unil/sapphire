@@ -18,6 +18,7 @@ public:
         app.add_option("-o,--output", ofname, "Output file name");
         app.add_option("-s,--start", start, "Starting sample position");
         app.add_option("-e,--end", end, "End sample position (excluded)");
+        app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
     }
 
     CLI::App app{"PP Extractor app"};
@@ -25,6 +26,7 @@ public:
     std::string ofname = "-";
     size_t start = 0;
     size_t end = -1;
+    bool verbose = false;
 };
 
 GlobalAppOptions global_app_options;
@@ -221,10 +223,12 @@ public:
         }
 
         line_counter++;
-        if (++print_counter == 1000) {
-            print_counter = 0;
-            printf("\033[A\033[2K");
-            std::cout << "Handled " << bcf_fri.line_num << " VCF entries (lines)" << std::endl;
+        if (global_app_options.verbose) {
+            if (++print_counter == 1000) {
+                print_counter = 0;
+                printf("\033[A\033[2K");
+                std::cout << "Handled " << bcf_fri.line_num << " VCF entries (lines)" << std::endl;
+            }
         }
     }
 
