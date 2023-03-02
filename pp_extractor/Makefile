@@ -78,4 +78,4 @@ clean :
 	rm -f $(TARGET) $(DEPENDENCIES) $(CPP_OBJS) pp_show
 
 # Rules that don't generate artifacts
-.PHONY : all clean
+.PHONY : all clean datetime gen_git_rev
