@@ -164,7 +164,7 @@ public:
         if (stop_id < start_id) {
             stop_id = start_id;
         }
-
+        std::cout << "Start ID : " << start_id << " Stop ID : " << stop_id << std::endl;
         fifos.resize(stop_id-start_id, GenericKeepFifo<HetInfo, PPPred>(FIFO_SIZE, PPPred(PP_THRESHOLD)));
     }
 
