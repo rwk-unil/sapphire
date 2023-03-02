@@ -141,14 +141,11 @@ public:
         stop_id(stop_id),
         line_counter(0),
         print_counter(0),
-        pred(PP_THRESHOLD),
-        fifos(stop_id-start_id, GenericKeepFifo<HetInfo, PPPred>(FIFO_SIZE, pred)) {
+        pred(PP_THRESHOLD) {
     }
 
 
     virtual void handle_bcf_file_reader() override {
-        bool need_resize = false;
-
         number_of_het_sites.clear();
         number_of_low_pp_sites.clear();
         number_of_non_snp.clear();
@@ -160,20 +157,15 @@ public:
         /* Handle garbage input and limit to number of samples */
         if (start_id > bcf_fri.n_samples) {
             start_id = bcf_fri.n_samples;
-            need_resize = true;
         }
         if (stop_id > bcf_fri.n_samples) {
             stop_id = bcf_fri.n_samples;
-            need_resize = true;
         }
         if (stop_id < start_id) {
             stop_id = start_id;
-            need_resize = true;
         }
 
-        if (need_resize) {
-            fifos.resize(stop_id-start_id, GenericKeepFifo<HetInfo, PPPred>(FIFO_SIZE, PPPred(PP_THRESHOLD)));
-        }
+        fifos.resize(stop_id-start_id, GenericKeepFifo<HetInfo, PPPred>(FIFO_SIZE, PPPred(PP_THRESHOLD)));
     }
 
     virtual void handle_bcf_line() override {
