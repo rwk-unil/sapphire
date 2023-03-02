@@ -1,0 +1,3 @@
+[submodule "xSqueezeIt"]
+	path = xSqueezeIt
+	url = https://github.com/rwk-unil/xSqueezeIt.git
