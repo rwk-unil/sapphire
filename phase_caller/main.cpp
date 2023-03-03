@@ -376,62 +376,7 @@ class HetTraversal : public BcfTraversal {
     std::vector<std::unique_ptr<Het> >& hets;
 };
 
-int main(int argc, char**argv) {
-    CLI::App app{"Ultralight phase caller"};
-    std::string cram_file = "-";
-    std::string vcf_file = "-";
-    app.add_option("-f,--file", cram_file, "Input file name");
-    app.add_option("--vcf", vcf_file, "VCF input file name");
-
-    CLI11_PARSE(app, argc, argv);
-
-    if (cram_file.compare("-") == 0) {
-        std::cerr << "Requires cram_file" << std::endl;
-        exit(app.exit(CLI::CallForHelp()));
-    }
-    if (vcf_file.compare("-") == 0) {
-        std::cerr << "Requires vcf_file" << std::endl;
-        exit(app.exit(CLI::CallForHelp()));
-    }
-
-#if 0
-    htsFile *file = hts_open(cram_file.c_str(), "r");
-    hts_idx_t *idx = sam_index_load(file, std::string(cram_file + ".crai").c_str());
-
-    if (!idx) {
-        std::cerr << "Failed to load index file" << std::endl;
-        exit(-1);
-    }
-
-    if (file->is_cram) {
-        std::cout << cram_file << " is a CRAM file" << std::endl;
-    }
-
-    sam_hdr_t *hdr = sam_hdr_read(file);
-    if (!hdr) {
-        std::cerr << "Failed to read header from file " << cram_file << std::endl;
-        exit(-1);
-    }
-
-    int tid = sam_hdr_name2tid(hdr, "chr1");
-    hts_itr_t *it = sam_itr_queryi(idx, tid, 108188080, 108190284);
-
-    if (!it) {
-        std::cerr << "Failed to get iterator for query" << std::endl;
-        exit(-1);
-    }
-
-    int ret;
-    bam1_t *r = bam_init1();
-    while ((ret = sam_itr_next(file, it, r)) >= 0) {
-        std::cout << bam_get_qname(r) << std::endl;
-    }
-
-    bam_destroy1(r);
-    sam_hdr_destroy(hdr);
-    hts_close(file);
-#endif
-
+void rephase_example(std::string& vcf_file, std::string& cram_file) {
     std::vector<std::unique_ptr<Het> > hets;
     std::vector<std::unique_ptr<HetTrio> > het_trios;
     HetTraversal ht(hets);
@@ -572,6 +517,65 @@ int main(int argc, char**argv) {
     }
 
     dc.close();
+}
+
+int main(int argc, char**argv) {
+    CLI::App app{"Ultralight phase caller"};
+    std::string cram_file = "-";
+    std::string vcf_file = "-";
+    app.add_option("-f,--file", cram_file, "Input file name");
+    app.add_option("--vcf", vcf_file, "VCF input file name");
+
+    CLI11_PARSE(app, argc, argv);
+
+    if (cram_file.compare("-") == 0) {
+        std::cerr << "Requires cram_file" << std::endl;
+        exit(app.exit(CLI::CallForHelp()));
+    }
+    if (vcf_file.compare("-") == 0) {
+        std::cerr << "Requires vcf_file" << std::endl;
+        exit(app.exit(CLI::CallForHelp()));
+    }
+
+#if 0
+    htsFile *file = hts_open(cram_file.c_str(), "r");
+    hts_idx_t *idx = sam_index_load(file, std::string(cram_file + ".crai").c_str());
+
+    if (!idx) {
+        std::cerr << "Failed to load index file" << std::endl;
+        exit(-1);
+    }
+
+    if (file->is_cram) {
+        std::cout << cram_file << " is a CRAM file" << std::endl;
+    }
+
+    sam_hdr_t *hdr = sam_hdr_read(file);
+    if (!hdr) {
+        std::cerr << "Failed to read header from file " << cram_file << std::endl;
+        exit(-1);
+    }
+
+    int tid = sam_hdr_name2tid(hdr, "chr1");
+    hts_itr_t *it = sam_itr_queryi(idx, tid, 108188080, 108190284);
+
+    if (!it) {
+        std::cerr << "Failed to get iterator for query" << std::endl;
+        exit(-1);
+    }
+
+    int ret;
+    bam1_t *r = bam_init1();
+    while ((ret = sam_itr_next(file, it, r)) >= 0) {
+        std::cout << bam_get_qname(r) << std::endl;
+    }
+
+    bam_destroy1(r);
+    sam_hdr_destroy(hdr);
+    hts_close(file);
+#endif
+
+    rephase_example(vcf_file, cram_file);
 
     return 0;
 }
