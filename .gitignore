@@ -35,6 +35,9 @@
 *.gz
 *.zip
 
+# Temporary files
+*.tmp
+
 # VS Code data
 .vscode
 
