@@ -20,7 +20,7 @@ public:
     std::string to_string() const {
         std::string output("Position : ");
         output += std::to_string(vcf_line);
-        output += std::string(" ") + std::to_string(bcf_gt_allele(a0)) + (bcf_gt_is_phased(a0) ? "|" : "/") + std::to_string(bcf_gt_allele(a1));
+        output += std::string(" ") + std::to_string(bcf_gt_allele(a0)) + (bcf_gt_is_phased(a1) ? "|" : "/") + std::to_string(bcf_gt_allele(a1));
         output += std::string(" PP : ") + std::to_string(pp);
 
         return output;
