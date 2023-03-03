@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 #include "CLI11.hpp"
 #include "bcf_traversal.hpp"
@@ -7,6 +10,7 @@
 #include "sam.h"
 #include "vcf.h"
 #include "het_info_loader.hpp"
+#include "sample_info.hpp"
 
 #define DIST(x,y) (std::max((x),(y))-std::min((x),(y)))
 
@@ -30,18 +34,22 @@ public:
         app.add_option("-b,--binary-file", bin_filename, "Input-Output het binary file name");
         app.add_option("-S,--sample-file", sample_filename, "Sample list file name");
         app.add_option("-I,--project-id", project_id, "UKB Project ID");
+        app.add_option("-p,--cram-path", cram_path, "CRAM files path");
         app.add_option("-s,--start", start, "Starting sample position");
         app.add_option("-e,--end", end, "End sample position (excluded)");
+        app.add_option("-t,--num-threads", n_threads, "Number of threads, default is 1, set to 0 for auto");
         app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
     }
 
     CLI::App app{"Ultralight Phase Caller"};
     std::string project_id = "XXXXX";
+    std::string cram_path = "/mnt/Bulk/Whole Genome Sequences/Whole genome CRAM files";
     std::string var_filename = "-";
     std::string bin_filename = "-";
     std::string sample_filename = "-";
     size_t start = 0;
     size_t end = -1;
+    size_t n_threads = 1;
     bool verbose = false;
 };
 
@@ -545,7 +553,92 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
     rephase(het_trios, cram_file);
 }
 
+void rephase_orchestrator(VarInfoLoader& vil, HetInfoMemoryMap& himm, SampleInfoLoader& sil,
+                          size_t start_id, size_t stop_id) {
+    for (size_t i = start_id; i < stop_id; ++i) {
+        // Get sample name
+        std::string sample_name = sil.sample_names[i];
+        // Don't try withdrawn samples
+        if (sample_name[0] == 'W') {
+            std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
+            continue;
+        }
+        // Generate the corresponding cram file path
+        std::string cram_file(global_app_options.cram_path);
+        cram_file += "/" + sample_name.substr(0, 2);
+        cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+
+        std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+        //rephase_sample(vil.vars, himm, cram_file, i);
+    }
+}
+
+inline size_t find_free(const std::vector<bool> v) {
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (v[i] == false) return i;
+    }
+    return v.size();
+}
+
+void rephase_orchestrator_multi_thread(VarInfoLoader& vil, HetInfoMemoryMap& himm, SampleInfoLoader& sil,
+                                       size_t start_id, size_t stop_id, size_t n_threads) {
+    std::vector<std::thread*> threads(n_threads, NULL);
+    std::vector<bool> active_threads(n_threads, false);
+    std::mutex mutex;
+    std::condition_variable cv;
+
+    for (size_t i = start_id; i < stop_id; ++i) {
+        std::unique_lock<std::mutex> lk(mutex);
+        size_t ti = find_free(active_threads);
+        cv.wait(lk, [&]{ti = find_free(active_threads); return ti < active_threads.size(); });
+
+        if (threads[ti]) {
+            // If a thread was launched but finished
+            threads[ti]->join();
+            std::cout << "Joined thread " << ti << std::endl;
+            delete threads[ti];
+            threads[ti] = NULL;
+        }
+
+        std::cout << "Launching thread " << ti << std::endl;
+        active_threads[ti] = true;
+        threads[ti] = new std::thread([&, ti]{
+            // Get sample name
+            std::string sample_name = sil.sample_names[i];
+            // Don't try withdrawn samples
+            if (sample_name[0] == 'W') {
+                std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
+            } else {
+                // Generate the corresponding cram file path
+                std::string cram_file(global_app_options.cram_path);
+                cram_file += "/" + sample_name.substr(0, 2);
+                cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+
+                std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+                //rephase_sample(vil.vars, himm, cram_file, i);
+            }
+            {
+                std::lock_guard lk(mutex);
+                std::cout << "Thread " << ti << " finished" << std::endl;
+                active_threads[ti] = false;
+            }
+            cv.notify_all();
+        });
+    }
+
+    // Final cleanup
+    for (size_t i = 0; i < threads.size(); ++i) {
+        if (threads[i]) {
+            threads[i]->join();
+            delete threads[i];
+            threads[i] = NULL;
+        }
+    }
+}
+
 int main(int argc, char**argv) {
+
+#if 0
     CLI::App app{"Ultralight phase caller"};
     std::string cram_file = "-";
     std::string vcf_file = "-";
@@ -562,6 +655,56 @@ int main(int argc, char**argv) {
         std::cerr << "Requires vcf_file" << std::endl;
         exit(app.exit(CLI::CallForHelp()));
     }
+
+    rephase_example(vcf_file, cram_file);
+#else
+    auto& opt = global_app_options;
+    auto& app = global_app_options.app;
+    std::string cram_file = "-";
+    app.add_option("-c, --cram", cram_file, "TODO REMOVE");
+    CLI11_PARSE(global_app_options.app, argc, argv);
+
+    if (opt.var_filename.compare("-") == 0) {
+        std::cerr << "Requires variant VCF/BCF file" << std::endl;
+        exit(app.exit(CLI::CallForHelp()));
+    }
+    if (opt.bin_filename.compare("-") == 0) {
+        std::cerr << "Requires het binary file" << std::endl;
+        exit(app.exit(CLI::CallForHelp()));
+    }
+    if (opt.sample_filename.compare("-") == 0) {
+        std::cerr << "Requires sample file name" << std::endl;
+        exit(app.exit(CLI::CallForHelp()));
+    }
+    if (opt.n_threads == 0) {
+        opt.n_threads = std::thread::hardware_concurrency();
+        std::cerr << "Setting number of threads to " << opt.n_threads << std::endl;
+    }
+
+    std::cout << "Loading sample names" << std::endl;
+    SampleInfoLoader sil(opt.sample_filename);
+    std::cout << "Loaded " << sil.sample_names.size() << " sample names" << std::endl;
+
+    std::cout << "Loading variants" << std::endl;
+
+    // Load all variants from variant BCF/VCF file once
+    VarInfoLoader vil(opt.var_filename);
+    std::cout << "Loaded " << vil.vars.size() << " variant entries" << std::endl;
+
+    std::cout << "Memory mapping binary file - This file will be edited !" << std::endl;
+
+    // Memory map the binary het variant file
+    HetInfoMemoryMap himm(opt.bin_filename, PROT_READ | PROT_WRITE);
+
+    //rephase_orchestrator(vil, himm, sil, 0, 15);
+    rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
+    return 0;
+
+    std::cout << "Rephasing a sample" << std::endl;
+    rephase_sample(vil.vars, himm, cram_file, 465);
+
+#endif
+
 
 #if 0
     htsFile *file = hts_open(cram_file.c_str(), "r");
@@ -600,8 +743,6 @@ int main(int argc, char**argv) {
     sam_hdr_destroy(hdr);
     hts_close(file);
 #endif
-
-    rephase_example(vcf_file, cram_file);
 
     return 0;
 }
