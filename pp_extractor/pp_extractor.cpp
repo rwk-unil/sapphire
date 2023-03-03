@@ -10,8 +10,7 @@
 
 constexpr size_t PLOIDY_2 = 2;
 
-class GlobalAppOptions
-{
+class GlobalAppOptions {
 public:
     GlobalAppOptions() {
         app.add_option("-f,--file", filename, "Input file name");
