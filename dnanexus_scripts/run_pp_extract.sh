@@ -51,7 +51,7 @@ then
     exit 1
 fi
 
-FILENAME=$(dx describe "${INPUT_ID}" | grep Name | tr -s ' ' | cut -d ' ' -f2)
+FILENAME=$(dx describe --json "${INPUT_ID}" | jq -r '.name')
 CHROMOSOME=$(basename $(dx describe --json "${INPUT_ID}" | jq -r '.folder'))
 echo "FILENAME        = ${FILENAME}"
 echo "CHROMOSOME      = ${CHROMOSOME}"
