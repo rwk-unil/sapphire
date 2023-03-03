@@ -145,7 +145,7 @@ int main(int argc, char**argv) {
 
 #if 1
 
-    Vars vars(filename);
+    VarInfoLoader vars(filename);
     std::cout << "Num VCF lines : " << vars.vars.size() << std::endl;
     //for (auto & v : vars.vars) {
     //    std::cout << v.to_string() << std::endl;

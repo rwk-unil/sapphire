@@ -83,9 +83,9 @@ protected:
     std::vector<VarInfo>& vars;
 };
 
-class Vars {
+class VarInfoLoader {
 public:
-    Vars(std::string vcf_file) {
+    VarInfoLoader(std::string vcf_file) {
         VarInfoTraversal vit(vars);
         vit.traverse_no_unpack_no_destroy(vcf_file);
         vit.destroy();
