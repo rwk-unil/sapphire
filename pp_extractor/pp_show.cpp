@@ -88,7 +88,7 @@ public:
         // This is all very slow code, but it is just for testing
 
         int* ac = NULL;
-        if (hil_ref.his[entry].position == line_counter) {
+        if (hil_ref.his[entry].vcf_line == line_counter) {
             std::string result(bcf_hdr_id2name(header, line->rid));
             result += "\t" + std::to_string(line->pos+1);
             result += "\t" + std::string(line->d.id);
@@ -178,7 +178,7 @@ int main(int argc, char**argv) {
     himm.fill_het_info(v, sample);
     std::cout << "---" << std::endl;
     for (auto hi : v) {
-        std::cout << vars.vars[hi.position].to_string() << "\t";
+        std::cout << vars.vars[hi.vcf_line].to_string() << "\t";
         std::cout << hi.to_string() << std::endl;
     }
 

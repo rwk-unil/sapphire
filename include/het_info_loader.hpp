@@ -174,7 +174,7 @@ public:
             // For each het site in dataset
             fill_het_info(v, i);
             for (auto hi : v) {
-                if (vi[hi.position].snp && !std::isnan(hi.pp) && hi.pp < threshold) {
+                if (vi[hi.vcf_line].snp && !std::isnan(hi.pp) && hi.pp < threshold) {
                     counter++;
                 }
             }
@@ -192,7 +192,7 @@ public:
             for (size_t j = 0; j < v.size(); ++j) {
                 auto& hi = v[j];
                 // If low PP and SNP
-                if (vi[hi.position].snp && !std::isnan(hi.pp) && hi.pp < threshold) {
+                if (vi[hi.vcf_line].snp && !std::isnan(hi.pp) && hi.pp < threshold) {
                     // Check the neighbors
                     size_t lower_bound = j < 2 ? 0 : j-2;
                     size_t upper_bound = j < v.size()-2 ? j+2 : v.size();
@@ -202,7 +202,7 @@ public:
                         if (k == j) continue;
                         auto& nei = v[k];
                         // If the neighbor is also a SNP and within distance
-                        if ((!snp_nei_req || vi[nei.position].snp) && vi[hi.position].distance(vi[nei.position]) < dist) {
+                        if ((!snp_nei_req || vi[nei.vcf_line].snp) && vi[hi.vcf_line].distance(vi[nei.vcf_line]) < dist) {
                             counter++;
                             break; // Don't count twice
                         }
