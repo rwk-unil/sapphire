@@ -153,6 +153,7 @@ int main(int argc, char**argv) {
 
     HetInfoMemoryMap himm(bfname);
 
+if (0 /* Show global info */) {
     const float PP_THRESHOLD = 0.99;
     const size_t DIST_THRESHOLD = 750;
     auto low_pp_count = himm.count_all_vars_below_threshold(PP_THRESHOLD);
@@ -170,7 +171,7 @@ int main(int argc, char**argv) {
               << maybe_solvable_low_pp_snps * 100.0 / low_pp_snps << "%" << std::endl;
 
     return 0;
-
+}
     // Per sample info
 
     //himm.print_positions(sample);
