@@ -59,6 +59,48 @@ public:
         pp_arr = pp;
         gt_arr = gt;
     }
+    Hetp(uint32_t* ptr, std::vector<VarInfo>& vi) : Hetp((float*)ptr+3, (int*)ptr+1, &vi[*ptr]) {}
+
+    bool is_snp() {
+        return var_info->snp;
+    }
+
+    char get_allele0() const {
+        return bcf_gt_allele(gt_arr[0]) ? var_info->alt[0] : var_info->ref[0];
+    }
+
+    char get_allele1() const {
+        return bcf_gt_allele(gt_arr[1]) ? var_info->alt[0] : var_info->ref[0];
+    }
+
+    // Very inefficient, but used only for debug
+    std::string to_string() const {
+        //std::string result(bcf_hdr_id2name(hdr, rec->rid)); // segfault ...
+        std::string result(var_info->to_string());
+        result += "\t" + std::to_string(bcf_gt_allele(gt_arr[0])) + "|" + std::to_string(bcf_gt_allele(gt_arr[1])) + ":" + std::to_string(get_pp());
+
+        return result;
+    }
+
+    void reverse_phase() {
+        int a0 = bcf_gt_allele(gt_arr[0]);
+        int a1 = bcf_gt_allele(gt_arr[1]);
+
+        gt_arr[0] = bcf_gt_unphased(a1); // First allele is always unphased per BCF standard
+        gt_arr[1] = bcf_gt_phased(a0);
+        reversed = true;
+        // The reads that associate to that allele are now swapped
+        a0_reads_p.swap(a1_reads_p);
+    }
+
+    float get_pp() const {
+        return pp_arr[0];
+    }
+
+    void set_validated_pp(size_t number_of_reads) {
+        pp_arr[0] += number_of_reads+1;
+    }
+
 
     VarInfo *var_info;
     std::unique_ptr<std::set<std::string> > a0_reads_p;
@@ -98,46 +140,6 @@ public:
         }
     }
 
-    // Very inefficient, but used only for debug
-    std::string to_string() const {
-        //std::string result(bcf_hdr_id2name(hdr, rec->rid)); // segfault ...
-        std::string result(var_info->to_string());
-        result += "\t" + std::to_string(bcf_gt_allele(gt_arr[0])) + "|" + std::to_string(bcf_gt_allele(gt_arr[1])) + ":" + std::to_string(get_pp());
-
-        return result;
-    }
-
-    bool is_snp() {
-        return var_info->snp;
-    }
-
-    char get_allele0() const {
-        return bcf_gt_allele(gt_arr[0]) ? var_info->alt[0] : var_info->ref[0];
-    }
-
-    char get_allele1() const {
-        return bcf_gt_allele(gt_arr[1]) ? var_info->alt[0] : var_info->ref[0];
-    }
-
-    void reverse_phase() {
-        int a0 = bcf_gt_allele(gt_arr[0]);
-        int a1 = bcf_gt_allele(gt_arr[1]);
-
-        gt_arr[0] = bcf_gt_unphased(a1); // First allele is always unphased per BCF standard
-        gt_arr[1] = bcf_gt_phased(a0);
-        reversed = true;
-        // The reads that associate to that allele are now swapped
-        a0_reads_p.swap(a1_reads_p);
-    }
-
-    float get_pp() const {
-        return pp_arr[0];
-    }
-
-    void set_validated_pp(size_t number_of_reads) {
-        pp_arr[0] += number_of_reads+1;
-    }
-
     std::unique_ptr<VarInfo> var_info_up;
 
 private:
@@ -147,13 +149,13 @@ private:
 
 class HetTrio {
 public:
-    HetTrio(HetTrio* prev, Het* self, HetTrio* next) :
+    HetTrio(HetTrio* prev, Hetp* self, HetTrio* next) :
         prev(prev),
         self(self),
         next(next) {
     }
     HetTrio *prev = NULL;
-    Het *self = NULL;
+    Hetp *self = NULL;
     HetTrio *next = NULL;
 
     bool has_prex() const {
@@ -173,7 +175,7 @@ public:
     }
 };
 
-void het_trio_list_from_hets(std::vector<std::unique_ptr<HetTrio> >& het_trios, std::vector<std::unique_ptr<Het> >& hets) {
+void het_trio_list_from_hets(std::vector<std::unique_ptr<HetTrio> >& het_trios, std::vector<std::unique_ptr<Hetp> >& hets) {
     // Create the HetTrio linked list
     HetTrio* prev = NULL;
     for (size_t i = 0; i < hets.size(); ++i) {
@@ -278,7 +280,7 @@ public:
         return iter->end;
     }
 
-    void pileup_reads(const bam_pileup1_t * v_plp, int n_plp, Het* het) {
+    void pileup_reads(const bam_pileup1_t * v_plp, int n_plp, Hetp* het) {
         n_bases_total++;
         for (int i = 0 ; i < n_plp ; ++i) {
             const bam_pileup1_t *p = v_plp + i;
@@ -365,7 +367,7 @@ static int pileup_filter(void *data, bam1_t *b) {
 
 class HetTraversal : public BcfTraversal {
     public:
-    HetTraversal(std::vector<std::unique_ptr<Het> >& hets) :
+    HetTraversal(std::vector<std::unique_ptr<Hetp> >& hets) :
         hets(hets)
     {}
 
@@ -373,11 +375,34 @@ class HetTraversal : public BcfTraversal {
         hets.push_back(std::make_unique<Het>(bcf_fri.line, bcf_fri.sr->readers[0].header));
     }
 
-    std::vector<std::unique_ptr<Het> >& hets;
+    std::vector<std::unique_ptr<Hetp> >& hets;
 };
 
+class HetInfoPtrContainerExt : HetInfoMemoryMap::HetInfoPtrContainer {
+public:
+    HetInfoPtrContainerExt (HetInfoMemoryMap& parent, size_t sample_idx, std::vector<VarInfo>& vi) :
+        HetInfoMemoryMap::HetInfoPtrContainer(parent, sample_idx), vi(vi) {}
+
+    void fill_het_info_ext(std::vector<std::unique_ptr<Hetp> >& v) {
+        v.clear();
+        for (size_t i = 0; i < size; ++i) {
+            v.emplace_back(std::make_unique<Hetp>(start_pos+i*Iterator_type::skip(), vi));
+        }
+    }
+
+    std::vector<VarInfo>& vi;
+};
+
+void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file) {
+    std::vector<std::unique_ptr<Hetp> > hets;
+    std::vector<std::unique_ptr<HetTrio> > het_trios;
+
+    // Get hets from memory map
+
+}
+
 void rephase_example(std::string& vcf_file, std::string& cram_file) {
-    std::vector<std::unique_ptr<Het> > hets;
+    std::vector<std::unique_ptr<Hetp> > hets;
     std::vector<std::unique_ptr<HetTrio> > het_trios;
     HetTraversal ht(hets);
     // Will fill the hets vector

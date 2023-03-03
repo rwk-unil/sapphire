@@ -107,8 +107,8 @@ public:
     };
 
     class HetInfoPtrContainer {
-        using Iterator_type = Iterator<uint32_t, 4>;
     public:
+        using Iterator_type = Iterator<uint32_t, 4>;
         HetInfoPtrContainer (HetInfoMemoryMap& parent, size_t sample) : parent(parent), sample(sample) {
             uint32_t mark = *(uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample]);
             if (mark != 0xd00dc0de) {
