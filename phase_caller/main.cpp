@@ -393,24 +393,7 @@ public:
     const std::vector<VarInfo>& vi;
 };
 
-void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
-    std::vector<std::unique_ptr<Hetp> > hets;
-    std::vector<std::unique_ptr<HetTrio> > het_trios;
-
-    // Get hets from memory map
-    HetInfoPtrContainerExt hipce(himm, sample_idx, vi);
-}
-
-void rephase_example(std::string& vcf_file, std::string& cram_file) {
-    std::vector<std::unique_ptr<Hetp> > hets;
-    std::vector<std::unique_ptr<HetTrio> > het_trios;
-    HetTraversal ht(hets);
-    // Will fill the hets vector
-    ht.traverse(vcf_file);
-
-    // This filters out the non SNPs
-    het_trio_list_from_hets(het_trios, hets); /// @todo handle non SNPs ?
-
+void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::string& cram_file) {
     DataCaller dc;
     dc.open(cram_file);
     if (!dc.isOpened()) {
@@ -449,14 +432,6 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
             if (!current_het) {
                 break;
             }
-#if 0
-            //Left
-            if (curr_tid == curr_chr && curr_pos == l_gen.pos) parseReads(v_plp, n_plp, l_gen, HET_LEFT);
-            //right
-            if (curr_tid == curr_chr && curr_pos == r_gen.pos) parseReads(v_plp, n_plp, r_gen, HET_RIGT);
-            //target
-            if (curr_tid == curr_chr && curr_pos == t_gen.pos) parseReads(v_plp, n_plp, t_gen, HET_TARG);
-#endif
         }
         bam_plp_reset(s_plp);
         bam_plp_destroy(s_plp);
@@ -542,6 +517,32 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
     }
 
     dc.close();
+}
+
+void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
+    std::vector<std::unique_ptr<Hetp> > hets;
+    std::vector<std::unique_ptr<HetTrio> > het_trios;
+
+    // Get hets from memory map
+    HetInfoPtrContainerExt hipce(himm, sample_idx, vi);
+    // Hets created from the memory map will directy edit the file on rephase
+    hipce.fill_het_info_ext(hets);
+    het_trio_list_from_hets(het_trios, hets);
+
+    rephase(het_trios, cram_file);
+}
+
+void rephase_example(std::string& vcf_file, std::string& cram_file) {
+    std::vector<std::unique_ptr<Hetp> > hets;
+    std::vector<std::unique_ptr<HetTrio> > het_trios;
+    HetTraversal ht(hets);
+    // Will fill the hets vector
+    ht.traverse(vcf_file);
+
+    // This filters out the non SNPs
+    het_trio_list_from_hets(het_trios, hets); /// @todo handle non SNPs ?
+
+    rephase(het_trios, cram_file);
 }
 
 int main(int argc, char**argv) {
