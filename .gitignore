@@ -31,4 +31,11 @@
 *.out
 *.app
 
+# Compressed files
+*.gz
+*.zip
+
+# VS Code data
+.vscode
+
 **/git_rev.h
