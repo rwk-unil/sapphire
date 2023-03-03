@@ -16,14 +16,15 @@
 
 class HetInfoMemoryMap {
 public:
-    HetInfoMemoryMap(std::string bfname) : file_size(fs::file_size(bfname)) {
+    HetInfoMemoryMap(std::string bfname) : HetInfoMemoryMap(bfname, PROT_READ) {}
+    HetInfoMemoryMap(std::string bfname, int flags) : file_size(fs::file_size(bfname)) {
         fd = open(bfname.c_str(), O_RDONLY, 0);
         if (fd < 0) {
             std::cerr << "Failed to open file : " << bfname << std::endl;
             throw "Failed to open file";
         }
 
-        file_mmap_p = mmap(NULL, file_size, PROT_READ, MAP_SHARED, fd, 0);
+        file_mmap_p = mmap(NULL, file_size, flags, MAP_SHARED, fd, 0);
         if (file_mmap_p == NULL) {
             std::cerr << "Failed to memory map file : " << bfname << std::endl;
             close(fd);
