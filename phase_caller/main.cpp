@@ -6,6 +6,7 @@
 #include "hts.h"
 #include "sam.h"
 #include "vcf.h"
+#include "het_info_loader.hpp"
 
 #define DIST(x,y) (std::max((x),(y))-std::min((x),(y)))
 
@@ -45,6 +46,26 @@ public:
 };
 
 GlobalAppOptions global_app_options;
+
+class Hetp {
+public:
+    Hetp() {}
+    Hetp(float *pp, int *gt_arr, VarInfo *var_info) :
+        var_info(var_info),
+        a0_reads_p(new std::set<std::string>),
+        a1_reads_p(new std::set<std::string>)
+    {
+    }
+
+    VarInfo *var_info;
+    std::unique_ptr<std::set<std::string> > a0_reads_p;
+    std::unique_ptr<std::set<std::string> > a1_reads_p;
+
+private:
+    bool reversed = false;
+    float *pp_arr = NULL;
+    int *gt_arr = NULL;
+};
 
 class Het {
 public:
