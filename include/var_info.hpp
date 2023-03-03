@@ -10,12 +10,8 @@
 
 class VarInfo {
 public:
-    VarInfo(const bcf_file_reader_info_t& bcf_fri) {
-        bcf_hdr_t* hdr = bcf_fri.sr->readers[0].header;
-        bcf1_t* line = bcf_fri.line;
-
+    VarInfo(bcf1_t *line, bcf_hdr_t *hdr) {
         /// @todo This constructor is a bit slow because of the repeated alloc/free
-
         contig = bcf_hdr_id2name(hdr, line->rid);
         pos1 = line->pos; // Is 1 based and not 0 based
         id = std::string(line->d.id);
@@ -43,6 +39,8 @@ public:
         #endif
         if (acp) { free(acp); }
     }
+
+    VarInfo(const bcf_file_reader_info_t& bcf_fri) : VarInfo(bcf_fri.line, bcf_fri.sr->readers[0].header) {}
 
     std::string to_string() {
         std::string result(contig);
