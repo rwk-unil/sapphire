@@ -22,6 +22,30 @@ inline char getBase (int code) {
 	}
 }
 
+class GlobalAppOptions {
+public:
+    GlobalAppOptions() {
+        app.add_option("-f,--file", var_filename, "Input variant file name");
+        app.add_option("-b,--binary-file", bin_filename, "Input-Output het binary file name");
+        app.add_option("-S,--sample-file", sample_filename, "Sample list file name");
+        app.add_option("-I,--project-id", project_id, "UKB Project ID");
+        app.add_option("-s,--start", start, "Starting sample position");
+        app.add_option("-e,--end", end, "End sample position (excluded)");
+        app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
+    }
+
+    CLI::App app{"Ultralight Phase Caller"};
+    std::string project_id = "XXXXX";
+    std::string var_filename = "-";
+    std::string bin_filename = "-";
+    std::string sample_filename = "-";
+    size_t start = 0;
+    size_t end = -1;
+    bool verbose = false;
+};
+
+GlobalAppOptions global_app_options;
+
 class Het {
 public:
     Het() {}
