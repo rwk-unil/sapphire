@@ -50,16 +50,16 @@ GlobalAppOptions global_app_options;
 class Hetp {
 public:
     Hetp() {}
-    Hetp(VarInfo *var_info) :
+    Hetp(const VarInfo *var_info) :
         var_info(var_info),
         a0_reads_p(new std::set<std::string>),
         a1_reads_p(new std::set<std::string>) {}
-    Hetp(float *pp, int *gt, VarInfo *var_info) :
+    Hetp(float *pp, int *gt, const VarInfo *var_info) :
         Hetp(var_info) {
         pp_arr = pp;
         gt_arr = gt;
     }
-    Hetp(uint32_t* ptr, std::vector<VarInfo>& vi) : Hetp((float*)ptr+3, (int*)ptr+1, &vi[*ptr]) {}
+    Hetp(uint32_t* ptr, const std::vector<VarInfo>& vi) : Hetp((float*)ptr+3, (int*)ptr+1, &vi[*ptr]) {}
 
     bool is_snp() {
         return var_info->snp;
@@ -102,7 +102,7 @@ public:
     }
 
 
-    VarInfo *var_info;
+    const VarInfo *var_info;
     std::unique_ptr<std::set<std::string> > a0_reads_p;
     std::unique_ptr<std::set<std::string> > a1_reads_p;
 
@@ -140,7 +140,7 @@ public:
         }
     }
 
-    std::unique_ptr<VarInfo> var_info_up;
+    std::unique_ptr<const VarInfo> var_info_up;
 
 private:
     int pp_arr_size = 0;
@@ -380,7 +380,7 @@ class HetTraversal : public BcfTraversal {
 
 class HetInfoPtrContainerExt : HetInfoMemoryMap::HetInfoPtrContainer {
 public:
-    HetInfoPtrContainerExt (HetInfoMemoryMap& parent, size_t sample_idx, std::vector<VarInfo>& vi) :
+    HetInfoPtrContainerExt (HetInfoMemoryMap& parent, size_t sample_idx, const std::vector<VarInfo>& vi) :
         HetInfoMemoryMap::HetInfoPtrContainer(parent, sample_idx), vi(vi) {}
 
     void fill_het_info_ext(std::vector<std::unique_ptr<Hetp> >& v) {
@@ -390,15 +390,15 @@ public:
         }
     }
 
-    std::vector<VarInfo>& vi;
+    const std::vector<VarInfo>& vi;
 };
 
-void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file) {
+void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
     std::vector<std::unique_ptr<Hetp> > hets;
     std::vector<std::unique_ptr<HetTrio> > het_trios;
 
     // Get hets from memory map
-
+    HetInfoPtrContainerExt hipce(himm, sample_idx, vi);
 }
 
 void rephase_example(std::string& vcf_file, std::string& cram_file) {

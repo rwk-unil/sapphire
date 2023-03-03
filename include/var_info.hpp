@@ -42,7 +42,7 @@ public:
 
     VarInfo(const bcf_file_reader_info_t& bcf_fri) : VarInfo(bcf_fri.line, bcf_fri.sr->readers[0].header) {}
 
-    std::string to_string() {
+    std::string to_string() const {
         std::string result(contig);
         result += "\t" + std::to_string(pos1+1); // Is 1 based and not 0 based
         result += "\t" + id;
