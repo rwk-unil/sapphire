@@ -31,4 +31,4 @@
 *.out
 *.app
 
-**/git_rev.hpp
+**/git_rev.h
