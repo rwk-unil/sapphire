@@ -5,7 +5,7 @@ ZSTD_PATH := ${XSQUEEZEITPATH}/zstd/lib
 
 # C++ Compiler
 CXX=g++
-INCLUDE_DIRS=-I include -I $(HTSLIB_PATH)/htslib -I $(ZSTD_PATH) -I ${XSQUEEZEITPATH}/include
+INCLUDE_DIRS=-I include -I ../include -I $(HTSLIB_PATH)/htslib -I $(ZSTD_PATH) -I ${XSQUEEZEITPATH}/include
 #EXTRA_FLAGS=-fsanitize=address -fsanitize=undefined -fsanitize=pointer-subtract -fsanitize=pointer-compare -fno-omit-frame-pointer -fstack-protector-all -fcf-protection
 ifeq ($(ADD_EXTRA),y)
 EXTRA_FLAGS=-fsanitize=address -fsanitize=undefined -fsanitize=pointer-subtract -fsanitize=pointer-compare -fno-omit-frame-pointer -fstack-protector-all -fcf-protection

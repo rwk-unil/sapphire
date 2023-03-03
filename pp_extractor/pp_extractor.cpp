@@ -3,10 +3,10 @@
 #include "vcf.h"
 #include "hts.h"
 #include "synced_bcf_reader.h"
-#include "../include/bcf_traversal.hpp"
-#include "../include/CLI11.hpp"
-#include "include/fifo.hpp"
-#include "include/het_info.hpp"
+#include "bcf_traversal.hpp"
+#include "CLI11.hpp"
+#include "fifo.hpp"
+#include "het_info.hpp"
 
 constexpr size_t PLOIDY_2 = 2;
 
