@@ -50,33 +50,33 @@ GlobalAppOptions global_app_options;
 class Hetp {
 public:
     Hetp() {}
-    Hetp(float *pp, int *gt_arr, VarInfo *var_info) :
+    Hetp(VarInfo *var_info) :
         var_info(var_info),
         a0_reads_p(new std::set<std::string>),
-        a1_reads_p(new std::set<std::string>)
-    {
+        a1_reads_p(new std::set<std::string>) {}
+    Hetp(float *pp, int *gt, VarInfo *var_info) :
+        Hetp(var_info) {
+        pp_arr = pp;
+        gt_arr = gt;
     }
 
     VarInfo *var_info;
     std::unique_ptr<std::set<std::string> > a0_reads_p;
     std::unique_ptr<std::set<std::string> > a1_reads_p;
 
-private:
+protected:
     bool reversed = false;
     float *pp_arr = NULL;
     int *gt_arr = NULL;
 };
 
-class Het {
+class Het : public Hetp {
 public:
     Het() {}
-    Het(bcf1_t *_rec, bcf_hdr_t *hdr) :
-        hdr(hdr),
-        a0_reads_p(new std::set<std::string>),
-        a1_reads_p(new std::set<std::string>)
+    Het(bcf1_t *rec, bcf_hdr_t *hdr) :
+        Hetp(new VarInfo(rec, hdr)),
+        var_info_up(var_info)
     {
-        rec = bcf_dup(_rec);
-        bcf_unpack(rec, BCF_UN_ALL);
         int res = bcf_get_format_float(hdr, rec, "PP", &pp_arr, &pp_arr_size);
         if (res < 0) {
             std::cerr << "Could not extract PP for pos : " << rec->pos << std::endl;
@@ -85,7 +85,6 @@ public:
         if (res < 0) {
             std::cerr << "Could not extract GT for pos : " << rec->pos << std::endl;
         }
-        contig = std::string(bcf_hdr_id2name(hdr, rec->rid));
     }
 
     ~Het() {
@@ -102,32 +101,22 @@ public:
     // Very inefficient, but used only for debug
     std::string to_string() const {
         //std::string result(bcf_hdr_id2name(hdr, rec->rid)); // segfault ...
-        std::string result(contig);
-        result += "\t" + std::to_string(rec->pos+1);
-        result += "\t" + std::string(rec->d.id);
-        result += "\t" + std::string(rec->d.allele[0]);
-        result += "\t" + std::string(rec->d.allele[1]);
-        result += "\t" + std::string(".");
-        result += "\t" + std::string(".");
-        result += "\t" + std::string(".");
+        std::string result(var_info->to_string());
         result += "\t" + std::to_string(bcf_gt_allele(gt_arr[0])) + "|" + std::to_string(bcf_gt_allele(gt_arr[1])) + ":" + std::to_string(get_pp());
 
         return result;
     }
 
-    bcf1_t *rec = NULL;
-    bcf_hdr_t *hdr = NULL;
-
     bool is_snp() {
-        return !(strlen(rec->d.allele[0]) > 1 || strlen(rec->d.allele[1]) > 1);
+        return var_info->snp;
     }
 
     char get_allele0() const {
-        return rec->d.allele[bcf_gt_allele(gt_arr[0])][0];
+        return bcf_gt_allele(gt_arr[0]) ? var_info->alt[0] : var_info->ref[0];
     }
 
     char get_allele1() const {
-        return rec->d.allele[bcf_gt_allele(gt_arr[1])][0];
+        return bcf_gt_allele(gt_arr[1]) ? var_info->alt[0] : var_info->ref[0];
     }
 
     void reverse_phase() {
@@ -149,15 +138,10 @@ public:
         pp_arr[0] += number_of_reads+1;
     }
 
-    std::unique_ptr<std::set<std::string> > a0_reads_p;
-    std::unique_ptr<std::set<std::string> > a1_reads_p;
+    std::unique_ptr<VarInfo> var_info_up;
 
 private:
-    std::string contig;
-    bool reversed = false;
-    float *pp_arr = NULL;
     int pp_arr_size = 0;
-    int *gt_arr = NULL;
     int gt_arr_size = 0;
 };
 
@@ -181,11 +165,11 @@ public:
     }
 
     size_t distance_to_prev() const {
-        return DIST(prev->self->rec->pos, self->rec->pos);
+        return DIST(prev->self->var_info->pos1, self->var_info->pos1);
     }
 
     size_t distance_to_next() const {
-        return DIST(self->rec->pos, next->self->rec->pos);
+        return DIST(self->var_info->pos1, next->self->var_info->pos1);
     }
 };
 
@@ -475,7 +459,7 @@ int main(int argc, char**argv) {
     while(current_het) {
         /* The iterator is really important for performance */
         /** @todo Not sure about the boundaries around the iterator though ... this could be reduced*/
-        dc.jump(stid, current_het->self->rec->pos - 300, current_het->self->rec->pos + 300);
+        dc.jump(stid, current_het->self->var_info->pos1 - 300, current_het->self->var_info->pos1 + 300);
 
         /* Init the pileup with the pileup function, it will use an iterator instead of reading all recs from file */
         const bam_pileup1_t *v_plp;
@@ -486,8 +470,8 @@ int main(int argc, char**argv) {
             /// @todo This should not even happen... plus if the iterator it NULL => segfault
             //if (curr_pos < dc.begin() || curr_pos >= dc.end()) continue;
 
-            // The position in the VCF/BCF is 1 based not 0 based, here the position is 0 based
-            if (curr_tid == target_tid && curr_pos == current_het->self->rec->pos) {
+            // The position in the VCF/BCF is 1 based not 0 based
+            if (curr_tid == target_tid && curr_pos == current_het->self->var_info->pos1) {
                 dc.pileup_reads(v_plp, n_plp, current_het->self);
                 //current_het = current_het->next;
                 break;
