@@ -586,6 +586,7 @@ public:
         }
     }
 
+private:
     inline size_t find_free(const std::vector<bool> v) {
         for (size_t i = 0; i < v.size(); ++i) {
             if (v[i] == false) return i;
@@ -593,6 +594,38 @@ public:
         return v.size();
     }
 
+    inline std::string cram_filename(const std::string& sample_name) const {
+        std::string cram_file(global_app_options.cram_path);
+        cram_file += "/" + sample_name.substr(0, 2);
+        cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+        return cram_file;
+    }
+
+    std::function<void(size_t, size_t)> thread_fun = [this](size_t thread_idx, size_t sample_idx){
+        // Get sample name
+        std::string sample_name = sil.sample_names[sample_idx];
+        // Don't try withdrawn samples
+        if (sample_name[0] == 'W') {
+            std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
+        } else {
+            // Generate the corresponding cram file path
+            std::string cram_file = cram_filename(sample_name);
+
+            std::cout << "Sample idx: " << sample_idx << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+            if (!fs::exists(cram_file)) {
+                std::cerr << "Cannot find file " << cram_file << " skipping ..." << std::endl;
+            }
+            //rephase_sample(vil.vars, himm, cram_file, sample_idx);
+        }
+        {
+            std::lock_guard lk(mutex);
+            std::cout << "Thread " << thread_idx << " finished" << std::endl;
+            active_threads[thread_idx] = false;
+        }
+        cv.notify_all();
+    };
+
+public:
     void rephase_orchestrator_multi_thread(size_t start_id, size_t stop_id) {
         for (size_t i = start_id; i < stop_id; ++i) {
             std::unique_lock<std::mutex> lk(mutex);
@@ -622,28 +655,37 @@ public:
         }
     }
 
-    std::function<void(size_t ti, size_t i)> thread_fun = [this](size_t ti, size_t i){
-        // Get sample name
-        std::string sample_name = sil.sample_names[i];
-        // Don't try withdrawn samples
-        if (sample_name[0] == 'W') {
-            std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
-        } else {
-            // Generate the corresponding cram file path
-            std::string cram_file(global_app_options.cram_path);
-            cram_file += "/" + sample_name.substr(0, 2);
-            cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+    void rephase_orchestrator_multi_thread() {
+        for (size_t i = 0; i < sil.sample_names.size(); ++i) {
+            if (std::find(samples_to_do.sample_names.begin(), samples_to_do.sample_names.end(),
+                sil.sample_names[i]) != samples_to_do.sample_names.end()) {
+                std::unique_lock<std::mutex> lk(mutex);
+                size_t ti = find_free(active_threads);
+                cv.wait(lk, [&]{ti = find_free(active_threads); return ti < active_threads.size(); });
 
-            std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-            //rephase_sample(vil.vars, himm, cram_file, i);
+                if (threads[ti]) {
+                    // If a thread was launched but finished
+                    threads[ti]->join();
+                    std::cout << "Joined thread " << ti << std::endl;
+                    delete threads[ti];
+                    threads[ti] = NULL;
+                }
+
+                std::cout << "Launching thread " << ti << std::endl;
+                active_threads[ti] = true;
+                threads[ti] = new std::thread(thread_fun, ti, i);
+            }
         }
-        {
-            std::lock_guard lk(mutex);
-            std::cout << "Thread " << ti << " finished" << std::endl;
-            active_threads[ti] = false;
+
+        // Final cleanup
+        for (size_t i = 0; i < threads.size(); ++i) {
+            if (threads[i]) {
+                threads[i]->join();
+                delete threads[i];
+                threads[i] = NULL;
+            }
         }
-        cv.notify_all();
-    };
+    }
 
     std::vector<std::thread*> threads;
     std::vector<bool> active_threads;
@@ -721,6 +763,8 @@ int main(int argc, char**argv) {
 
     PhaseCaller pc(opt.var_filename, opt.bin_filename, opt.sample_filename, opt.sample_list_filename, opt.n_threads);
     pc.rephase_orchestrator_multi_thread(0, 32);
+    std::cout << "TEST 2" << std::endl;
+    pc.rephase_orchestrator_multi_thread();
 
     //rephase_orchestrator(vil, himm, sil, 0, 15);
     //rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
