@@ -400,17 +400,17 @@ void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::strin
         exit(-1);
     }
 
-    /* Try some pileup */
-
-    /* This will create an iterator that is used for the pileup instead of going through all the reads */
-    std::string stid("chr1");
-    int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
+    /* Do some pileup */
 
     HetTrio* current_het = het_trios.front().get();
 
     while(current_het) {
+        std::string stid = current_het->self->var_info->contig;
+        int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
+
         /* The iterator is really important for performance */
         /** @todo Not sure about the boundaries around the iterator though ... this could be reduced*/
+        /* This will create an iterator that is used for the pileup instead of going through all the reads */
         dc.jump(stid, current_het->self->var_info->pos1 - 300, current_het->self->var_info->pos1 + 300);
 
         /* Init the pileup with the pileup function, it will use an iterator instead of reading all recs from file */
