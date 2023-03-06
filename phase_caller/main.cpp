@@ -33,6 +33,7 @@ public:
         app.add_option("-f,--file", var_filename, "Input variant file name");
         app.add_option("-b,--binary-file", bin_filename, "Input-Output het binary file name");
         app.add_option("-S,--sample-file", sample_filename, "Sample list file name");
+        app.add_option("-l,--sample-list", sample_list_filename, "Sample to use list file name");
         app.add_option("-I,--project-id", project_id, "UKB Project ID");
         app.add_option("-p,--cram-path", cram_path, "CRAM files path");
         app.add_option("-s,--start", start, "Starting sample position");
@@ -47,6 +48,7 @@ public:
     std::string var_filename = "-";
     std::string bin_filename = "-";
     std::string sample_filename = "-";
+    std::string sample_list_filename = "-";
     size_t start = 0;
     size_t end = -1;
     size_t n_threads = 1;
@@ -553,88 +555,142 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
     rephase(het_trios, cram_file);
 }
 
-void rephase_orchestrator(VarInfoLoader& vil, HetInfoMemoryMap& himm, SampleInfoLoader& sil,
-                          size_t start_id, size_t stop_id) {
-    for (size_t i = start_id; i < stop_id; ++i) {
-        // Get sample name
-        std::string sample_name = sil.sample_names[i];
-        // Don't try withdrawn samples
-        if (sample_name[0] == 'W') {
-            std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
-            continue;
-        }
-        // Generate the corresponding cram file path
-        std::string cram_file(global_app_options.cram_path);
-        cram_file += "/" + sample_name.substr(0, 2);
-        cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
-
-        std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-        //rephase_sample(vil.vars, himm, cram_file, i);
+class PhaseCaller {
+public:
+    PhaseCaller(std::string& vcf_filename, std::string& bin_filename, std::string& sample_filename, std::string& samples_to_do_filename,
+                size_t n_threads) :
+        threads(n_threads, NULL),
+        active_threads(n_threads, false),
+        samples_to_do(samples_to_do_filename),
+        sil(sample_filename),
+        vil(vcf_filename),
+        himm(bin_filename)
+    {
     }
-}
 
-inline size_t find_free(const std::vector<bool> v) {
-    for (size_t i = 0; i < v.size(); ++i) {
-        if (v[i] == false) return i;
-    }
-    return v.size();
-}
-
-void rephase_orchestrator_multi_thread(VarInfoLoader& vil, HetInfoMemoryMap& himm, SampleInfoLoader& sil,
-                                       size_t start_id, size_t stop_id, size_t n_threads) {
-    std::vector<std::thread*> threads(n_threads, NULL);
-    std::vector<bool> active_threads(n_threads, false);
-    std::mutex mutex;
-    std::condition_variable cv;
-
-    for (size_t i = start_id; i < stop_id; ++i) {
+    ~PhaseCaller() {
         std::unique_lock<std::mutex> lk(mutex);
-        size_t ti = find_free(active_threads);
-        cv.wait(lk, [&]{ti = find_free(active_threads); return ti < active_threads.size(); });
-
-        if (threads[ti]) {
-            // If a thread was launched but finished
-            threads[ti]->join();
-            std::cout << "Joined thread " << ti << std::endl;
-            delete threads[ti];
-            threads[ti] = NULL;
+        // Final cleanup
+        for (size_t i = 0; i < threads.size(); ++i) {
+            if (threads[i]) {
+                threads[i]->join();
+                delete threads[i];
+                threads[i] = NULL;
+            }
         }
+    }
 
-        std::cout << "Launching thread " << ti << std::endl;
-        active_threads[ti] = true;
-        threads[ti] = new std::thread([&, ti]{
+    void rephase_orchestrator(size_t start_id, size_t stop_id) {
+        for (size_t i = start_id; i < stop_id; ++i) {
             // Get sample name
             std::string sample_name = sil.sample_names[i];
             // Don't try withdrawn samples
             if (sample_name[0] == 'W') {
                 std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
-            } else {
-                // Generate the corresponding cram file path
-                std::string cram_file(global_app_options.cram_path);
-                cram_file += "/" + sample_name.substr(0, 2);
-                cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
-
-                std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-                //rephase_sample(vil.vars, himm, cram_file, i);
+                continue;
             }
-            {
-                std::lock_guard lk(mutex);
-                std::cout << "Thread " << ti << " finished" << std::endl;
-                active_threads[ti] = false;
-            }
-            cv.notify_all();
-        });
-    }
+            // Generate the corresponding cram file path
+            std::string cram_file(global_app_options.cram_path);
+            cram_file += "/" + sample_name.substr(0, 2);
+            cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
 
-    // Final cleanup
-    for (size_t i = 0; i < threads.size(); ++i) {
-        if (threads[i]) {
-            threads[i]->join();
-            delete threads[i];
-            threads[i] = NULL;
+            std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+            //rephase_sample(vil.vars, himm, cram_file, i);
         }
     }
-}
+
+    inline size_t find_free(const std::vector<bool> v) {
+        for (size_t i = 0; i < v.size(); ++i) {
+            if (v[i] == false) return i;
+        }
+        return v.size();
+    }
+
+    void rephase_orchestrator_multi_thread(size_t start_id, size_t stop_id) {
+        for (size_t i = start_id; i < stop_id; ++i) {
+            std::unique_lock<std::mutex> lk(mutex);
+            size_t ti = find_free(active_threads);
+            cv.wait(lk, [&]{ti = find_free(active_threads); return ti < active_threads.size(); });
+
+            if (threads[ti]) {
+                // If a thread was launched but finished
+                threads[ti]->join();
+                std::cout << "Joined thread " << ti << std::endl;
+                delete threads[ti];
+                threads[ti] = NULL;
+            }
+
+            std::cout << "Launching thread " << ti << std::endl;
+            active_threads[ti] = true;
+            if (0) threads[ti] = new std::thread([&, ti]{
+                // Get sample name
+                std::string sample_name = sil.sample_names[i];
+                // Don't try withdrawn samples
+                if (sample_name[0] == 'W') {
+                    std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
+                } else {
+                    // Generate the corresponding cram file path
+                    std::string cram_file(global_app_options.cram_path);
+                    cram_file += "/" + sample_name.substr(0, 2);
+                    cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+
+                    std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+                    //rephase_sample(vil.vars, himm, cram_file, i);
+                }
+                {
+                    std::lock_guard lk(mutex);
+                    std::cout << "Thread " << ti << " finished" << std::endl;
+                    active_threads[ti] = false;
+                }
+                cv.notify_all();
+            });
+            threads[ti] = new std::thread(thread_fun, ti, i);
+        }
+
+        // Final cleanup
+        for (size_t i = 0; i < threads.size(); ++i) {
+            if (threads[i]) {
+                threads[i]->join();
+                delete threads[i];
+                threads[i] = NULL;
+            }
+        }
+    }
+
+    std::function<void(size_t ti, size_t i)> thread_fun = [this](size_t ti, size_t i){
+                // Get sample name
+                std::string sample_name = sil.sample_names[i];
+                // Don't try withdrawn samples
+                if (sample_name[0] == 'W') {
+                    std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
+                } else {
+                    // Generate the corresponding cram file path
+                    std::string cram_file(global_app_options.cram_path);
+                    cram_file += "/" + sample_name.substr(0, 2);
+                    cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+
+                    std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+                    //rephase_sample(vil.vars, himm, cram_file, i);
+                }
+                {
+                    std::lock_guard lk(mutex);
+                    std::cout << "Thread " << ti << " finished" << std::endl;
+                    active_threads[ti] = false;
+                }
+                cv.notify_all();
+            };
+
+    std::vector<std::thread*> threads;
+    std::vector<bool> active_threads;
+    std::mutex mutex;
+    std::condition_variable cv;
+
+    SampleInfoLoader samples_to_do;
+    SampleInfoLoader sil;
+    VarInfoLoader vil;
+    // We memory map as to save RAM space and update the file in place
+    HetInfoMemoryMap himm;
+};
 
 int main(int argc, char**argv) {
 
@@ -681,6 +737,7 @@ int main(int argc, char**argv) {
         std::cerr << "Setting number of threads to " << opt.n_threads << std::endl;
     }
 
+#if 0
     std::cout << "Loading sample names" << std::endl;
     SampleInfoLoader sil(opt.sample_filename);
     std::cout << "Loaded " << sil.sample_names.size() << " sample names" << std::endl;
@@ -695,13 +752,17 @@ int main(int argc, char**argv) {
 
     // Memory map the binary het variant file
     HetInfoMemoryMap himm(opt.bin_filename, PROT_READ | PROT_WRITE);
+#endif
+
+    PhaseCaller pc(opt.var_filename, opt.bin_filename, opt.sample_filename, opt.sample_list_filename, opt.n_threads);
+    pc.rephase_orchestrator_multi_thread(0, 32);
 
     //rephase_orchestrator(vil, himm, sil, 0, 15);
-    rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
+    //rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
     return 0;
 
     std::cout << "Rephasing a sample" << std::endl;
-    rephase_sample(vil.vars, himm, cram_file, 465);
+    //rephase_sample(vil.vars, himm, cram_file, 465);
 
 #endif
 
