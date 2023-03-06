@@ -582,20 +582,7 @@ public:
 
     void rephase_orchestrator(size_t start_id, size_t stop_id) {
         for (size_t i = start_id; i < stop_id; ++i) {
-            // Get sample name
-            std::string sample_name = sil.sample_names[i];
-            // Don't try withdrawn samples
-            if (sample_name[0] == 'W') {
-                std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
-                continue;
-            }
-            // Generate the corresponding cram file path
-            std::string cram_file(global_app_options.cram_path);
-            cram_file += "/" + sample_name.substr(0, 2);
-            cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
-
-            std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-            //rephase_sample(vil.vars, himm, cram_file, i);
+            thread_fun(i, 0);
         }
     }
 
@@ -622,28 +609,6 @@ public:
 
             std::cout << "Launching thread " << ti << std::endl;
             active_threads[ti] = true;
-            if (0) threads[ti] = new std::thread([&, ti]{
-                // Get sample name
-                std::string sample_name = sil.sample_names[i];
-                // Don't try withdrawn samples
-                if (sample_name[0] == 'W') {
-                    std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
-                } else {
-                    // Generate the corresponding cram file path
-                    std::string cram_file(global_app_options.cram_path);
-                    cram_file += "/" + sample_name.substr(0, 2);
-                    cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
-
-                    std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-                    //rephase_sample(vil.vars, himm, cram_file, i);
-                }
-                {
-                    std::lock_guard lk(mutex);
-                    std::cout << "Thread " << ti << " finished" << std::endl;
-                    active_threads[ti] = false;
-                }
-                cv.notify_all();
-            });
             threads[ti] = new std::thread(thread_fun, ti, i);
         }
 
@@ -658,27 +623,27 @@ public:
     }
 
     std::function<void(size_t ti, size_t i)> thread_fun = [this](size_t ti, size_t i){
-                // Get sample name
-                std::string sample_name = sil.sample_names[i];
-                // Don't try withdrawn samples
-                if (sample_name[0] == 'W') {
-                    std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
-                } else {
-                    // Generate the corresponding cram file path
-                    std::string cram_file(global_app_options.cram_path);
-                    cram_file += "/" + sample_name.substr(0, 2);
-                    cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
+        // Get sample name
+        std::string sample_name = sil.sample_names[i];
+        // Don't try withdrawn samples
+        if (sample_name[0] == 'W') {
+            std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
+        } else {
+            // Generate the corresponding cram file path
+            std::string cram_file(global_app_options.cram_path);
+            cram_file += "/" + sample_name.substr(0, 2);
+            cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
 
-                    std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-                    //rephase_sample(vil.vars, himm, cram_file, i);
-                }
-                {
-                    std::lock_guard lk(mutex);
-                    std::cout << "Thread " << ti << " finished" << std::endl;
-                    active_threads[ti] = false;
-                }
-                cv.notify_all();
-            };
+            std::cout << "Sample idx: " << i << " name: " << sample_name << " cram path: " << cram_file << std::endl;
+            //rephase_sample(vil.vars, himm, cram_file, i);
+        }
+        {
+            std::lock_guard lk(mutex);
+            std::cout << "Thread " << ti << " finished" << std::endl;
+            active_threads[ti] = false;
+        }
+        cv.notify_all();
+    };
 
     std::vector<std::thread*> threads;
     std::vector<bool> active_threads;
