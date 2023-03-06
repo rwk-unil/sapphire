@@ -104,7 +104,8 @@ public:
     }
 
     float get_pp() const {
-        return pp_arr[0];
+        /// @note NaN is when PP is not given (e.g., common variants)
+        return std::isnan(pp_arr[0]) ? 1.0 : pp_arr[0];
     }
 
     void set_validated_pp(size_t number_of_reads) {
@@ -392,131 +393,134 @@ public:
     const std::vector<VarInfo>& vi;
 };
 
-void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::string& cram_file) {
-    DataCaller dc;
-    dc.open(cram_file);
-    if (!dc.isOpened()) {
-        std::cerr << "Cannot open data for file " << cram_file << std::endl;
-        exit(-1);
-    }
+class Rephaser {
+public:
+    static void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::string& cram_file) {
+        DataCaller dc;
+        dc.open(cram_file);
+        if (!dc.isOpened()) {
+            std::cerr << "Cannot open data for file " << cram_file << std::endl;
+            exit(-1);
+        }
 
-    /* Do some pileup */
+        /* Do some pileup */
 
-    HetTrio* current_het = het_trios.front().get();
+        HetTrio* current_het = het_trios.front().get();
 
-    while(current_het) {
-        std::string stid = current_het->self->var_info->contig;
-        int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
+        while(current_het) {
+            std::string stid = current_het->self->var_info->contig;
+            int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
 
-        /* The iterator is really important for performance */
-        /** @todo Not sure about the boundaries around the iterator though ... this could be reduced*/
-        /* This will create an iterator that is used for the pileup instead of going through all the reads */
-        dc.jump(stid, current_het->self->var_info->pos1 - 300, current_het->self->var_info->pos1 + 300);
+            /* The iterator is really important for performance */
+            /** @todo Not sure about the boundaries around the iterator though ... this could be reduced*/
+            /* This will create an iterator that is used for the pileup instead of going through all the reads */
+            dc.jump(stid, current_het->self->var_info->pos1 - 300, current_het->self->var_info->pos1 + 300);
 
-        /* Init the pileup with the pileup function, it will use an iterator instead of reading all recs from file */
-        const bam_pileup1_t *v_plp;
-        int n_plp(0), curr_tid(0), curr_pos(0);
-        bam_plp_t s_plp = bam_plp_init(pileup_filter, (void*)&dc);
+            /* Init the pileup with the pileup function, it will use an iterator instead of reading all recs from file */
+            const bam_pileup1_t *v_plp;
+            int n_plp(0), curr_tid(0), curr_pos(0);
+            bam_plp_t s_plp = bam_plp_init(pileup_filter, (void*)&dc);
 
-        while ((v_plp = bam_plp_auto(s_plp, &curr_tid, &curr_pos, &n_plp)) != 0) {
-            /// @todo This should not even happen... plus if the iterator it NULL => segfault
-            //if (curr_pos < dc.begin() || curr_pos >= dc.end()) continue;
+            while ((v_plp = bam_plp_auto(s_plp, &curr_tid, &curr_pos, &n_plp)) != 0) {
+                /// @todo This should not even happen... plus if the iterator it NULL => segfault
+                //if (curr_pos < dc.begin() || curr_pos >= dc.end()) continue;
 
-            // The position in the VCF/BCF is 1 based not 0 based
-            if (curr_tid == target_tid && curr_pos == current_het->self->var_info->pos1) {
-                dc.pileup_reads(v_plp, n_plp, current_het->self);
-                //current_het = current_het->next;
-                break;
+                // The position in the VCF/BCF is 1 based not 0 based
+                if (curr_tid == target_tid && curr_pos == current_het->self->var_info->pos1) {
+                    dc.pileup_reads(v_plp, n_plp, current_het->self);
+                    //current_het = current_het->next;
+                    break;
+                }
+                if (!current_het) {
+                    break;
+                }
             }
-            if (!current_het) {
-                break;
+            bam_plp_reset(s_plp);
+            bam_plp_destroy(s_plp);
+
+            current_het = current_het->next;
+        }
+
+        for (auto& h : het_trios) {
+            if (h->self->get_pp() < 1.0) {
+                std::cout << h->self->to_string() << " requires work" << std::endl;
+
+                size_t correct_phase_pir = 0;
+                size_t reverse_phase_pir = 0;
+
+                auto& strand_0_reads = *h->self->a0_reads_p.get();
+                auto& strand_1_reads = *h->self->a1_reads_p.get();
+
+                /**
+                 * @todo
+                 *  - Check distances not to waste time searching in the sets of reads
+                 *  - Check prev and next chain if within distance
+                 */
+
+                // For all the reads in both strands check the reads in prev and next
+                for (auto& s0r : strand_0_reads) {
+                    if (h->prev) {
+                        if (h->prev->self->a0_reads_p->find(s0r) != h->prev->self->a0_reads_p->end()) {
+                            correct_phase_pir++;
+                        }
+                        if (h->prev->self->a1_reads_p->find(s0r) != h->prev->self->a1_reads_p->end()) {
+                            reverse_phase_pir++;
+                        }
+                    }
+                    if (h->next) {
+                        if (h->next->self->a0_reads_p->find(s0r) != h->next->self->a0_reads_p->end()) {
+                            correct_phase_pir++;
+                        }
+                        if (h->next->self->a1_reads_p->find(s0r) != h->next->self->a1_reads_p->end()) {
+                            reverse_phase_pir++;
+                        }
+                    }
+                }
+                for (auto& s1r : strand_1_reads) {
+                    if (h->prev) {
+                        if (h->prev->self->a0_reads_p->find(s1r) != h->prev->self->a0_reads_p->end()) {
+                            reverse_phase_pir++;
+                        }
+                        if (h->prev->self->a1_reads_p->find(s1r) != h->prev->self->a1_reads_p->end()) {
+                            correct_phase_pir++;
+                        }
+                    }
+                    if (h->next) {
+                        if (h->next->self->a0_reads_p->find(s1r) != h->next->self->a0_reads_p->end()) {
+                            reverse_phase_pir++;
+                        }
+                        if (h->next->self->a1_reads_p->find(s1r) != h->next->self->a1_reads_p->end()) {
+                            correct_phase_pir++;
+                        }
+                    }
+                }
+
+                std::cout << "Correct phase PIRs : " << correct_phase_pir << std::endl;
+                std::cout << "Reverse phase PIRs : " << reverse_phase_pir << std::endl;
+
+                if (correct_phase_pir && reverse_phase_pir) {
+                    std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
+                }
+                // We need at least to have seen some reads
+                if (correct_phase_pir || reverse_phase_pir) {
+                    if (correct_phase_pir > reverse_phase_pir) {
+                        // Phase is correct
+                        h->self->set_validated_pp(correct_phase_pir);
+                    } else {
+                        // Phase is incorrect
+                        h->self->reverse_phase();
+                        h->self->set_validated_pp(reverse_phase_pir);
+                    }
+                    std::cout << "This is the read validated entry :" << std::endl;
+                    std::cout << h->self->to_string() << std::endl;
+                    std::cout << "---" << std::endl;
+                }
             }
         }
-        bam_plp_reset(s_plp);
-        bam_plp_destroy(s_plp);
 
-        current_het = current_het->next;
+        dc.close();
     }
-
-    for (auto& h : het_trios) {
-        if (h->self->get_pp() < 1.0) {
-            std::cout << h->self->to_string() << " requires work" << std::endl;
-
-            size_t correct_phase_pir = 0;
-            size_t reverse_phase_pir = 0;
-
-            auto& strand_0_reads = *h->self->a0_reads_p.get();
-            auto& strand_1_reads = *h->self->a1_reads_p.get();
-
-            /**
-             * @todo
-             *  - Check distances not to waste time searching in the sets of reads
-             *  - Check prev and next chain if within distance
-             */
-
-            // For all the reads in both strands check the reads in prev and next
-            for (auto& s0r : strand_0_reads) {
-                if (h->prev) {
-                    if (h->prev->self->a0_reads_p->find(s0r) != h->prev->self->a0_reads_p->end()) {
-                        correct_phase_pir++;
-                    }
-                    if (h->prev->self->a1_reads_p->find(s0r) != h->prev->self->a1_reads_p->end()) {
-                        reverse_phase_pir++;
-                    }
-                }
-                if (h->next) {
-                    if (h->next->self->a0_reads_p->find(s0r) != h->next->self->a0_reads_p->end()) {
-                        correct_phase_pir++;
-                    }
-                    if (h->next->self->a1_reads_p->find(s0r) != h->next->self->a1_reads_p->end()) {
-                        reverse_phase_pir++;
-                    }
-                }
-            }
-            for (auto& s1r : strand_1_reads) {
-                if (h->prev) {
-                    if (h->prev->self->a0_reads_p->find(s1r) != h->prev->self->a0_reads_p->end()) {
-                        reverse_phase_pir++;
-                    }
-                    if (h->prev->self->a1_reads_p->find(s1r) != h->prev->self->a1_reads_p->end()) {
-                        correct_phase_pir++;
-                    }
-                }
-                if (h->next) {
-                    if (h->next->self->a0_reads_p->find(s1r) != h->next->self->a0_reads_p->end()) {
-                        reverse_phase_pir++;
-                    }
-                    if (h->next->self->a1_reads_p->find(s1r) != h->next->self->a1_reads_p->end()) {
-                        correct_phase_pir++;
-                    }
-                }
-            }
-
-            std::cout << "Correct phase PIRs : " << correct_phase_pir << std::endl;
-            std::cout << "Reverse phase PIRs : " << reverse_phase_pir << std::endl;
-
-            if (correct_phase_pir && reverse_phase_pir) {
-                std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
-            }
-            // We need at least to have seen some reads
-            if (correct_phase_pir || reverse_phase_pir) {
-                if (correct_phase_pir > reverse_phase_pir) {
-                    // Phase is correct
-                    h->self->set_validated_pp(correct_phase_pir);
-                } else {
-                    // Phase is incorrect
-                    h->self->reverse_phase();
-                    h->self->set_validated_pp(reverse_phase_pir);
-                }
-                std::cout << "This is the read validated entry :" << std::endl;
-                std::cout << h->self->to_string() << std::endl;
-                std::cout << "---" << std::endl;
-            }
-        }
-    }
-
-    dc.close();
-}
+};
 
 void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
     std::vector<std::unique_ptr<Hetp> > hets;
@@ -529,7 +533,7 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     het_trio_list_from_hets(het_trios, hets);
 
     try {
-        rephase(het_trios, cram_file);
+        Rephaser::rephase(het_trios, cram_file);
     } catch (DataCaller::DataCallerError e) {
         return;
     }
@@ -546,7 +550,7 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
     het_trio_list_from_hets(het_trios, hets); /// @todo handle non SNPs ?
 
     try {
-        rephase(het_trios, cram_file);
+        Rephaser::rephase(het_trios, cram_file);
     } catch (DataCaller::DataCallerError e) {
         return;
     }
@@ -719,6 +723,7 @@ int main(int argc, char**argv) {
     }
 
     rephase_example(vcf_file, cram_file);
+    return 0;
 #else
     auto& opt = global_app_options;
     auto& app = global_app_options.app;
