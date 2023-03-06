@@ -645,8 +645,9 @@ private:
             if (!fs::exists(cram_file)) {
                 std::lock_guard lk(mutex);
                 std::cerr << "Cannot find file " << cram_file << " skipping ..." << std::endl;
+            } else {
+                rephase_sample(vil.vars, himm, cram_file, sample_idx);
             }
-            //rephase_sample(vil.vars, himm, cram_file, sample_idx);
         }
         {
             std::lock_guard lk(mutex);
@@ -757,10 +758,14 @@ int main(int argc, char**argv) {
     }
 
     PhaseCaller pc(opt.var_filename, opt.bin_filename, opt.sample_filename, opt.sample_list_filename, opt.n_threads);
-#if 0
-    pc.rephase_orchestrator_multi_thread(0, 32);
-    std::cout << "TEST 2" << std::endl;
+#if 1
+
     pc.rephase_orchestrator_multi_thread();
+    printElapsedTime(start_time, std::chrono::steady_clock::now());
+
+    //pc.rephase_orchestrator_multi_thread(0, 32);
+    //std::cout << "TEST 2" << std::endl;
+    //pc.rephase_orchestrator_multi_thread();
 
     //rephase_orchestrator(vil, himm, sil, 0, 15);
     //rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
