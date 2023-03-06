@@ -203,6 +203,14 @@ void het_trio_list_from_hets(std::vector<std::unique_ptr<HetTrio> >& het_trios, 
 
 class DataCaller {
 public:
+    class DataCallerError {
+    public:
+        DataCallerError(std::string what) : what(what) {
+            std::cerr << what << std::endl;
+        }
+        std::string what;
+    };
+
     htsFile * fp;				// File handler
     sam_hdr_t * hdr;			// File header
     hts_idx_t * idx;			// Index handler
@@ -229,20 +237,20 @@ public:
     void open (std::string cram_file) {
         fp = hts_open(cram_file.c_str(), "r");
         if (!fp) {
-            std::cerr << "Cannot open " << cram_file << std::endl;
-            exit(-1);
+            std::string error("Cannot open ");
+            error += cram_file;
+            throw DataCallerError(error);
         }
         idx = sam_index_load(fp, std::string(cram_file + ".crai").c_str());
         if (!idx) {
-            std::cerr << "Failed to load index file" << std::endl;
-            exit(-1);
+            throw DataCallerError(std::string("Failed to load index file"));
         }
         hdr = sam_hdr_read(fp);
         if (!hdr) {
-            std::cerr << "Failed to read header from file " << cram_file << std::endl;
-            exit(-1);
+            std::string error("Failed to read header from file ");
+            error += cram_file;
+            throw DataCallerError(error);
         }
-        //if ((fasta != "") && hts_set_fai_filename(fp, fasta.c_str())) vrb.error("Cannot open fasta");
         opened = true;
     }
 
@@ -325,25 +333,6 @@ public:
                     // Read that has a1
                     het->a1_reads_p->insert(std::string(bam_get_qname(p->b)));
                 }
-#if 0
-                string qname = string(bam_get_qname(p->b));
-                map < string, pir > :: iterator itR = R.insert(pair < string, pir > (qname, pir())).first;
-                switch (side) {
-                case HET_LEFT:	itR->second.l_phr = qual;
-                                itR->second.l_obs = 1;
-                                itR->second.l_all = (base == h.alt);
-                                break;
-                case HET_TARG:	itR->second.t_phr = qual;
-                                itR->second.t_obs = 1;
-                                itR->second.t_all = (base == h.alt);
-                                break;
-                case HET_RIGT:	itR->second.r_phr = qual;
-                                itR->second.r_obs = 1;
-                                itR->second.r_all = (base == h.alt);
-                                break;
-                }
-                n_bases_match++;
-#endif
             }
         }
         if constexpr (DEBUG_SHOW_PILEUP) {
@@ -539,7 +528,11 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     hipce.fill_het_info_ext(hets);
     het_trio_list_from_hets(het_trios, hets);
 
-    rephase(het_trios, cram_file);
+    try {
+        rephase(het_trios, cram_file);
+    } catch (DataCaller::DataCallerError e) {
+        return;
+    }
 }
 
 void rephase_example(std::string& vcf_file, std::string& cram_file) {
@@ -552,7 +545,11 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
     // This filters out the non SNPs
     het_trio_list_from_hets(het_trios, hets); /// @todo handle non SNPs ?
 
-    rephase(het_trios, cram_file);
+    try {
+        rephase(het_trios, cram_file);
+    } catch (DataCaller::DataCallerError e) {
+        return;
+    }
 }
 
 class PhaseCaller {
@@ -606,6 +603,7 @@ private:
         std::string sample_name = sil.sample_names[sample_idx];
         // Don't try withdrawn samples
         if (sample_name[0] == 'W') {
+            std::lock_guard lk(mutex);
             std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
         } else {
             // Generate the corresponding cram file path
@@ -613,6 +611,7 @@ private:
 
             std::cout << "Sample idx: " << sample_idx << " name: " << sample_name << " cram path: " << cram_file << std::endl;
             if (!fs::exists(cram_file)) {
+                std::lock_guard lk(mutex);
                 std::cerr << "Cannot find file " << cram_file << " skipping ..." << std::endl;
             }
             //rephase_sample(vil.vars, himm, cram_file, sample_idx);
