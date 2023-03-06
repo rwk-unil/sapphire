@@ -133,7 +133,7 @@ while true; do
     esac
 done
 
-dx run swiss-army-knife -icmd="ls -al; cp ${BIN_FILENAME} ${NEW_BINARY_FILE} ${NEW_BINARY_FILE}; ${command}" \
+dx run swiss-army-knife -icmd="ls -al; cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; ${command}" \
     -iin="${VCF_VAR_ID}" -iin="${BIN_ID}" -iin="${SAMPLE_FILE_ID}" "${INIIDSAMPLELIST}" \
     -iimage_file=docker/pp_extract_v1.1.tar.gz -imount_inputs=true --tag "${tag}" \
     --destination phasing_rare/validation_interm_results/ \
