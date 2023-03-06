@@ -7,6 +7,7 @@
 class SampleInfoLoader {
 public:
     SampleInfoLoader(const std::string& sample_filename) {
+        if (sample_filename.compare("-") == 0) return;
         std::ifstream file(sample_filename);
         std::string line;
         while (std::getline(file, line)) {
