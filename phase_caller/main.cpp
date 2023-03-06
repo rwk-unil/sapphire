@@ -11,6 +11,7 @@
 #include "vcf.h"
 #include "het_info_loader.hpp"
 #include "sample_info.hpp"
+#include "time.hpp"
 
 #define DIST(x,y) (std::max((x),(y))-std::min((x),(y)))
 
@@ -394,13 +395,64 @@ public:
 };
 
 class Rephaser {
+protected:
+    inline void check_phase(HetTrio* het, HetTrio* other_het, size_t& correct_phase_pir, size_t& reverse_phase_pir) {
+        if (other_het && other_het->self->get_pp() > OTHER_PP_THRESHOLD) {
+            // Check strand 0 concordance
+            for (auto& s0r : *het->self->a0_reads_p) {
+                if (other_het->self->a0_reads_p->find(s0r) != other_het->self->a0_reads_p->end()) {
+                    correct_phase_pir++;
+                }
+                if (other_het->self->a1_reads_p->find(s0r) != other_het->self->a1_reads_p->end()) {
+                    reverse_phase_pir++;
+                }
+            }
+            // Check strand 1 concordance
+            for (auto& s1r : *het->self->a1_reads_p) {
+                if (other_het->self->a0_reads_p->find(s1r) != other_het->self->a0_reads_p->end()) {
+                    reverse_phase_pir++;
+                }
+                if (other_het->self->a1_reads_p->find(s1r) != other_het->self->a1_reads_p->end()) {
+                    correct_phase_pir++;
+                }
+            }
+        }
+    }
+
+    inline void look_back(HetTrio* het, size_t& correct_phase_pir, size_t& reverse_phase_pir, size_t max_dist) {
+        HetTrio *prev = het->prev;
+        while (prev) {
+            auto distance = DIST(prev->self->var_info->pos1, het->self->var_info->pos1);
+            if (distance > max_dist) {
+                return;
+            } else {
+                check_phase(het, prev, correct_phase_pir, reverse_phase_pir);
+            }
+            prev = prev->prev;
+        }
+    }
+
+    inline void look_ahead(HetTrio* het, size_t& correct_phase_pir, size_t& reverse_phase_pir, size_t max_dist) {
+        HetTrio *next = het->next;
+        while (next) {
+            auto distance = DIST(next->self->var_info->pos1, het->self->var_info->pos1);
+            if (distance > max_dist) {
+                return;
+            } else {
+                check_phase(het, next, correct_phase_pir, reverse_phase_pir);
+            }
+            next = next->next;
+        }
+    }
+
 public:
-    static void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::string& cram_file) {
+    void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::string& cram_file) {
         DataCaller dc;
         dc.open(cram_file);
         if (!dc.isOpened()) {
-            std::cerr << "Cannot open data for file " << cram_file << std::endl;
-            exit(-1);
+            std::string error("Cannot open data for file ");
+            error += cram_file;
+            throw DataCaller::DataCallerError(error);
         }
 
         /* Do some pileup */
@@ -443,66 +495,29 @@ public:
 
         for (auto& h : het_trios) {
             if (h->self->get_pp() < 1.0) {
-                std::cout << h->self->to_string() << " requires work" << std::endl;
+                if (global_app_options.verbose) {
+                    std::cout << h->self->to_string() << " requires work" << std::endl;
+                }
+
+                rephase_tries++;
 
                 size_t correct_phase_pir = 0;
                 size_t reverse_phase_pir = 0;
 
-                auto& strand_0_reads = *h->self->a0_reads_p.get();
-                auto& strand_1_reads = *h->self->a1_reads_p.get();
+                look_back(h.get(), correct_phase_pir, reverse_phase_pir, MAX_DISTANCE);
+                look_ahead(h.get(), correct_phase_pir, reverse_phase_pir, MAX_DISTANCE);
 
-                /**
-                 * @todo
-                 *  - Check distances not to waste time searching in the sets of reads
-                 *  - Check prev and next chain if within distance
-                 */
+                if (global_app_options.verbose) {
+                    std::cout << "Correct phase PIRs : " << correct_phase_pir << std::endl;
+                    std::cout << "Reverse phase PIRs : " << reverse_phase_pir << std::endl;
 
-                // For all the reads in both strands check the reads in prev and next
-                for (auto& s0r : strand_0_reads) {
-                    if (h->prev) {
-                        if (h->prev->self->a0_reads_p->find(s0r) != h->prev->self->a0_reads_p->end()) {
-                            correct_phase_pir++;
-                        }
-                        if (h->prev->self->a1_reads_p->find(s0r) != h->prev->self->a1_reads_p->end()) {
-                            reverse_phase_pir++;
-                        }
+                    if (correct_phase_pir && reverse_phase_pir) {
+                        std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
                     }
-                    if (h->next) {
-                        if (h->next->self->a0_reads_p->find(s0r) != h->next->self->a0_reads_p->end()) {
-                            correct_phase_pir++;
-                        }
-                        if (h->next->self->a1_reads_p->find(s0r) != h->next->self->a1_reads_p->end()) {
-                            reverse_phase_pir++;
-                        }
-                    }
-                }
-                for (auto& s1r : strand_1_reads) {
-                    if (h->prev) {
-                        if (h->prev->self->a0_reads_p->find(s1r) != h->prev->self->a0_reads_p->end()) {
-                            reverse_phase_pir++;
-                        }
-                        if (h->prev->self->a1_reads_p->find(s1r) != h->prev->self->a1_reads_p->end()) {
-                            correct_phase_pir++;
-                        }
-                    }
-                    if (h->next) {
-                        if (h->next->self->a0_reads_p->find(s1r) != h->next->self->a0_reads_p->end()) {
-                            reverse_phase_pir++;
-                        }
-                        if (h->next->self->a1_reads_p->find(s1r) != h->next->self->a1_reads_p->end()) {
-                            correct_phase_pir++;
-                        }
-                    }
-                }
-
-                std::cout << "Correct phase PIRs : " << correct_phase_pir << std::endl;
-                std::cout << "Reverse phase PIRs : " << reverse_phase_pir << std::endl;
-
-                if (correct_phase_pir && reverse_phase_pir) {
-                    std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
                 }
                 // We need at least to have seen some reads
                 if (correct_phase_pir || reverse_phase_pir) {
+                    rephase_success++;
                     if (correct_phase_pir > reverse_phase_pir) {
                         // Phase is correct
                         h->self->set_validated_pp(correct_phase_pir);
@@ -511,15 +526,26 @@ public:
                         h->self->reverse_phase();
                         h->self->set_validated_pp(reverse_phase_pir);
                     }
-                    std::cout << "This is the read validated entry :" << std::endl;
-                    std::cout << h->self->to_string() << std::endl;
-                    std::cout << "---" << std::endl;
+                    if (global_app_options.verbose) {
+                        std::cout << "This is the read validated entry :" << std::endl;
+                        std::cout << h->self->to_string() << std::endl;
+                        std::cout << "---" << std::endl;
+                    }
                 }
             }
         }
 
         dc.close();
+
+        if (global_app_options.verbose) {
+            std::cout << "Tried to rephase " << rephase_tries << " het sites, succeeded with " << rephase_success << std::endl;
+        }
     }
+protected:
+    const float OTHER_PP_THRESHOLD = 0.9;
+    const size_t MAX_DISTANCE = 1000;
+    size_t rephase_tries = 0;
+    size_t rephase_success = 0;
 };
 
 void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
@@ -533,7 +559,8 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     het_trio_list_from_hets(het_trios, hets);
 
     try {
-        Rephaser::rephase(het_trios, cram_file);
+        Rephaser r;
+        r.rephase(het_trios, cram_file);
     } catch (DataCaller::DataCallerError e) {
         return;
     }
@@ -550,7 +577,8 @@ void rephase_example(std::string& vcf_file, std::string& cram_file) {
     het_trio_list_from_hets(het_trios, hets); /// @todo handle non SNPs ?
 
     try {
-        Rephaser::rephase(het_trios, cram_file);
+        Rephaser r;
+        r.rephase(het_trios, cram_file);
     } catch (DataCaller::DataCallerError e) {
         return;
     }
@@ -565,7 +593,7 @@ public:
         samples_to_do(samples_to_do_filename),
         sil(sample_filename),
         vil(vcf_filename),
-        himm(bin_filename)
+        himm(bin_filename, PROT_READ | PROT_WRITE)
     {
     }
 
@@ -703,28 +731,8 @@ public:
 };
 
 int main(int argc, char**argv) {
+    auto start_time = std::chrono::steady_clock::now();
 
-#if 0
-    CLI::App app{"Ultralight phase caller"};
-    std::string cram_file = "-";
-    std::string vcf_file = "-";
-    app.add_option("-f,--file", cram_file, "Input file name");
-    app.add_option("--vcf", vcf_file, "VCF input file name");
-
-    CLI11_PARSE(app, argc, argv);
-
-    if (cram_file.compare("-") == 0) {
-        std::cerr << "Requires cram_file" << std::endl;
-        exit(app.exit(CLI::CallForHelp()));
-    }
-    if (vcf_file.compare("-") == 0) {
-        std::cerr << "Requires vcf_file" << std::endl;
-        exit(app.exit(CLI::CallForHelp()));
-    }
-
-    rephase_example(vcf_file, cram_file);
-    return 0;
-#else
     auto& opt = global_app_options;
     auto& app = global_app_options.app;
     std::string cram_file = "-";
@@ -748,24 +756,8 @@ int main(int argc, char**argv) {
         std::cerr << "Setting number of threads to " << opt.n_threads << std::endl;
     }
 
-#if 0
-    std::cout << "Loading sample names" << std::endl;
-    SampleInfoLoader sil(opt.sample_filename);
-    std::cout << "Loaded " << sil.sample_names.size() << " sample names" << std::endl;
-
-    std::cout << "Loading variants" << std::endl;
-
-    // Load all variants from variant BCF/VCF file once
-    VarInfoLoader vil(opt.var_filename);
-    std::cout << "Loaded " << vil.vars.size() << " variant entries" << std::endl;
-
-    std::cout << "Memory mapping binary file - This file will be edited !" << std::endl;
-
-    // Memory map the binary het variant file
-    HetInfoMemoryMap himm(opt.bin_filename, PROT_READ | PROT_WRITE);
-#endif
-
     PhaseCaller pc(opt.var_filename, opt.bin_filename, opt.sample_filename, opt.sample_list_filename, opt.n_threads);
+#if 0
     pc.rephase_orchestrator_multi_thread(0, 32);
     std::cout << "TEST 2" << std::endl;
     pc.rephase_orchestrator_multi_thread();
@@ -773,9 +765,12 @@ int main(int argc, char**argv) {
     //rephase_orchestrator(vil, himm, sil, 0, 15);
     //rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
     return 0;
-
+#else
     std::cout << "Rephasing a sample" << std::endl;
-    //rephase_sample(vil.vars, himm, cram_file, 465);
+    rephase_sample(pc.vil.vars, pc.himm, cram_file, 465);
+
+    printElapsedTime(start_time, std::chrono::steady_clock::now());
+    return 0;
 
 #endif
 
