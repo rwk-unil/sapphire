@@ -45,7 +45,7 @@ public:
 
     CLI::App app{"Ultralight Phase Caller"};
     std::string project_id = "XXXXX";
-    std::string cram_path = "/mnt/Bulk/Whole Genome Sequences/Whole genome CRAM files";
+    std::string cram_path = "/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files";
     std::string var_filename = "-";
     std::string bin_filename = "-";
     std::string sample_filename = "-";
