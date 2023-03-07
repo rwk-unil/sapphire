@@ -15,6 +15,12 @@ then
     exit 1
 fi
 
+dx_id_to_path () {
+    FFNAME=$(dx describe --json "$1" | jq -r '.name')
+    FFPATH=$(dx describe --json "$1" | jq -r '.folder')
+    echo "/mnt/project/${FFPATH}/${FFNAME}"
+}
+
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
@@ -25,6 +31,9 @@ SAMPLE_LIST_ID=""
 PROJECT_ID=23193
 INPUT_ID=""
 VERBOSE=""
+COST_LIMIT=""
+INSTANCE="mem3_ssd2_v2_x8"
+CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -63,6 +72,21 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --cost-limit)
+    COST_LIMIT="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --instance)
+    INSTANCE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --cram-path)
+    CRAM_PATH="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -90,18 +114,18 @@ then
     exit 1
 fi
 
-VCF_FILENAME=$(dx describe --json "${VCF_VAR_ID}" | jq -r '.name')
+VCF_FILENAME=$(dx_id_to_path "${VCF_VAR_ID}")
 CHROMOSOME=$(basename $(dx describe --json "${VCF_VAR_ID}" | jq -r '.folder'))
 echo "FILENAME        = ${VCF_FILENAME}"
 echo "CHROMOSOME      = ${CHROMOSOME}"
-BIN_FILENAME=$(dx describe --json "${BIN_ID}" | jq -r '.name')
+BIN_FILENAME=$(dx_id_to_path "${BIN_ID}")
 echo "BIN FILENAME    = ${BIN_FILENAME}"
-SAMPLE_FILENAME=$(dx describe --json "${SAMPLE_FILE_ID}" | jq -r '.name')
+SAMPLE_FILENAME=$(dx_id_to_path "${SAMPLE_FILE_ID}")
 echo "SAMPLE FILENAME = ${SAMPLE_FILENAME}"
 
 if ! [ -z "${SAMPLE_LIST_ID}" ]
 then
-    SAMPLE_LIST_FILENAME=$(dx describe --json "${SAMPLE_LIST_ID}" | jq -r '.name')
+    SAMPLE_LIST_FILENAME=$(dx_id_to_path "${SAMPLE_LIST_ID}")
     echo "SAMPLE LIST = ${SAMPLE_LIST_FILENAME}"
     INIIDSAMPLELIST="-iin=${SAMPLE_LIST_ID}"
 else
@@ -111,10 +135,17 @@ fi
 tag="phase_caller_v1.1"
 echo "dx run with tag : ${tag}"
 
-NEW_BINARY_FILE="${BIN_FILENAME}.new"
-command="time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} -t 0 -l ${SAMPLE_LIST_FILENAME} ${VERBOSE}"
+CRAM_PATH_ARG=""
+if ! [ -z "${CRAM_PATH}" ]
+then
+    CRAM_PATH_ARG="--cram-path \"${CRAM_PATH}\""
+fi
+
+NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_children.bin"
+command="time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} -t 0 -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
 
 echo "Command : ${command}"
+echo "Instance type : ${INSTANCE}"
 
 while true; do
     read -p "Do you want to launch on DNANexus? [y/n]" yn
@@ -133,8 +164,14 @@ while true; do
     esac
 done
 
+COST_LIMIT_ARG=""
+if ! [ -z "${COST_LIMIT}" ]
+then
+    COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
+fi
+
 dx run swiss-army-knife -icmd="ls -al; cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; ${command}" \
-    -iin="${VCF_VAR_ID}" -iin="${BIN_ID}" -iin="${SAMPLE_FILE_ID}" "${INIIDSAMPLELIST}" \
-    -iimage_file=docker/pp_extract_v1.1.tar.gz -imount_inputs=true --tag "${tag}" \
+    ${COST_LIMIT_ARG} --name RephaseCaller \
+    -iimage_file=docker/pp_extract_v1.1.tar.gz --tag "${tag}" \
     --destination phasing_rare/validation_interm_results/ \
-    --instance-type mem3_ssd2_v2_x8 -y
+    --instance-type ${INSTANCE} -y
