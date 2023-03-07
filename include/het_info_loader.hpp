@@ -214,6 +214,24 @@ public:
         return counter;
     }
 
+    size_t count_rephased_variants() {
+        size_t counter = 0;
+        // For each sample
+        for (size_t i = 0; i < num_samples; ++i) {
+            std::vector<HetInfo> v;
+            // For each het site in dataset
+            fill_het_info(v, i);
+            for (size_t j = 0; j < v.size(); ++j) {
+                auto& hi = v[j];
+                // If SNP and PP above 1 (means rephase with sequencing reads)
+                if (!std::isnan(hi.pp) && hi.pp > 1.0) {
+                    counter++;
+                }
+            }
+        }
+        return counter;
+    }
+
     int fd;
     size_t file_size;
     void *file_mmap_p;
