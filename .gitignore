@@ -45,6 +45,9 @@
 *.bin
 *.bak
 *.orig
+*.bcf
+*.vcf
+*.vcf.gz
 
 # Log files
 *.log
