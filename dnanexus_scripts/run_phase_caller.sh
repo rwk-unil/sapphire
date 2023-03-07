@@ -34,6 +34,8 @@ VERBOSE=""
 COST_LIMIT=""
 INSTANCE="mem3_ssd2_v2_x8"
 CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
+# 0 threads means "auto" (number of cores)
+THREADS_ARG="-t 0"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -84,6 +86,11 @@ case $key in
     ;;
     --cram-path)
     CRAM_PATH="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --threads)
+    THREADS_ARG="-t $2"
     shift # past argument
     shift # past value
     ;;
@@ -141,8 +148,8 @@ then
     CRAM_PATH_ARG="--cram-path \"${CRAM_PATH}\""
 fi
 
-NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_children.bin"
-command="time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} -t 0 -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
+NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_rephased.bin"
+command="time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} ${THREADS_ARG} -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
 
 echo "Command : ${command}"
 echo "Instance type : ${INSTANCE}"
