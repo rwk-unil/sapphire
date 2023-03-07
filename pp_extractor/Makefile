@@ -16,7 +16,7 @@ endif
 CXXFLAGS=-O$(OLEVEL) -g -Wall -std=c++17 $(INCLUDE_DIRS) $(CXXEXTRAFLAGS) $(EXTRA_FLAGS)
 # Linker
 LD=g++
-LIBS=-lpthread -lhts -lzstd
+LIBS=-lhts -lzstd
 LDFLAGS=-O$(OLEVEL) $(EXTRA_FLAGS) -L $(HTSLIB_PATH) -L $(ZSTD_PATH)
 
 # Project specific :
@@ -54,6 +54,9 @@ $(TARGET) : $(XOBJS) pp_extractor.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 
 pp_show : $(XOBJS) pp_show.o
+	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+
+analyze_bin : $(XOBJS) analyze_bin.o
 	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
 
 # Do not include the depency rules for "clean"
