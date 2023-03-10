@@ -37,6 +37,7 @@ INSTANCE="mem2_ssd1_v2_x4"
 CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # 0 threads means "auto" (number of cores)
 THREADS_ARG="-t 0"
+DESTINATION="phasing_rare"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -153,6 +154,7 @@ NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_rephased.bin"
 command="time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} ${THREADS_ARG} -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
 
 echo "Command : ${command}"
+echo "Output file destination : ${DESTINATION}"
 echo "Instance type : ${INSTANCE}"
 
 while true; do
@@ -182,5 +184,5 @@ fi
 dx run swiss-army-knife -icmd="ls -al; cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; ${command}" \
     ${COST_LIMIT_ARG} --name RephaseCaller \
     -iimage_file=docker/pp_extract_v1.1.tar.gz --tag "${tag}" \
-    --destination phasing_rare/validation_interm_results/ \
+    --destination "${DESTINATION}/phase_called/${CHROMOSOME} \
     --instance-type ${INSTANCE} -y

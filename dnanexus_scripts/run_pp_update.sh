@@ -29,6 +29,7 @@ OFNAME=""
 VERBOSE=""
 COST_LIMIT=""
 INSTANCE="mem2_ssd1_v2_x2"
+DESTINATION="phasing_rare"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -66,6 +67,11 @@ case $key in
     --verbose)
     VERBOSE="-v"
     shift # no value attached
+    ;;
+    -d|--destination)
+    DESTINATION="$2"
+    shift
+    shift
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
@@ -112,6 +118,9 @@ fi
 
 command="time pp_update -f ${VCF_FILENAME} -o ${OFNAME} -b ${BIN_FILENAME} ${VERBOSE}"
 
+echo "Command : ${command}"
+echo "Output file destination : ${DESTINATION}"
+echo "Instance type : ${INSTANCE}"
 
 while true; do
     read -p "Do you want to launch on DNANexus? [y/n]" yn
@@ -136,9 +145,8 @@ then
     COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
 fi
 
-# TODO DESTINATION
 dx run swiss-army-knife -icmd="${command}; bcftools index ${OFNAME}" \
     ${COST_LIMIT_ARG} --name UpdatePhase \
     -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
-    --destination phasing_rare/validation_interm_results/ \
-    --instance-type ${INSTANCE} -y
+    --destination "${DESTINATION}/rephased/${CHROMOSOME}" \
+    --instance-type "${INSTANCE}" -y

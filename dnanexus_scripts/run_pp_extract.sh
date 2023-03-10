@@ -19,6 +19,7 @@ SCRIPTPATH=$(realpath  $(dirname "$0"))
 
 FILENAME=""
 INPUT_ID=""
+DESTINATION="phasing_rare/"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -37,6 +38,11 @@ case $key in
     INPUT_ID="$2"
     shift # past argument
     shift # past value
+    ;;
+    -d|--destination)
+    DESTINATION="$2"
+    shift
+    shift
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
@@ -67,6 +73,9 @@ tag=pp_extract_v1
 echo "dx run with tag : ${tag}"
 command="time run_pp_extract -f ${FILENAME}"
 
+echo "Output file destination : ${DESTINATION}"
+echo "Command : ${command}"
+
 while true; do
     read -p "Do you want to launch on DNANexus? [y/n]" yn
     case $yn in
@@ -87,5 +96,5 @@ done
 dx run swiss-army-knife -icmd="ls -al; ${command}" \
     -iin="${INPUT_ID}" \
     -iimage_file=docker/pp_extract_v1.tar.gz -imount_inputs=true --tag "${tag}" \
-    --destination phasing_rare/het_extraction/${CHROMOSOME}/ \
+    --destination "${DESTINATION}/het_extraction/${CHROMOSOME}/" \
     --instance-type mem2_ssd1_v2_x2 -y
