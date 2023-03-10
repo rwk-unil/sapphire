@@ -395,6 +395,10 @@ public:
 };
 
 class Rephaser {
+public:
+    /* Rephase if PP below (strict) < PP_THRESHOLD */
+    Rephaser() : PP_THRESHOLD(1.0) {}
+
 protected:
     inline void check_phase(HetTrio* het, HetTrio* other_het, size_t& correct_phase_pir, size_t& reverse_phase_pir) {
         if (other_het && other_het->self->get_pp() > OTHER_PP_THRESHOLD) {
@@ -455,7 +459,7 @@ public:
             throw DataCaller::DataCallerError(error);
         }
 
-        /* Do some pileup */
+        num_hets = het_trios.size();
 
         HetTrio* current_het = het_trios.front().get();
 
@@ -474,9 +478,6 @@ public:
             bam_plp_t s_plp = bam_plp_init(pileup_filter, (void*)&dc);
 
             while ((v_plp = bam_plp_auto(s_plp, &curr_tid, &curr_pos, &n_plp)) != 0) {
-                /// @todo This should not even happen... plus if the iterator it NULL => segfault
-                //if (curr_pos < dc.begin() || curr_pos >= dc.end()) continue;
-
                 // The position in the VCF/BCF is 1 based not 0 based
                 if (curr_tid == target_tid && curr_pos == current_het->self->var_info->pos1) {
                     dc.pileup_reads(v_plp, n_plp, current_het->self);
@@ -494,7 +495,16 @@ public:
         }
 
         for (auto& h : het_trios) {
-            if (h->self->get_pp() < 1.0) {
+            // Sanity check
+            if (!h->self->a0_reads_p->size() && h->self->a1_reads_p->size()) {
+                if (global_app_options.verbose) {
+                    std::cerr << "No reads mapped to " << h->self->var_info->contig << ":" << h->self->var_info->pos1 << std::endl;
+                }
+                no_reads++;
+            }
+
+            // Requires to be rephased
+            if (h->self->get_pp() < PP_THRESHOLD) {
                 if (global_app_options.verbose) {
                     std::cout << h->self->to_string() << " requires work" << std::endl;
                 }
@@ -513,6 +523,7 @@ public:
 
                     if (correct_phase_pir && reverse_phase_pir) {
                         std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
+                        rephase_mixed++;
                     }
                 }
                 // We need at least to have seen some reads
@@ -541,11 +552,15 @@ public:
             std::cout << "Tried to rephase " << rephase_tries << " het sites, succeeded with " << rephase_success << std::endl;
         }
     }
-protected:
+
+    const float PP_THRESHOLD;
     const float OTHER_PP_THRESHOLD = 0.9;
     const size_t MAX_DISTANCE = 1000;
     size_t rephase_tries = 0;
     size_t rephase_success = 0;
+    size_t rephase_mixed = 0;
+    size_t no_reads = 0;
+    size_t num_hets = 0;
 };
 
 void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
