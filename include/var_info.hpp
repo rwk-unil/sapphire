@@ -55,6 +55,12 @@ public:
         return result;
     }
 
+    std::string to_vcfotographer_string(size_t window = 1000) const {
+        std::string result("goto ");
+        result += contig + ":" + (pos1 > window ? std::to_string(pos1-window) : "1") + "-" + std::to_string(pos1+window);
+        return result;
+    }
+
     inline size_t distance(const VarInfo& other) const {
         return DIST(pos1, other.pos1);
     }
