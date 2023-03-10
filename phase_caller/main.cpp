@@ -170,7 +170,7 @@ public:
     Hetp *self = NULL;
     HetTrio *next = NULL;
 
-    bool has_prex() const {
+    bool has_prev() const {
         return !!prev;
     }
 
