@@ -10,6 +10,7 @@ fi
 if ! command -v jq &> /dev/null
 then
     echo "Please install jq"
+    echo "E.g., sudo apt install jq"
     exit 1
 fi
 
@@ -68,7 +69,7 @@ command="time run_pp_extract -f ${FILENAME}"
 
 while true; do
     read -p "Do you want to launch on DNANexus? [y/n]" yn
-    case $yn in 
+    case $yn in
         y)
         echo "Launching !";
         break

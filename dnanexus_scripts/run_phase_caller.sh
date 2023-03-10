@@ -12,6 +12,7 @@ fi
 if ! command -v jq &> /dev/null
 then
     echo "Please install jq"
+    echo "E.g., sudo apt install jq"
     exit 1
 fi
 
@@ -32,7 +33,7 @@ PROJECT_ID=23193
 INPUT_ID=""
 VERBOSE=""
 COST_LIMIT=""
-INSTANCE="mem3_ssd2_v2_x8"
+INSTANCE="mem2_ssd1_v2_x4"
 CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # 0 threads means "auto" (number of cores)
 THREADS_ARG="-t 0"
@@ -156,7 +157,7 @@ echo "Instance type : ${INSTANCE}"
 
 while true; do
     read -p "Do you want to launch on DNANexus? [y/n]" yn
-    case $yn in 
+    case $yn in
         y)
         echo "Launching !";
         break
@@ -177,6 +178,7 @@ then
     COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
 fi
 
+# TODO DESTINATION
 dx run swiss-army-knife -icmd="ls -al; cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; ${command}" \
     ${COST_LIMIT_ARG} --name RephaseCaller \
     -iimage_file=docker/pp_extract_v1.1.tar.gz --tag "${tag}" \
