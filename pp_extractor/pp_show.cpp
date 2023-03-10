@@ -19,11 +19,11 @@
 int main(int argc, char**argv) {
     CLI::App app{"PP Show utility app"};
     std::string filename = "-";
-    app.add_option("-f,--file", filename, "Input file name");
+    app.add_option("-f,--vcf-file", filename, "Input VCF file name (variants only)");
     std::string bfname = "-";
-    app.add_option("-b,--binary", bfname, "Binary file name");
-    std::string ofname = "-";
-    app.add_option("-o,--output", ofname, "Output file name");
+    app.add_option("-b,--bin-file", bfname, "Binary file name");
+    //std::string ofname = "-";
+    //app.add_option("-o,--output", ofname, "Output file name");
     size_t sample = -1;
     app.add_option("-s,--sample", sample, "Sample index");
 
