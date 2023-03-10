@@ -450,6 +450,15 @@ protected:
     }
 
 public:
+    class RephaserStatistics {
+    public:
+        size_t rephase_tries = 0;
+        size_t rephase_success = 0;
+        size_t rephase_mixed = 0;
+        size_t no_reads = 0;
+        size_t num_hets = 0;
+    };
+
     void rephase(std::vector<std::unique_ptr<HetTrio> >& het_trios, const std::string& cram_file) {
         DataCaller dc;
         dc.open(cram_file);
@@ -459,7 +468,7 @@ public:
             throw DataCaller::DataCallerError(error);
         }
 
-        num_hets = het_trios.size();
+        stats.num_hets = het_trios.size();
 
         HetTrio* current_het = het_trios.front().get();
 
@@ -500,7 +509,7 @@ public:
                 if (global_app_options.verbose) {
                     std::cerr << "No reads mapped to " << h->self->var_info->contig << ":" << h->self->var_info->pos1 << std::endl;
                 }
-                no_reads++;
+                stats.no_reads++;
             }
 
             // Requires to be rephased
@@ -509,7 +518,7 @@ public:
                     std::cout << h->self->to_string() << " requires work" << std::endl;
                 }
 
-                rephase_tries++;
+                stats.rephase_tries++;
 
                 size_t correct_phase_pir = 0;
                 size_t reverse_phase_pir = 0;
@@ -523,12 +532,12 @@ public:
 
                     if (correct_phase_pir && reverse_phase_pir) {
                         std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
-                        rephase_mixed++;
+                        stats.rephase_mixed++;
                     }
                 }
                 // We need at least to have seen some reads
                 if (correct_phase_pir || reverse_phase_pir) {
-                    rephase_success++;
+                    stats.rephase_success++;
                     if (correct_phase_pir > reverse_phase_pir) {
                         // Phase is correct
                         h->self->set_validated_pp(correct_phase_pir);
@@ -549,18 +558,14 @@ public:
         dc.close();
 
         if (global_app_options.verbose) {
-            std::cout << "Tried to rephase " << rephase_tries << " het sites, succeeded with " << rephase_success << std::endl;
+            std::cout << "Tried to rephase " << stats.rephase_tries << " het sites, succeeded with " << stats.rephase_success << std::endl;
         }
     }
 
     const float PP_THRESHOLD;
     const float OTHER_PP_THRESHOLD = 0.9;
     const size_t MAX_DISTANCE = 1000;
-    size_t rephase_tries = 0;
-    size_t rephase_success = 0;
-    size_t rephase_mixed = 0;
-    size_t no_reads = 0;
-    size_t num_hets = 0;
+    RephaserStatistics stats;
 };
 
 void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
@@ -751,9 +756,7 @@ int main(int argc, char**argv) {
 
     auto& opt = global_app_options;
     auto& app = global_app_options.app;
-    std::string cram_file = "-";
-    app.add_option("-c, --cram", cram_file, "TODO REMOVE");
-    CLI11_PARSE(global_app_options.app, argc, argv);
+    CLI11_PARSE(app, argc, argv);
 
     if (opt.var_filename.compare("-") == 0) {
         std::cerr << "Requires variant VCF/BCF file" << std::endl;
