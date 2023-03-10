@@ -773,65 +773,8 @@ int main(int argc, char**argv) {
     }
 
     PhaseCaller pc(opt.var_filename, opt.bin_filename, opt.sample_filename, opt.sample_list_filename, opt.n_threads);
-#if 1
-
     pc.rephase_orchestrator_multi_thread();
     printElapsedTime(start_time, std::chrono::steady_clock::now());
-
-    //pc.rephase_orchestrator_multi_thread(0, 32);
-    //std::cout << "TEST 2" << std::endl;
-    //pc.rephase_orchestrator_multi_thread();
-
-    //rephase_orchestrator(vil, himm, sil, 0, 15);
-    //rephase_orchestrator_multi_thread(vil, himm, sil, 0, 32, opt.n_threads);
-    return 0;
-#else
-    std::cout << "Rephasing a sample" << std::endl;
-    rephase_sample(pc.vil.vars, pc.himm, cram_file, 465);
-
-    printElapsedTime(start_time, std::chrono::steady_clock::now());
-    return 0;
-
-#endif
-
-
-#if 0
-    htsFile *file = hts_open(cram_file.c_str(), "r");
-    hts_idx_t *idx = sam_index_load(file, std::string(cram_file + ".crai").c_str());
-
-    if (!idx) {
-        std::cerr << "Failed to load index file" << std::endl;
-        exit(-1);
-    }
-
-    if (file->is_cram) {
-        std::cout << cram_file << " is a CRAM file" << std::endl;
-    }
-
-    sam_hdr_t *hdr = sam_hdr_read(file);
-    if (!hdr) {
-        std::cerr << "Failed to read header from file " << cram_file << std::endl;
-        exit(-1);
-    }
-
-    int tid = sam_hdr_name2tid(hdr, "chr1");
-    hts_itr_t *it = sam_itr_queryi(idx, tid, 108188080, 108190284);
-
-    if (!it) {
-        std::cerr << "Failed to get iterator for query" << std::endl;
-        exit(-1);
-    }
-
-    int ret;
-    bam1_t *r = bam_init1();
-    while ((ret = sam_itr_next(file, it, r)) >= 0) {
-        std::cout << bam_get_qname(r) << std::endl;
-    }
-
-    bam_destroy1(r);
-    sam_hdr_destroy(hdr);
-    hts_close(file);
-#endif
 
     return 0;
 }
