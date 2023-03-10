@@ -586,24 +586,6 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     }
 }
 
-void rephase_example(std::string& vcf_file, std::string& cram_file) {
-    std::vector<std::unique_ptr<Hetp> > hets;
-    std::vector<std::unique_ptr<HetTrio> > het_trios;
-    HetTraversal ht(hets);
-    // Will fill the hets vector
-    ht.traverse(vcf_file);
-
-    // This filters out the non SNPs
-    het_trio_list_from_hets(het_trios, hets); /// @todo handle non SNPs ?
-
-    try {
-        Rephaser r;
-        r.rephase(het_trios, cram_file);
-    } catch (DataCaller::DataCallerError e) {
-        return;
-    }
-}
-
 class PhaseCaller {
 public:
     PhaseCaller(std::string& vcf_filename, std::string& bin_filename, std::string& sample_filename, std::string& samples_to_do_filename,
