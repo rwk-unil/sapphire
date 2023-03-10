@@ -7,6 +7,7 @@
 #include "CLI11.hpp"
 #include "fifo.hpp"
 #include "het_info.hpp"
+#include "time.hpp"
 
 constexpr size_t PLOIDY_2 = 2;
 
@@ -17,6 +18,7 @@ public:
         app.add_option("-o,--output", ofname, "Output file name");
         app.add_option("-s,--start", start, "Starting sample position");
         app.add_option("-e,--end", end, "End sample position (excluded)");
+        app.add_option("-p,--progress", progress, "Number of VCF lines to show progress");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
     }
 
@@ -25,6 +27,7 @@ public:
     std::string ofname = "-";
     size_t start = 0;
     size_t end = -1;
+    size_t progress = 0;
     bool verbose = false;
 };
 
@@ -214,8 +217,8 @@ public:
         }
 
         line_counter++;
-        if (global_app_options.verbose) {
-            if (++print_counter == 1000) {
+        if (global_app_options.progress) {
+            if (++print_counter == global_app_options.progress) {
                 print_counter = 0;
                 printf("\033[A\033[2K");
                 std::cout << "Handled " << bcf_fri.line_num << " VCF entries (lines)" << std::endl;
@@ -547,6 +550,8 @@ protected:
 };
 
 int main(int argc, char**argv) {
+    auto begin_time = std::chrono::steady_clock::now();
+
     CLI::App& app = global_app_options.app;
     auto& start = global_app_options.start;
     auto& end = global_app_options.end;
@@ -564,27 +569,6 @@ int main(int argc, char**argv) {
         exit(app.exit(CLI::CallForHelp()));
     }
 
-#if 0
-
-    std::cout << "Scanning...\n" << std::endl;
-
-    ScanTraversal ut(start, end);
-    ut.traverse_no_destroy(filename);
-    ut.finalize();
-
-    const auto& extractions = ut.get_extractions_ref();
-    std::cout << "Number of sites to extract : " << extractions.size() << std::endl;
-
-    std::cout << "Extracting...\n" << std::endl;
-
-    ExtractTraversal et(ut.get_extractions_ref());
-    et.traverse_no_unpack_no_destroy(filename);
-    et.finalize();
-
-    ut.destroy();
-    et.destroy();
-#else
-
     std::cout << "Extracting...\n" << std::endl;
 
     PPExtractTraversal ppet(start, end);
@@ -592,9 +576,9 @@ int main(int argc, char**argv) {
     ppet.finalize();
     ppet.write_to_file(ofname);
 
-#endif
-
     std::cout << "Done !" << std::endl;
+
+    printElapsedTime(begin_time, std::chrono::steady_clock::now());
 
     return 0;
 }
