@@ -116,7 +116,9 @@ then
     OFNAME="${NEW_VCF_FILE}"
 fi
 
-command="time pp_update -f ${VCF_FILENAME} -o ${OFNAME} -b ${BIN_FILENAME} ${VERBOSE}"
+# The update_pp script will pull the git repo, rebuild all tools, and install them
+# This allows to update the tools without having to rebuild the fat docker image
+command="/usr/src/pp/Docker/update_pp.sh; time pp_update -f ${VCF_FILENAME} -o ${OFNAME} -b ${BIN_FILENAME} ${VERBOSE}"
 
 echo "Command : ${command}"
 echo "Output file destination : ${DESTINATION}"
