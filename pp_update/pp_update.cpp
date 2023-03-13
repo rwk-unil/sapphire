@@ -8,6 +8,7 @@
 #include "het_info.hpp"
 #include "het_info_loader.hpp"
 #include "time.hpp"
+#include "git_rev.h"
 
 constexpr size_t PLOIDY_2 = 2;
 
@@ -155,6 +156,8 @@ int main(int argc, char**argv) {
     auto& ofname = global_app_options.ofname;
     auto& bfname = global_app_options.bfname;
     CLI11_PARSE(app, argc, argv);
+
+    std::cout << "PP Update git rev : " << std::hex << GIT_REVISION << std::dec << std::endl;
 
     if (filename.compare("-") == 0) {
         std::cerr << "Requires filename\n";
