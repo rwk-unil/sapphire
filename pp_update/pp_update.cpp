@@ -93,19 +93,31 @@ public:
             }
             if (!has_pp) {
                 std::cerr << "Cannot update PP, it is missing from line " << line_counter << std::endl;
+                errors++;
             } else {
                 if (work_line->second.vcf_line_num != line_counter) {
                     std::cerr << "Work line is different from line counter !" << std::endl;
                     std::cerr << "Something went wrong in the machinery" << std::endl;
+                    errors++;
                 } else {
                     for (auto todo : work_line->second.updated_data) {
                         auto idx = todo.first;
                         auto new_pp = todo.second.pp;
+                        if (pp_arr[idx] != new_pp) {
+                            updated_pp++;
+                        }
                         pp_arr[idx] = new_pp;
+                        // Also update GT
+                        if (bcf_fri.gt_arr[idx * PLOIDY_2] != todo.second.a0) {
+                            updated_gts++;
+                        }
+                        bcf_fri.gt_arr[idx * PLOIDY_2] = todo.second.a0;
+                        bcf_fri.gt_arr[idx * PLOIDY_2 + 1] = todo.second.a1;
                     }
                 }
                 // Update the record
                 bcf_update_format_float(hdr, line, "PP", pp_arr, pp_arr_size);
+                bcf_update_genotypes(hdr, line, bcf_fri.gt_arr, bcf_fri.size_gt_arr);
             }
         }
 
@@ -118,11 +130,21 @@ public:
         line_counter++;
     }
 
+    void print_stats() const {
+        std::cout << "Updated entries : " << updated_pp << std::endl;
+        std::cout << "Rephased GTs    : " << updated_gts << std::endl;
+        std::cout << "Errors          : " << errors << std::endl;
+    }
+
 protected:
     std::map<size_t, VCFLineWork>& work;
     size_t line_counter;
     float* pp_arr;
     int pp_arr_size;
+
+    size_t updated_pp = 0;
+    size_t updated_gts = 0;
+    size_t errors = 0;
 };
 
 int main(int argc, char**argv) {
@@ -162,6 +184,7 @@ int main(int argc, char**argv) {
 
     std::cout << "Done !" << std::endl;
     printElapsedTime(start_time, std::chrono::steady_clock::now());
+    pput.print_stats();
 
     return 0;
 }
