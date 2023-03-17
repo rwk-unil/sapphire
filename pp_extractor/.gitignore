@@ -3,4 +3,5 @@
 pp_show
 pp_extract
 analyze_bin
+bin_diff
 logs

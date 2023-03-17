@@ -20,7 +20,7 @@ LDLIBS+=-lhts -lzstd
 LDFLAGS+=-O$(OLEVEL) $(EXTRA_FLAGS) -L $(HTSLIB_PATH) -L $(ZSTD_PATH)
 
 # Project specific :
-TARGETS := pp_extract pp_show analyze_bin
+TARGETS := pp_extract pp_show analyze_bin bin_diff
 XOBJS := ${XSQUEEZEITPATH}/xcf.o ${XSQUEEZEITPATH}/bcf_traversal.o
 CPP_SOURCES := $(wildcard *.cpp)
 CPP_OBJS := $(CPP_SOURCES:.cpp=.o)
