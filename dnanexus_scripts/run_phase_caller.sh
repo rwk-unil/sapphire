@@ -38,6 +38,7 @@ CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # 0 threads means "auto" (number of cores)
 THREADS_ARG="-t 0"
 DESTINATION="phasing_rare"
+NEW_BIN_TAG="rephased"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -91,6 +92,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --new-bin-tag)
+    NEW_BIN_TAG="$2"
+    shift # past argument
+    shift # past value
+    ;;
     --threads)
     THREADS_ARG="-t $2"
     shift # past argument
@@ -141,7 +147,7 @@ else
     SAMPLE_LIST_FILENAME="${SAMPLE_FILENAME}"
 fi
 
-tag="phase_caller_v1.1"
+tag="phase_caller_v1.2"
 echo "dx run with tag : ${tag}"
 
 CRAM_PATH_ARG=""
@@ -150,11 +156,11 @@ then
     CRAM_PATH_ARG="--cram-path \"${CRAM_PATH}\""
 fi
 
-NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_rephased.bin"
-command="time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} ${THREADS_ARG} -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
+NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_${NEW_BIN_TAG}.bin"
+command="cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} ${THREADS_ARG} -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
 
 echo "Command : ${command}"
-echo "Output file destination : ${DESTINATION}"
+echo "Output file destination : ${DESTINATION}/phase_called/${CHROMOSOME}"
 echo "Instance type : ${INSTANCE}"
 
 while true; do
@@ -181,8 +187,8 @@ then
 fi
 
 # TODO DESTINATION
-dx run swiss-army-knife -icmd="ls -al; cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; ${command}" \
+dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
     ${COST_LIMIT_ARG} --name RephaseCaller \
     -iimage_file=docker/pp_extract_v1.1.tar.gz --tag "${tag}" \
-    --destination "${DESTINATION}/phase_called/${CHROMOSOME} \
+    --destination "${DESTINATION}/phase_called/${CHROMOSOME}" \
     --instance-type ${INSTANCE} -y
