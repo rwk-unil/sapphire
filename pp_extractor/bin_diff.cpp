@@ -25,12 +25,12 @@ public:
 
     std::string to_string() const {
         std::stringstream ss;
-        ss << vcf_line << "," << pp << "," << switched << "," << num_pir;
+        ss << pp << "," << switched << "," << num_pir;
         return ss.str();
     }
 
     static std::string csv_header() {
-        return std::string("VCF Line, PP, Switched, Num PIR");
+        return std::string("PP, Switched, Num PIR");
     }
 
     size_t vcf_line;
@@ -59,6 +59,8 @@ std::vector<size_t> ids_from_files(std::string& samples_fname, std::string& sub_
 
 int main(int argc, char**argv) {
     CLI::App app{"Binary file diff utility app"};
+    std::string vcf_fname = "-";
+    app.add_option("-f,--vcf-file", vcf_fname, "Variant file name (needed for extra info)");
     std::string bin1_fname = "-";
     std::string bin2_fname = "-";
     app.add_option("-a,--binary1", bin1_fname, "Original binary file name");
@@ -67,6 +69,10 @@ int main(int argc, char**argv) {
     app.add_option("-S,--samples", samples_fname, "Sample names (text file) as appear in full BCF");
     std::string sub_fname = "-";
     app.add_option("-l,--sample-list", sub_fname, "Unordered sub sample list (text file)");
+    bool extra = false;
+    app.add_flag("--extra-info", extra, "Output extra information");
+    bool more = false;
+    app.add_flag("--more", more, "Output more information");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -122,11 +128,30 @@ int main(int argc, char**argv) {
         }
     }
 
-    std::cout << Data::csv_header() << std::endl;
+    if (extra) {
+        if (vcf_fname.compare("-") == 0) {
+            std::cerr << "Requires variant VCF/BCF filename\n";
+            exit(app.exit(CLI::CallForHelp()));
+        }
 
-    for (auto& v : data) {
-        for (auto& e : v) {
-            std::cout << e.to_string() << std::endl;
+        VarInfoLoader vil(vcf_fname);
+        SampleInfoLoader sil_full(samples_fname);
+
+        std::cout << "Sample name, " <<  Data::csv_header() << ", is SNP" << (more ? ", VCF line" : "") <<std::endl;
+
+        for (size_t i = 0; i < ids.size(); ++i) {
+            for (auto& e : data[i]) {
+                std::cout << sil_full.sample_names[ids[i]] << "," << e.to_string() << "," << vil.vars[e.vcf_line].snp <<
+                (more ? std::string(",") + vil.vars[e.vcf_line].to_string() : "") << std::endl;
+            }
+        }
+    } else {
+        std::cout << Data::csv_header() << std::endl;
+
+        for (auto& v : data) {
+            for (auto& e : v) {
+                std::cout << e.to_string() << std::endl;
+            }
         }
     }
 
