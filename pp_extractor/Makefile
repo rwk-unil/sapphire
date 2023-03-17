@@ -15,13 +15,12 @@ OLEVEL=3
 endif
 CXXFLAGS=-O$(OLEVEL) -g -Wall -std=c++17 $(INCLUDE_DIRS) $(CXXEXTRAFLAGS) $(EXTRA_FLAGS)
 # Linker
-LD=g++
-LIBS=-lhts -lzstd
-LDFLAGS=-O$(OLEVEL) $(EXTRA_FLAGS) -L $(HTSLIB_PATH) -L $(ZSTD_PATH)
+CC=g++
+LDLIBS+=-lhts -lzstd
+LDFLAGS+=-O$(OLEVEL) $(EXTRA_FLAGS) -L $(HTSLIB_PATH) -L $(ZSTD_PATH)
 
 # Project specific :
-TARGET := pp_extract
-#OBJS := xcf.o bcf_traversal.o accessor.o c_api.o xsi_mixed_vcf.o $(OBJ)
+TARGETS := pp_extract pp_show analyze_bin
 XOBJS := ${XSQUEEZEITPATH}/xcf.o ${XSQUEEZEITPATH}/bcf_traversal.o
 CPP_SOURCES := $(wildcard *.cpp)
 CPP_OBJS := $(CPP_SOURCES:.cpp=.o)
@@ -41,7 +40,7 @@ else
 endif
 
 # Rules
-all : $(GEN_GIT_REV) $(DEPENDENCIES) $(TARGET)
+all : $(GEN_GIT_REV) $(DEPENDENCIES) $(TARGETS)
 
 datetime :
 	date | figlet 2> /dev/null
@@ -49,26 +48,13 @@ datetime :
 gen_git_rev :
 	echo "#define GIT_REVISION 0x$(GIT_REVISION)" > include/git_rev.h
 
-# Link the target
-$(TARGET) : $(XOBJS) pp_extractor.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
-
-pp_show : $(XOBJS) pp_show.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
-
-analyze_bin : $(XOBJS) analyze_bin.o
-	$(LD) $(LDFLAGS) $^ $(LIBS) -o $@
+# Link the targets (use implicit built-in rule)
+$(TARGETS) : % : $(XOBJS) %.o
 
 # Do not include the depency rules for "clean"
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPENDENCIES)
 endif
-
-# Compile
-%.o : %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-%.o : %.c
-	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Rule to generate the dependency files
 %.d : %.cpp
