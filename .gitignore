@@ -54,3 +54,5 @@
 *.txt
 
 **/git_rev.h
+
+.DS_Store
