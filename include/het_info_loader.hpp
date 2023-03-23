@@ -65,18 +65,18 @@ public:
         // Write endianness
         ofs.write(reinterpret_cast<const char*>(&endianness), sizeof(uint32_t));
         // Write number of samples
-        uint32_t num_samples = ids_to_extract.size();
-        ofs.write(reinterpret_cast<const char*>(&num_samples), sizeof(uint32_t));
+        uint32_t n = ids_to_extract.size();
+        ofs.write(reinterpret_cast<const char*>(&n), sizeof(uint32_t));
         // Write offset table
-        std::vector<uint64_t> offset_table(ids_to_extract.size(), 0xdeadc0dedeadc0de);
+        std::vector<uint64_t> new_offset_table(n, 0xdeadc0dedeadc0de);
         uint64_t dummy_offset = 0xdeadc0dedeadc0de;
         auto table_seek = ofs.tellp();
-        for (uint32_t i = 0; i < num_samples; ++i) {
+        for (uint32_t i = 0; i < n; ++i) {
             ofs.write(reinterpret_cast<const char*>(&dummy_offset), sizeof(uint64_t));
         }
 
-        for (uint32_t i = 0; i < num_samples; ++i) {
-            uint32_t *start = ((uint32_t*)(((char*)file_mmap_p) + offset_table[i]));
+        for (uint32_t i = 0; i < n; ++i) {
+            uint32_t *start = ((uint32_t*)(((char*)file_mmap_p) + offset_table[ids_to_extract[i]]));
             if (*start != 0xd00dc0de) {
                 std::cerr << "Something is wrong, mark not found for idx " << i << std::endl;
             } else {
@@ -85,15 +85,15 @@ public:
                 if (id != ids_to_extract[i]) {
                     std::cerr << "Trying to extract id " << ids_to_extract[i] << " but found id " << id << std::endl;
                 }
-                offset_table[i] = ofs.tellp();
+                new_offset_table[i] = ofs.tellp();
                 ofs.write(reinterpret_cast<const char*>(start), size * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 /* Mark, id, isze */);
             }
         }
 
         // Rewrite the offset table
         ofs.seekp(table_seek);
-        for (const auto& offset : offset_table) {
-            ofs.write(reinterpret_cast<const char*>(offset), sizeof(decltype(offset)));
+        for (const auto& offset : new_offset_table) {
+            ofs.write(reinterpret_cast<const char*>(&offset), sizeof(decltype(offset)));
         }
 
         ofs.close();
