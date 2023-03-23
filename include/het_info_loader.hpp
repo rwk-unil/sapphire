@@ -54,7 +54,7 @@ public:
         }
     }
 
-    void write_sub_file(const std::vector<uint32_t> ids_to_extract, const std::string& filename) {
+    void write_sub_file(const std::vector<uint32_t> ids_to_extract, const std::string& filename) const {
         std::fstream ofs(filename, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
         if (!ofs.is_open()) {
             std::cerr << "Cannot open file " << filename << std::endl;
