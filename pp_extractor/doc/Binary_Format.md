@@ -40,7 +40,7 @@ This is the data type for the "Per sample data block" in the binary file format 
 
 | **Field**         | **Type**  | **Value**                                 |
 |-------------------|-----------|-------------------------------------------|
-| Sanity Check Code | uint32_t  | 0xd00dc0de                                |
+| Sanity Check Code | uint32_t  | 0xd00dc0de (aka "mark")                   |
 | ID                | uint32_t  | nth sample in original BCF file (0 based) |
 | # Het info data   | uint32_t  | Number of het info data for sample        |
 | Het info          | HetInfo[] | Heterozygous variant info                 |
