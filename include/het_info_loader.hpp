@@ -54,6 +54,51 @@ public:
         }
     }
 
+    void write_sub_file(const std::vector<uint32_t> ids_to_extract, const std::string& filename) {
+        std::fstream ofs(filename, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
+        if (!ofs.is_open()) {
+            std::cerr << "Cannot open file " << filename << std::endl;
+            throw "Cannot open file";
+        }
+
+        const uint32_t endianness = 0xaabbccdd;
+        // Write endianness
+        ofs.write(reinterpret_cast<const char*>(&endianness), sizeof(uint32_t));
+        // Write number of samples
+        uint32_t num_samples = ids_to_extract.size();
+        ofs.write(reinterpret_cast<const char*>(&num_samples), sizeof(uint32_t));
+        // Write offset table
+        std::vector<uint64_t> offset_table(ids_to_extract.size(), 0xdeadc0dedeadc0de);
+        uint64_t dummy_offset = 0xdeadc0dedeadc0de;
+        auto table_seek = ofs.tellp();
+        for (uint32_t i = 0; i < num_samples; ++i) {
+            ofs.write(reinterpret_cast<const char*>(&dummy_offset), sizeof(uint64_t));
+        }
+
+        for (uint32_t i = 0; i < num_samples; ++i) {
+            uint32_t *start = ((uint32_t*)(((char*)file_mmap_p) + offset_table[i]));
+            if (*start != 0xd00dc0de) {
+                std::cerr << "Something is wrong, mark not found for idx " << i << std::endl;
+            } else {
+                uint32_t id = *(start+1);
+                uint32_t size = *(start+2);
+                if (id != ids_to_extract[i]) {
+                    std::cerr << "Trying to extract id " << ids_to_extract[i] << " but found id " << id << std::endl;
+                }
+                offset_table[i] = ofs.tellp();
+                ofs.write(reinterpret_cast<const char*>(start), size * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 /* Mark, id, isze */);
+            }
+        }
+
+        // Rewrite the offset table
+        ofs.seekp(table_seek);
+        for (const auto& offset : offset_table) {
+            ofs.write(reinterpret_cast<const char*>(offset), sizeof(decltype(offset)));
+        }
+
+        ofs.close();
+    }
+
     /// @note inspired by https://www.internalpointers.com/post/writing-custom-iterators-modern-cpp
     template <typename T, size_t SKIP = 4>
     class Iterator
