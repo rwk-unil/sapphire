@@ -17,6 +17,24 @@ public:
         }
     }
 
+    static std::vector<size_t> ids_from_files(std::string& samples_fname, std::string& sub_fname) {
+        SampleInfoLoader sil_full(samples_fname);
+        SampleInfoLoader sil_sub(sub_fname);
+
+        std::vector<size_t> ids;
+
+        for (auto& s : sil_sub.sample_names) {
+            auto it = std::find(sil_full.sample_names.begin(), sil_full.sample_names.end(), s);
+            if (it == sil_full.sample_names.end()) {
+                std::cerr << "Sample with name " << s << " not found in " << samples_fname << std::endl;
+            } else {
+                ids.push_back(it-sil_full.sample_names.begin());
+            }
+        }
+
+        return ids;
+    }
+
     std::vector<std::string> sample_names;
 };
 

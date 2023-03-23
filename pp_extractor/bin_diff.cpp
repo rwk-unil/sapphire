@@ -39,24 +39,6 @@ public:
     size_t num_pir;
 };
 
-std::vector<size_t> ids_from_files(std::string& samples_fname, std::string& sub_fname) {
-    SampleInfoLoader sil_full(samples_fname);
-    SampleInfoLoader sil_sub(sub_fname);
-
-    std::vector<size_t> ids;
-
-    for (auto& s : sil_sub.sample_names) {
-        auto it = std::find(sil_full.sample_names.begin(), sil_full.sample_names.end(), s);
-        if (it == sil_full.sample_names.end()) {
-            std::cerr << "Sample with name " << s << " not found in " << samples_fname << std::endl;
-        } else {
-            ids.push_back(it-sil_full.sample_names.begin());
-        }
-    }
-
-    return ids;
-}
-
 int main(int argc, char**argv) {
     CLI::App app{"Binary file diff utility app"};
     std::string vcf_fname = "-";
@@ -96,7 +78,7 @@ int main(int argc, char**argv) {
         ids.resize(himm_original.num_samples);
         std::iota(ids.begin(), ids.end(), 0);
     } else {
-        ids = ids_from_files(samples_fname, sub_fname);
+        ids = SampleInfoLoader::ids_from_files(samples_fname, sub_fname);
     }
 
     /* For all samples */
