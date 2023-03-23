@@ -17,9 +17,9 @@
 #include "synced_bcf_reader.h"
 #include "vcf.h"
 
-void write_to_file(uint32_t i, uint32_t size, const std::string& bin_ofname, const HetInfoMemoryMap& himm) {
+void write_to_file(uint32_t i, uint32_t start_id, uint32_t size, const std::string& bin_ofname, const HetInfoMemoryMap& himm) {
     std::vector<uint32_t> ids_to_extract(size);
-    std::iota(ids_to_extract.begin(), ids_to_extract.end(), i * size);
+    std::iota(ids_to_extract.begin(), ids_to_extract.end(), start_id);
     auto nth_bin_ofname = bin_ofname + "_" + std::to_string(i);
     himm.write_sub_file(ids_to_extract, nth_bin_ofname);
 }
@@ -71,33 +71,34 @@ int main(int argc, char**argv) {
 
     if (split_size) {
         HetInfoMemoryMap himm(bin_fname);
+
+        if (!himm.integrity_check_pass()) {
+            std::cout << "Input file " << bin_fname << " seems to have some issues" << std::endl;
+        }
+
+        if (more) {
+            himm.show_info();
+        }
+
         auto full_chunks = himm.num_samples / split_size;
         auto last_chunk_size = himm.num_samples % split_size;
 
         if (verbose) {
-            std::cout << "Splitting into " << (last_chunk_size ? full_chunks : full_chunks+1) << " chunks of size " << split_size << std::endl;
+            std::cout << "Num samples : " << himm.num_samples << std::endl;
+            std::cout << "Splitting into " << full_chunks << " chunks of size " << split_size << std::endl;
+            if (last_chunk_size) {
+                std::cout << "and an extra chunk of size " << last_chunk_size << std::endl;
+            }
         }
 
         for (uint32_t i = 0; i < full_chunks; ++i) {
-            /*
-            std::vector<uint32_t> ids_to_extract(split_size);
-            std::iota(ids_to_extract.begin(), ids_to_extract.end(), i * split_size);
-            auto nth_bin_ofname = bin_ofname + "_" + std::to_string(i);
-            himm.write_sub_file(ids_to_extract, nth_bin_ofname);
-            */
-            write_to_file(i, split_size, bin_ofname, himm);
+            write_to_file(i, i * split_size, split_size, bin_ofname, himm);
             if (more) {
                 std::cout << "Splitted chunk " << i << std::endl;
             }
         }
         if (last_chunk_size) {
-            /*
-            std::vector<uint32_t> ids_to_extract(last_chunk_size);
-            std::iota(ids_to_extract.begin(), ids_to_extract.end(), full_chunks * split_size);
-            auto nth_bin_ofname = bin_ofname + "_" + std::to_string(full_chunks);
-            himm.write_sub_file(ids_to_extract, nth_bin_ofname);
-            */
-           write_to_file(full_chunks, last_chunk_size, bin_ofname, himm);
+           write_to_file(full_chunks, full_chunks * split_size, last_chunk_size, bin_ofname, himm);
         }
     } else {
         SampleInfoLoader all_sil(samples_fname);
