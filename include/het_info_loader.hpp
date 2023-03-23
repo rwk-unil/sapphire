@@ -69,6 +69,11 @@ public:
         return *(start+2) * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 * sizeof(uint32_t); /* Mark, id, size */
     }
 
+    uint32_t get_orig_idx_of_nth(uint32_t n) const {
+        const auto start = get_ptr_on_nth(n);
+        return *(start+1);
+    }
+
     bool integrity_check_pass() const {
         size_t computed_size = (num_samples + 1) * sizeof(uint64_t);
 
