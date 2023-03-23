@@ -110,15 +110,16 @@ public:
     class HetInfoPtrContainer {
     public:
         using Iterator_type = Iterator<uint32_t, 4>;
-        HetInfoPtrContainer (HetInfoMemoryMap& parent, size_t sample) : parent(parent), sample(sample) {
+        HetInfoPtrContainer (HetInfoMemoryMap& parent, size_t sample) : parent(parent), sample(sample),
+            sample_id(*(((uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample])) + 1)),
+            size(*(((uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample])) + 2)),
+            start_pos(((uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample])) + 3)
+        {
             uint32_t mark = *(uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample]);
             if (mark != 0xd00dc0de) {
                 std::cerr << "Wrong mark on sample index" << sample << std::endl;
                 throw "Wrong mark";
             }
-            sample_id = *(((uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample])) + 1);
-            size = *(((uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample])) + 2);
-            start_pos = ((uint32_t*)(((char*)parent.file_mmap_p) + parent.offset_table[sample])) + 3;
         }
 
         void fill_het_info(std::vector<HetInfo>& v) {
@@ -130,10 +131,11 @@ public:
 
     protected:
         HetInfoMemoryMap& parent;
-        uint32_t *start_pos;
-        size_t sample;
-        uint32_t sample_id;
-        size_t size;
+    public:
+        const size_t sample;
+        const uint32_t sample_id;
+        const size_t size;
+        uint32_t* const start_pos;
     };
 
     void fill_het_info(std::vector<HetInfo>& v, size_t sample) {
