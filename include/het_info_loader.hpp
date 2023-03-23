@@ -54,6 +54,54 @@ public:
         }
     }
 
+    uint32_t *get_ptr_on_nth(uint32_t n) const {
+        uint32_t *start = ((uint32_t*)(((char*)file_mmap_p) + offset_table[n]));
+        if (*start != 0xd00dc0de) {
+            std::cerr << "Something is wrong, mark not found for idx " << n << std::endl;
+            return nullptr;
+        } else {
+            return start;
+        }
+    }
+
+    uint32_t get_size_of_nth(uint32_t n) const {
+        const auto start = get_ptr_on_nth(n);
+        return *(start+2) * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 * sizeof(uint32_t); /* Mark, id, size */
+    }
+
+    bool integrity_check_pass() const {
+        size_t computed_size = (num_samples + 1) * sizeof(uint64_t);
+
+        bool pass = true;
+        for (size_t i = 0; i < num_samples-1; ++i) {
+            computed_size += get_size_of_nth(i);
+            auto p1 = get_ptr_on_nth(i);
+            auto p2 = get_ptr_on_nth(i+1);
+            if (*p1 != 0xd00dc0de) pass = false;
+            if (*p2 != 0xd00dc0de) pass = false;
+            if (((uint32_t*)((uint8_t*)p1 + get_size_of_nth(i))) != p2) {
+                std::cerr << "Offset " << i << "and next one don't match up !" << std::endl;
+                pass = false;
+            }
+        }
+        computed_size += get_size_of_nth(num_samples-1);
+        if (computed_size != file_size) {
+            std::cerr << "File has different size than it should be" << std::endl;
+            pass = false;
+        }
+        return pass;
+    }
+
+    void show_info() const {
+        std::cout << "File size : " << file_size << std::endl;
+        std::cout << "Number of samples : " << num_samples << std::endl;
+        for (size_t i = 0; i < num_samples; ++i) {
+            std::cout << "Size of sample " << i << " : " << get_size_of_nth(i) << std::endl;
+        }
+        bool pass = integrity_check_pass();
+        std::cout << "File passes integrity check : " << (pass ? "YES" : "NO") << std::endl;
+    }
+
     void write_sub_file(const std::vector<uint32_t> ids_to_extract, const std::string& filename) const {
         std::fstream ofs(filename, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
         if (!ofs.is_open()) {
@@ -86,7 +134,7 @@ public:
                     std::cerr << "Trying to extract id " << ids_to_extract[i] << " but found id " << id << std::endl;
                 }
                 new_offset_table[i] = ofs.tellp();
-                ofs.write(reinterpret_cast<const char*>(start), size * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 /* Mark, id, isze */);
+                ofs.write(reinterpret_cast<const char*>(start), size * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 * sizeof(uint32_t) /* Mark, id, size */);
             }
         }
 
@@ -284,6 +332,71 @@ public:
     void *file_mmap_p;
     uint32_t num_samples;
     uint64_t *offset_table;
+};
+
+class HetInfoMemoryMapMerger {
+public:
+
+    static uint32_t get_num_samples_from_filenames(const std::vector<std::string>& filenames) {
+        uint32_t total = 0;
+        for (const auto& f : filenames) {
+            HetInfoMemoryMap himm(f);
+            total += himm.num_samples;
+        }
+        return total;
+    }
+
+    HetInfoMemoryMapMerger(std::string ofname, uint32_t num_samples) :
+        current_sample(0),
+        offset_table(num_samples, 0xdeadc0dedeadc0de),
+        ofs(ofname, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc)
+    {
+        if (!ofs.is_open()) {
+            std::cerr << "Cannot open file " << ofname << std::endl;
+        }
+
+        const uint32_t endianness = 0xaabbccdd;
+        // Write endianness
+        ofs.write(reinterpret_cast<const char*>(&endianness), sizeof(uint32_t));
+        // Write number of samples
+        ofs.write(reinterpret_cast<const char*>(&num_samples), sizeof(uint32_t));
+        // Write offset table
+        table_seek = ofs.tellp();
+        for (const auto& offset : offset_table) {
+            ofs.write(reinterpret_cast<const char*>(&offset), sizeof(decltype(offset)));
+        }
+    }
+
+    void merge(const std::string& filename) {
+        HetInfoMemoryMap himm(filename);
+        if (!himm.integrity_check_pass()) {
+            std::cerr << "File " << filename << " doesn't pass integrity checks" << std::endl;
+        }
+        for (size_t i = 0; i < himm.num_samples; ++i) {
+            if (current_sample > offset_table.size()) {
+                std::cerr << "Number of samples is not enough for merge" << std::endl;
+                return;
+            }
+            offset_table[current_sample] = ofs.tellp();
+            ofs.write(reinterpret_cast<const char*>(himm.get_ptr_on_nth(i)), himm.get_size_of_nth(i));
+            current_sample++;
+        }
+    }
+
+    virtual ~HetInfoMemoryMapMerger() {
+        /* Update the offset table before closing the file */
+        ofs.seekp(table_seek);
+        for (const auto& offset : offset_table) {
+            ofs.write(reinterpret_cast<const char*>(&offset), sizeof(decltype(offset)));
+        }
+        ofs.close();
+    }
+
+protected:
+    std::streampos table_seek;
+    uint32_t current_sample;
+    std::vector<uint64_t> offset_table;
+    std::fstream ofs;
 };
 
 #endif /* __HET_INFO_LOADER_HPP__ */
