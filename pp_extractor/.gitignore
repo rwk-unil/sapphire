@@ -5,6 +5,7 @@ pp_extract
 analyze_bin
 bin_diff
 bin_splitter
+bin_merger
 logs
 
 *tmp
