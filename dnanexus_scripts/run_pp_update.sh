@@ -121,7 +121,7 @@ fi
 command="/usr/src/pp/Docker/update_pp.sh; time pp_update -f ${VCF_FILENAME} -o ${OFNAME} -b ${BIN_FILENAME} ${VERBOSE}"
 
 echo "Command : ${command}"
-echo "Output file destination : ${DESTINATION}"
+echo "Output file destination : ${DESTINATION}/rephased/${CHROMOSOME}"
 echo "Instance type : ${INSTANCE}"
 
 while true; do
