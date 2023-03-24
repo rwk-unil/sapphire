@@ -71,7 +71,7 @@ echo "BIN FILENAME    = ${BIN_FILENAME}"
 
 if [ -z "${OFNAME}" ]
 then
-    OFNAME="${BIN_FILENAME}"
+    OFNAME=$(basename "${BIN_FILENAME}")
 fi
 
 tag=bin_splitter_v1.2
@@ -82,7 +82,7 @@ echo "dx run with tag : ${tag}"
 command="/usr/src/pp/Docker/update_pp.sh; time bin_splitter -b ${BIN_FILENAME} -o ${OFNAME} -n ${SPLIT_SIZE} ${VERBOSE}"
 
 echo "Command : ${command}"
-echo "Output file destination : ${DESTINATION}/het_extraction/${CHROMOSOME}"
+echo "Output file destination : ${DESTINATION}/het_extraction/${CHROMOSOME}/split"
 echo "Optput file prefix : ${OFNAME}"
 echo "Instance type : ${INSTANCE}"
 
@@ -91,5 +91,5 @@ ask_permission_to_launch
 dx run swiss-army-knife -icmd="${command}" \
     ${COST_LIMIT_ARG} --name BinSplitter \
     -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
-    --destination "${DESTINATION}/het_extraction/${CHROMOSOME}" \
+    --destination "${DESTINATION}/het_extraction/${CHROMOSOME}/split" \
     --instance-type "${INSTANCE}" -y
