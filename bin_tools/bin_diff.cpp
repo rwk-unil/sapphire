@@ -9,7 +9,6 @@
 #include "bcf_traversal.hpp"
 #include "CLI11.hpp"
 #include "hts.h"
-#include "fifo.hpp"
 #include "het_info.hpp"
 #include "het_info_loader.hpp"
 #include "var_info.hpp"

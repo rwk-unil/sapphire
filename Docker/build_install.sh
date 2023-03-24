@@ -18,10 +18,10 @@ make
 
 chmod +x pp_extractor/pp_extract
 cp pp_extractor/pp_extract /usr/local/bin/
-chmod +x pp_extractor/bin_splitter
-cp pp_extractor/bin_splitter /usr/local/bin/
-chmod +x pp_extractor/bin_merger
-cp pp_extractor/bin_merger /usr/local/bin/
+chmod +x bin_tools/bin_splitter
+cp bin_tools/bin_splitter /usr/local/bin/
+chmod +x bin_tools/bin_merger
+cp bin_tools/bin_merger /usr/local/bin/
 chmod +x phase_caller/phase_caller
 cp phase_caller/phase_caller /usr/local/bin
 chmod +x pp_update/pp_update

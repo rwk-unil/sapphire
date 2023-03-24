@@ -20,7 +20,7 @@ LDLIBS+=-lhts -lzstd
 LDFLAGS+=-O$(OLEVEL) $(EXTRA_FLAGS) -L $(HTSLIB_PATH) -L $(ZSTD_PATH)
 
 # Project specific :
-TARGETS := pp_extract pp_show
+TARGETS := analyze_bin bin_diff bin_splitter bin_merger
 XOBJS := ${XSQUEEZEITPATH}/xcf.o ${XSQUEEZEITPATH}/bcf_traversal.o
 CPP_SOURCES := $(wildcard *.cpp)
 CPP_OBJS := $(CPP_SOURCES:.cpp=.o)
@@ -64,7 +64,7 @@ endif
 
 # Remove artifacts
 clean :
-	rm -f $(TARGETS) $(DEPENDENCIES) $(CPP_OBJS) pp_show
+	rm -f $(TARGETS) $(DEPENDENCIES) $(CPP_OBJS)
 
 # Rules that don't generate artifacts
 .PHONY : all clean datetime gen_git_rev
