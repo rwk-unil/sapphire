@@ -48,6 +48,8 @@
 *.bcf
 *.vcf
 *.vcf.gz
+*.old
+*.new
 
 # Log files
 *.log
@@ -57,4 +59,4 @@
 
 .DS_Store
 
-.csv
+*.csv
