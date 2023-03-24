@@ -145,7 +145,7 @@ then
 fi
 
 NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_${NEW_BIN_TAG}.bin"
-command="cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} ${SAMPLE_FILENAME_ARG} -I ${PROJECT_ID} ${THREADS_ARG} ${SAMPLE_LIST_FILENAME_ARG} ${VERBOSE} ${CRAM_PATH_ARG}"
+command="/usr/src/pp/Docker/update_pp.sh; cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} ${SAMPLE_FILENAME_ARG} -I ${PROJECT_ID} ${THREADS_ARG} ${SAMPLE_LIST_FILENAME_ARG} ${VERBOSE} ${CRAM_PATH_ARG}"
 
 echo "Command : ${command}"
 echo "Output file destination : ${DESTINATION}/phase_called/${CHROMOSOME}"
@@ -153,8 +153,8 @@ echo "Instance type : ${INSTANCE}"
 
 ask_permission_to_launch
 
-dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
+dx run swiss-army-knife -icmd="${command}" \
     ${COST_LIMIT_ARG} --name RephaseCaller \
-    -iimage_file=docker/pp_extract_v1.1.tar.gz --tag "${tag}" \
+    -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
     --destination "${DESTINATION}/phase_called/${CHROMOSOME}" \
     --instance-type ${INSTANCE} -y
