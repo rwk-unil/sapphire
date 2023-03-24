@@ -74,7 +74,7 @@ int main(int argc, char**argv) {
 
     std::vector<size_t> ids;
 
-    if (samples_fname.compare("-") == 0) {
+    if (sub_fname.compare("-") == 0) {
         ids.resize(himm_original.num_samples);
         std::iota(ids.begin(), ids.end(), 0);
     } else {
