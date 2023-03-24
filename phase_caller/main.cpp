@@ -568,12 +568,12 @@ public:
     RephaserStatistics stats;
 };
 
-void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t sample_idx) {
+void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, const std::string& cram_file, size_t himm_sample_idx) {
     std::vector<std::unique_ptr<Hetp> > hets;
     std::vector<std::unique_ptr<HetTrio> > het_trios;
 
     // Get hets from memory map
-    HetInfoPtrContainerExt hipce(himm, sample_idx, vi);
+    HetInfoPtrContainerExt hipce(himm, himm_sample_idx, vi);
     // Hets created from the memory map will directy edit the file on rephase
     hipce.fill_het_info_ext(hets);
     het_trio_list_from_hets(het_trios, hets);
@@ -599,6 +599,16 @@ public:
     {
     }
 
+    PhaseCaller(std::string& vcf_filename, std::string& bin_filename, std::string& sample_filename, size_t n_threads) :
+        threads(n_threads, NULL),
+        active_threads(n_threads, false),
+        samples_to_do("-"),
+        sil(sample_filename),
+        vil(vcf_filename),
+        himm(bin_filename, PROT_READ | PROT_WRITE)
+    {
+    }
+
     ~PhaseCaller() {
         std::unique_lock<std::mutex> lk(mutex);
         // Final cleanup
@@ -613,7 +623,7 @@ public:
 
     void rephase_orchestrator(size_t start_id, size_t stop_id) {
         for (size_t i = start_id; i < stop_id; ++i) {
-            thread_fun(i, 0);
+            thread_fun(0, i, i);
         }
     }
 
@@ -632,7 +642,10 @@ private:
         return cram_file;
     }
 
-    std::function<void(size_t, size_t)> thread_fun = [this](size_t thread_idx, size_t sample_idx){
+    /*****************/
+    /* MAIN FUNCTION */
+    /*****************/
+    std::function<void(size_t, size_t, size_t)> thread_fun = [this](size_t thread_idx, size_t sample_idx, size_t himm_idx){
         // Get sample name
         std::string sample_name = sil.sample_names[sample_idx];
         // Don't try withdrawn samples
@@ -648,7 +661,7 @@ private:
                 std::lock_guard lk(mutex);
                 std::cerr << "Cannot find file " << cram_file << " skipping ..." << std::endl;
             } else {
-                rephase_sample(vil.vars, himm, cram_file, sample_idx);
+                rephase_sample(vil.vars, himm, cram_file, himm_idx);
             }
         }
         {
@@ -676,7 +689,7 @@ public:
 
             std::cout << "Launching thread " << ti << std::endl;
             active_threads[ti] = true;
-            threads[ti] = new std::thread(thread_fun, ti, i);
+            threads[ti] = new std::thread(thread_fun, ti, i, i);
         }
 
         // Final cleanup
@@ -690,6 +703,46 @@ public:
     }
 
     void rephase_orchestrator_multi_thread() {
+        if (samples_to_do.sample_names.size()) {
+            rephase_orchestrator_multi_thread_with_list();
+        } else {
+            rephase_orchestrator_multi_thread_without_list();
+        }
+    }
+
+    /* This one is a special case for subsampled binary files */
+    void rephase_orchestrator_multi_thread_without_list() {
+        for (uint32_t himm_idx = 0; himm_idx < himm.num_samples; ++himm_idx) {
+            // Because the himm is subsampled we need the original index wrt sample list
+            uint32_t orig_idx = himm.get_orig_idx_of_nth(himm_idx);
+            std::unique_lock<std::mutex> lk(mutex);
+            size_t ti = find_free(active_threads);
+            cv.wait(lk, [&]{ti = find_free(active_threads); return ti < active_threads.size(); });
+
+            if (threads[ti]) {
+                // If a thread was launched but finished
+                threads[ti]->join();
+                std::cout << "Joined thread " << ti << std::endl;
+                delete threads[ti];
+                threads[ti] = NULL;
+            }
+
+            std::cout << "Launching thread " << ti << std::endl;
+            active_threads[ti] = true;
+            threads[ti] = new std::thread(thread_fun, ti, orig_idx, himm_idx);
+        }
+
+        // Final cleanup
+        for (size_t i = 0; i < threads.size(); ++i) {
+            if (threads[i]) {
+                threads[i]->join();
+                delete threads[i];
+                threads[i] = NULL;
+            }
+        }
+    }
+
+    void rephase_orchestrator_multi_thread_with_list() {
         for (size_t i = 0; i < sil.sample_names.size(); ++i) {
             if (std::find(samples_to_do.sample_names.begin(), samples_to_do.sample_names.end(),
                 sil.sample_names[i]) != samples_to_do.sample_names.end()) {
@@ -707,7 +760,7 @@ public:
 
                 std::cout << "Launching thread " << ti << std::endl;
                 active_threads[ti] = true;
-                threads[ti] = new std::thread(thread_fun, ti, i);
+                threads[ti] = new std::thread(thread_fun, ti, i, i);
             }
         }
 
