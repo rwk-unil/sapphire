@@ -37,7 +37,7 @@ int main(int argc, char**argv) {
     uint32_t split_size = 0;
     app.add_option("-n,--split-size", split_size, "Split in subfiles of this size, if 0 (default) use sub sample list");
     bool verbose = false;
-    app.add_flag("--verbose", verbose, "Be more verbose");
+    app.add_flag("-v,--verbose", verbose, "Be more verbose");
     bool more = false;
     app.add_flag("--more", more, "Be even more verbose");
     verbose = verbose || more;

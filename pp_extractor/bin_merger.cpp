@@ -24,7 +24,7 @@ int main(int argc, char**argv) {
     app.add_option("-b,--input", bin_fname, "Binary file prefix");
     app.add_option("-o,--output", bin_ofname, "Merged binary file name (output)");
     bool verbose = false;
-    app.add_flag("--verbose", verbose, "Be more verbose");
+    app.add_flag("-v,--verbose", verbose, "Be more verbose");
     bool more = false;
     app.add_flag("--more", more, "Be even more verbose");
     verbose = verbose || more;
