@@ -73,7 +73,7 @@ tag=pp_extract_v1
 echo "dx run with tag : ${tag}"
 command="time run_pp_extract -f ${FILENAME}"
 
-echo "Output file destination : ${DESTINATION}"
+echo "Output file destination : ${DESTINATION}/et_extraction/${CHROMOSOME}"
 echo "Command : ${command}"
 
 while true; do
