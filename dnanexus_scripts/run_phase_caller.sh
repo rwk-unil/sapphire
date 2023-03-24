@@ -9,21 +9,13 @@ then
     }
 fi
 
-if ! command -v jq &> /dev/null
-then
-    echo "Please install jq"
-    echo "E.g., sudo apt install jq"
-    exit 1
-fi
-
-dx_id_to_path () {
-    FFNAME=$(dx describe --json "$1" | jq -r '.name')
-    FFPATH=$(dx describe --json "$1" | jq -r '.folder')
-    echo "/mnt/project/${FFPATH}/${FFNAME}"
-}
-
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
+
+INSTANCE="mem2_ssd1_v2_x4"
+
+# Source common variables and functions
+source "${SCRIPTPATH}/common.sh"
 
 VCF_VAR_ID=""
 BIN_FILE_ID=""
@@ -31,9 +23,6 @@ SAMPLE_FILE_ID=""
 SAMPLE_LIST_ID=""
 PROJECT_ID=23193
 INPUT_ID=""
-VERBOSE=""
-COST_LIMIT=""
-INSTANCE="mem2_ssd1_v2_x4"
 CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # 0 threads means "auto" (number of cores)
 THREADS_ARG="-t 0"
@@ -48,10 +37,6 @@ key="$1"
 # Command line argument parsing from :
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 case $key in
-    --verbose)
-    VERBOSE="-v"
-    shift # no value attached
-    ;;
     --vcf-id)
     VCF_VAR_ID="$2"
     shift # past argument
@@ -74,16 +59,6 @@ case $key in
     ;;
     --project-id)
     PROJECT_ID="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --cost-limit)
-    COST_LIMIT="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --instance)
-    INSTANCE="$2"
     shift # past argument
     shift # past value
     ;;
@@ -163,30 +138,8 @@ echo "Command : ${command}"
 echo "Output file destination : ${DESTINATION}/phase_called/${CHROMOSOME}"
 echo "Instance type : ${INSTANCE}"
 
-while true; do
-    read -p "Do you want to launch on DNANexus? [y/n]" yn
-    case $yn in
-        y)
-        echo "Launching !";
-        break
-        ;;
-        n)
-        echo "exiting...";
-        exit
-        ;;
-        *)
-        echo "unexpected input"
-        ;;
-    esac
-done
+ask_permission_to_launch
 
-COST_LIMIT_ARG=""
-if ! [ -z "${COST_LIMIT}" ]
-then
-    COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
-fi
-
-# TODO DESTINATION
 dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
     ${COST_LIMIT_ARG} --name RephaseCaller \
     -iimage_file=docker/pp_extract_v1.1.tar.gz --tag "${tag}" \

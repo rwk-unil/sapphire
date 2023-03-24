@@ -7,28 +7,17 @@ then
     }
 fi
 
-if ! command -v jq &> /dev/null
-then
-    echo "Please install jq"
-    echo "E.g., sudo apt install jq"
-    exit 1
-fi
-
-dx_id_to_path () {
-    FFNAME=$(dx describe --json "$1" | jq -r '.name')
-    FFPATH=$(dx describe --json "$1" | jq -r '.folder')
-    echo "/mnt/project/${FFPATH}/${FFNAME}"
-}
-
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
+
+INSTANCE="mem2_ssd1_v2_x2"
+
+# Source common variables and functions
+source "${SCRIPTPATH}/common.sh"
 
 BIN_ID=""
 OFNAME=""
 SPLIT_SIZE="1000"
-VERBOSE=""
-COST_LIMIT=""
-INSTANCE="mem2_ssd1_v2_x2"
 DESTINATION="phasing_rare"
 
 POSITIONAL=()
@@ -53,20 +42,6 @@ case $key in
     SPLIT_SIZE="$2"
     shift # past argument
     shift # past value
-    ;;
-    --cost-limit)
-    COST_LIMIT="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --instance)
-    INSTANCE="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --verbose)
-    VERBOSE="-v"
-    shift # no value attached
     ;;
     -d|--destination)
     DESTINATION="$2"
@@ -111,31 +86,10 @@ echo "Output file destination : ${DESTINATION}/het_extraction/${CHROMOSOME}"
 echo "Optput file prefix : ${OFNAME}"
 echo "Instance type : ${INSTANCE}"
 
-while true; do
-    read -p "Do you want to launch on DNANexus? [y/n]" yn
-    case $yn in
-        y)
-        echo "Launching !";
-        break
-        ;;
-        n)
-        echo "exiting...";
-        exit
-        ;;
-        *)
-        echo "unexpected input"
-        ;;
-    esac
-done
-
-COST_LIMIT_ARG=""
-if ! [ -z "${COST_LIMIT}" ]
-then
-    COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
-fi
+ask_permission_to_launch
 
 dx run swiss-army-knife -icmd="${command}" \
-    ${COST_LIMIT_ARG} --name BinSplitter\
+    ${COST_LIMIT_ARG} --name BinSplitter \
     -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
     --destination "${DESTINATION}/het_extraction/${CHROMOSOME}" \
     --instance-type "${INSTANCE}" -y

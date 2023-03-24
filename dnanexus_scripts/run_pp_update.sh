@@ -7,28 +7,19 @@ then
     }
 fi
 
-if ! command -v jq &> /dev/null
-then
-    echo "Please install jq"
-    echo "E.g., sudo apt install jq"
-    exit 1
-fi
-
-dx_id_to_path () {
-    FFNAME=$(dx describe --json "$1" | jq -r '.name')
-    FFPATH=$(dx describe --json "$1" | jq -r '.folder')
-    echo "/mnt/project/${FFPATH}/${FFNAME}"
-}
-
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
+
+VERBOSE=""
+COST_LIMIT=""
+INSTANCE="mem2_ssd1_v2_x2"
+
+# Source common variables and functions
+source "${SCRIPTPATH}/common.sh"
 
 VCF_ID=""
 BIN_ID=""
 OFNAME=""
-VERBOSE=""
-COST_LIMIT=""
-INSTANCE="mem2_ssd1_v2_x2"
 DESTINATION="phasing_rare"
 
 POSITIONAL=()
@@ -53,20 +44,6 @@ case $key in
     OFNAME="$2"
     shift # past argument
     shift # past value
-    ;;
-    --cost-limit)
-    COST_LIMIT="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --instance)
-    INSTANCE="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    --verbose)
-    VERBOSE="-v"
-    shift # no value attached
     ;;
     -d|--destination)
     DESTINATION="$2"
@@ -124,28 +101,7 @@ echo "Command : ${command}"
 echo "Output file destination : ${DESTINATION}/rephased/${CHROMOSOME}"
 echo "Instance type : ${INSTANCE}"
 
-while true; do
-    read -p "Do you want to launch on DNANexus? [y/n]" yn
-    case $yn in
-        y)
-        echo "Launching !";
-        break
-        ;;
-        n)
-        echo "exiting...";
-        exit
-        ;;
-        *)
-        echo "unexpected input"
-        ;;
-    esac
-done
-
-COST_LIMIT_ARG=""
-if ! [ -z "${COST_LIMIT}" ]
-then
-    COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
-fi
+ask_permission_to_launch
 
 dx run swiss-army-knife -icmd="${command}; bcftools index ${OFNAME}" \
     ${COST_LIMIT_ARG} --name UpdatePhase \

@@ -7,15 +7,13 @@ then
     }
 fi
 
-if ! command -v jq &> /dev/null
-then
-    echo "Please install jq"
-    echo "E.g., sudo apt install jq"
-    exit 1
-fi
-
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
+
+INSTANCE="mem2_ssd1_v2_x2"
+
+# Source common variables and functions
+source "${SCRIPTPATH}/common.sh"
 
 FILENAME=""
 INPUT_ID=""
@@ -76,25 +74,11 @@ command="time run_pp_extract -f ${FILENAME}"
 echo "Output file destination : ${DESTINATION}/et_extraction/${CHROMOSOME}"
 echo "Command : ${command}"
 
-while true; do
-    read -p "Do you want to launch on DNANexus? [y/n]" yn
-    case $yn in
-        y)
-        echo "Launching !";
-        break
-        ;;
-        n)
-        echo "exiting...";
-        exit
-        ;;
-        *)
-        echo "unexpected input"
-        ;;
-    esac
-done
+ask_permission_to_launch
 
 dx run swiss-army-knife -icmd="ls -al; ${command}" \
     -iin="${INPUT_ID}" \
+    ${COST_LIMIT_ARG} --name PPExtract \
     -iimage_file=docker/pp_extract_v1.tar.gz -imount_inputs=true --tag "${tag}" \
     --destination "${DESTINATION}/het_extraction/${CHROMOSOME}/" \
-    --instance-type mem2_ssd1_v2_x2 -y
+    --instance-type ${INSTANCE} -y
