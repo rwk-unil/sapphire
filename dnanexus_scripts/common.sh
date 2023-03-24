@@ -13,6 +13,10 @@ dx_id_to_path () {
     echo "/mnt/project/${FFPATH}/${FFNAME}"
 }
 
+dx_id_to_dx_path () {
+    echo $(dx describe --json "$1" | jq -r '.folder')
+}
+
 ask_permission_to_launch() {
     while true; do
         read -p "Do you want to launch on DNANexus? [y/n]" yn
@@ -24,6 +28,30 @@ ask_permission_to_launch() {
             n)
             echo "exiting...";
             exit
+            ;;
+            *)
+            echo "unexpected input"
+            ;;
+        esac
+    done
+}
+
+ask_permission_to_launch_all() {
+    while true; do
+        read -p "Do you want to launch on DNANexus? [y/n/a]" yn
+        case $yn in
+            y)
+            echo "Launching !";
+            break
+            ;;
+            n)
+            echo "exiting...";
+            exit
+            ;;
+            a)
+            echo "Launching all !";
+            LAUNCH_ALL="yes";
+            break
             ;;
             *)
             echo "unexpected input"
