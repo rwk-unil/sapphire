@@ -706,6 +706,8 @@ public:
         if (samples_to_do.sample_names.size()) {
             rephase_orchestrator_multi_thread_with_list();
         } else {
+            /** @todo remove this message */
+            std::cout << "Running version compatible with splitted bins" << std::endl;
             rephase_orchestrator_multi_thread_without_list();
         }
     }

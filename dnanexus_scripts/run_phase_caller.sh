@@ -25,7 +25,10 @@ PROJECT_ID=23193
 INPUT_ID=""
 CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # 0 threads means "auto" (number of cores)
-THREADS_ARG="-t 0"
+# Because the phase caller is bottlenecked by network access to CRAM files
+# through the mounting point, setting approx 3 times more threads than cores
+# results in an acceptable CPU usage (threads wait for data over network)
+THREADS_ARG="-t 12"
 DESTINATION="phasing_rare"
 NEW_BIN_TAG="rephased"
 
@@ -119,7 +122,7 @@ then
     echo "SAMPLE LIST = ${SAMPLE_LIST_FILENAME}"
     INIIDSAMPLELIST="-iin=${SAMPLE_LIST_ID}"
 else
-    SAMPLE_LIST_FILENAME="${SAMPLE_FILENAME}"
+    SAMPLE_LIST_FILENAME=""
 fi
 
 tag="phase_caller_v1.2"
@@ -130,9 +133,19 @@ if ! [ -z "${CRAM_PATH}" ]
 then
     CRAM_PATH_ARG="--cram-path \"${CRAM_PATH}\""
 fi
+SAMPLE_FILENAME_ARG=""
+if ! [ -z "${SAMPLE_FILENAME}" ]
+then
+    SAMPLE_FILENAME_ARG="-S \"${SAMPLE_FILENAME}\""
+fi
+SAMPLE_LIST_FILENAME_ARG=""
+if ! [ -z "${SAMPLE_LIST_FILENAME}" ]
+then
+    SAMPLE_LIST_FILENAME_ARG="-l \"${SAMPLE_LIST_FILENAME}\""
+fi
 
 NEW_BINARY_FILE="$(basename ${BIN_FILENAME})_${NEW_BIN_TAG}.bin"
-command="cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} -S ${SAMPLE_FILENAME} -I ${PROJECT_ID} ${THREADS_ARG} -l ${SAMPLE_LIST_FILENAME} ${VERBOSE} ${CRAM_PATH_ARG}"
+command="cp ${BIN_FILENAME} ${NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} ${SAMPLE_FILENAME_ARG} -I ${PROJECT_ID} ${THREADS_ARG} ${SAMPLE_LIST_FILENAME_ARG} ${VERBOSE} ${CRAM_PATH_ARG}"
 
 echo "Command : ${command}"
 echo "Output file destination : ${DESTINATION}/phase_called/${CHROMOSOME}"
