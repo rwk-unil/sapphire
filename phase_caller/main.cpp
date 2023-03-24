@@ -488,7 +488,7 @@ public:
 
             while ((v_plp = bam_plp_auto(s_plp, &curr_tid, &curr_pos, &n_plp)) != 0) {
                 // The position in the VCF/BCF is 1 based not 0 based
-                if (curr_tid == target_tid && curr_pos == current_het->self->var_info->pos1) {
+                if (curr_tid == target_tid && curr_pos == (int)current_het->self->var_info->pos1) {
                     dc.pileup_reads(v_plp, n_plp, current_het->self);
                     //current_het = current_het->next;
                     break;

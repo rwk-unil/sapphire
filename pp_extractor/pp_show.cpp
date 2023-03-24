@@ -31,7 +31,7 @@ int main(int argc, char**argv) {
 
     CLI11_PARSE(app, argc, argv);
 
-    if (sample == -1) {
+    if (sample == (size_t)-1) {
         std::cerr << "Please provide sample indice" << std::endl;
         exit(app.exit(CLI::CallForHelp()));
     }
