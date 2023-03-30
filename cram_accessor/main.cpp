@@ -225,7 +225,7 @@ public:
 
             while ((v_plp = bam_plp_auto(s_plp, &curr_tid, &curr_pos, &n_plp)) != 0) {
                 // The position in the VCF/BCF is 1 based not 0 based
-                if (curr_tid == target_tid && curr_pos == position) {
+                if (curr_tid == target_tid && (size_t)curr_pos == position) {
                     dc.pileup_reads(v_plp, n_plp);
                     //current_het = current_het->next;
                     break;
