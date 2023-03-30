@@ -3,6 +3,7 @@
 pp_show
 pp_extract
 analyze_bin
+bin_compare
 bin_diff
 bin_splitter
 bin_merger

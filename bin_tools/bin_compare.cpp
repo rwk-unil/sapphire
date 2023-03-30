@@ -45,6 +45,8 @@ int main(int argc, char**argv) {
     std::vector<uint32_t> idx1;
     std::vector<uint32_t> idx2;
 
+    std::cout << "First file : " << bin1_fname << std::endl;
+    std::cout << "Second file : " << bin2_fname << std::endl;
     std::cout << "The first file has " << himm_1.num_samples << " samples" << std::endl;
     std::cout << "The second file has " << himm_2.num_samples << " samples" << std::endl;
 
@@ -69,6 +71,7 @@ int main(int argc, char**argv) {
 
     size_t vector_diffs = 0;
     size_t diffs = 0;
+    size_t commons = 0;
     for (auto idx : common_idx) {
         auto his1 = himm_1.get_het_info_for_nth(map1.at(idx));
         auto his2 = himm_2.get_het_info_for_nth(map2.at(idx));
@@ -83,6 +86,8 @@ int main(int argc, char**argv) {
                         std::cout << his1[i].to_string() << " " << his1[i].vcf_line << std::endl;
                         std::cout << his2[i].to_string() << " " << his2[i].vcf_line << std::endl;
                     }
+                } else {
+                    commons++;
                 }
             }
         }
@@ -90,6 +95,7 @@ int main(int argc, char**argv) {
 
     std::cout << "There are " << vector_diffs << " samples that don't have the same amount of variants" << std::endl;
     std::cout << "There are " << diffs << " variants that differ in common vectors" << std::endl;
+    std::cout << "There are " << commons << " variants that are the same in common vectors" << std::endl;
 
     return 0;
 }
