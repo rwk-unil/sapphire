@@ -154,7 +154,7 @@ for split_bin_file in $(dx ls $(dx_id_to_dx_path "${BIN_ID}"))
 do
     INNER_BIN_FILENAME=$(dirname "${BIN_FILENAME}")/"${split_bin_file}"
     INNER_NEW_BINARY_FILE="$(basename ${INNER_BIN_FILENAME})_${NEW_BIN_TAG}.bin"
-    command="cp ${INNER_BIN_FILENAME} ${INNER_NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${NEW_BINARY_FILE} ${SAMPLE_FILENAME_ARG} -I ${PROJECT_ID} ${THREADS_ARG} ${SAMPLE_LIST_FILENAME_ARG} ${VERBOSE} ${CRAM_PATH_ARG}"
+    command="cp ${INNER_BIN_FILENAME} ${INNER_NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${INNER_NEW_BINARY_FILE} ${SAMPLE_FILENAME_ARG} -I ${PROJECT_ID} ${THREADS_ARG} ${SAMPLE_LIST_FILENAME_ARG} ${VERBOSE} ${CRAM_PATH_ARG}"
     echo "${command}"
     if [ -z "${LAUNCH_ALL}" ]
     then
