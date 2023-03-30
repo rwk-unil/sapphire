@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <sys/mman.h>
 
 #include "compression.hpp"
@@ -64,6 +65,18 @@ public:
         }
     }
 
+    std::vector<HetInfo> get_het_info_for_nth(uint32_t n) const {
+        std::vector<HetInfo> his;
+        auto start = get_ptr_on_nth(n);
+        auto size = *(start + 2); /* Skip Mark, id */
+        auto p = start + 3; /* Skip Mark, id, size */
+        for (auto todo = size; todo > 0; todo--) {
+            his.push_back(HetInfo(p));
+            p += 4; /* Size of HetInfo */
+        }
+        return his;
+    }
+
     uint32_t get_size_of_nth(uint32_t n) const {
         const auto start = get_ptr_on_nth(n);
         return *(start+2) * sizeof(uint32_t) * 4 /* Size of HetInfo */ + 3 * sizeof(uint32_t); /* Mark, id, size */
@@ -72,6 +85,14 @@ public:
     uint32_t get_orig_idx_of_nth(uint32_t n) const {
         const auto start = get_ptr_on_nth(n);
         return *(start+1);
+    }
+
+    std::map<uint32_t, uint32_t> get_orig_idx_to_nth_map() const {
+        std::map<uint32_t, uint32_t> map;
+        for (uint32_t i = 0; i < num_samples; ++i) {
+            map.insert({get_orig_idx_of_nth(i), i});
+        }
+        return map;
     }
 
     bool integrity_check_pass() const {
