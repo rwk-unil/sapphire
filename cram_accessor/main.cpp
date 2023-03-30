@@ -299,11 +299,11 @@ public:
     void orchestrator_multi_thread() {
         size_t tid = 0;
         for (const auto & entry : fs::directory_iterator(global_app_options.cram_path)) {
-            std::cout << entry.path() << std::endl;
-            if (entry.path().extension().compare("cram") != 0) {
+            if (entry.path().extension().compare(".cram") != 0) {
                 // Skip non CRAM files
                 continue;
             }
+            std::cout << entry.path() << std::endl;
 
             std::unique_lock<std::mutex> lk(mutex);
             size_t ti = find_free(active_threads);
