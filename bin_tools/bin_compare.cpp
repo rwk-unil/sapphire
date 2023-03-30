@@ -22,8 +22,8 @@ int main(int argc, char**argv) {
     app.add_option("-b,--binary2", bin2_fname, "Second binary file name");
     //std::string samples_fname = "-";
     //app.add_option("-S,--samples", samples_fname, "Sample names (text file) as appear in full BCF");
-    //bool extra = false;
-    //app.add_flag("--extra-info", extra, "Output extra information");
+    bool extra = false;
+    app.add_flag("--extra-info", extra, "Output extra information");
     //bool more = false;
     //app.add_flag("--more", more, "Output more information");
 
@@ -79,6 +79,10 @@ int main(int argc, char**argv) {
             for (size_t i = 0; i < his1.size(); ++i) {
                 if (his1[i] != his2[i]) {
                     diffs++;
+                    if (extra) {
+                        std::cout << his1[i].to_string() << " " << his1[i].vcf_line << std::endl;
+                        std::cout << his2[i].to_string() << " " << his2[i].vcf_line << std::endl;
+                    }
                 }
             }
         }
