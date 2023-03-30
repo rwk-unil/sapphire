@@ -155,6 +155,6 @@ ask_permission_to_launch
 
 dx run swiss-army-knife -icmd="${command}" \
     ${COST_LIMIT_ARG} --name RephaseCaller \
-    -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
+    -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
     --destination "${DESTINATION}/phase_called/${CHROMOSOME}" \
     --instance-type ${INSTANCE} -y

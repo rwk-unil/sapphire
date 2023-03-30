@@ -90,6 +90,6 @@ ask_permission_to_launch
 
 dx run swiss-army-knife -icmd="${command}" \
     ${COST_LIMIT_ARG} --name BinSplitter \
-    -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
+    -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
     --destination "${DESTINATION}/het_extraction/${CHROMOSOME}/split" \
     --instance-type "${INSTANCE}" -y

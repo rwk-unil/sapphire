@@ -105,6 +105,6 @@ ask_permission_to_launch
 
 dx run swiss-army-knife -icmd="${command}; bcftools index ${OFNAME}" \
     ${COST_LIMIT_ARG} --name UpdatePhase \
-    -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
+    -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
     --destination "${DESTINATION}/rephased/${CHROMOSOME}" \
     --instance-type "${INSTANCE}" -y

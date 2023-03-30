@@ -1,5 +1,7 @@
 #/bin/bash
 
+DOCKER_IMAGE=docker/pp_rephase_v1.3.tar.gz
+
 if ! command -v jq &> /dev/null
 then
     echo "Please install jq"
@@ -75,6 +77,11 @@ case $key in
     ;;
     --instance)
     INSTANCE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --docker-image)
+    DOCKER_IMAGE="$2"
     shift # past argument
     shift # past value
     ;;

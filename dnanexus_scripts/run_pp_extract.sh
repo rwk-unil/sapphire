@@ -79,6 +79,6 @@ ask_permission_to_launch
 dx run swiss-army-knife -icmd="ls -al; ${command}" \
     -iin="${INPUT_ID}" \
     ${COST_LIMIT_ARG} --name PPExtract \
-    -iimage_file=docker/pp_extract_v1.tar.gz -imount_inputs=true --tag "${tag}" \
+    -iimage_file="${DOCKER_IMAGE}" -imount_inputs=true --tag "${tag}" \
     --destination "${DESTINATION}/het_extraction/${CHROMOSOME}/" \
     --instance-type ${INSTANCE} -y

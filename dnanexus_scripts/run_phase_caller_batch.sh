@@ -162,7 +162,7 @@ do
     fi
     dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
         ${COST_LIMIT_ARG} --name RephaseCallerBatch \
-        -iimage_file=docker/pp_rephase_v1.2.tar.gz --tag "${tag}" \
+        -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
         --destination "${DESTINATION}/phase_called/${CHROMOSOME}" \
         --instance-type ${INSTANCE} -y
 done
