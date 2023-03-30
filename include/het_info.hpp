@@ -41,4 +41,14 @@ public:
     }
 };
 
+constexpr bool operator==(const HetInfo& lhs, const HetInfo& rhs) {
+    return lhs.vcf_line == rhs.vcf_line &&
+           lhs.a0 == rhs.a0 && lhs.a1 == rhs.a1 &&
+           ((std::isnan(lhs.pp) && std::isnan(rhs.pp)) || (lhs.pp == rhs.pp));
+}
+
+constexpr bool operator!=(const HetInfo& lhs, const HetInfo& rhs) {
+    return !(lhs == rhs);
+}
+
 #endif /* __HET_INFO_HPP__ */
