@@ -24,7 +24,9 @@ main() {
     # recover the original filenames, you can use the output of "dx describe
     # "$variable" --name".
 
-    FILENAME="$(dx describe "$vcf_bcf_file" --json | jq -r .name)"
+    FILENAME="$(dx describe "$vcf_bcf_file" --name)"
+    echo "Filename : ${FILENAME}"
+
     dx download "$vcf_bcf_file" -o "${FILENAME}"
 
     SAMPLES_FILENAME="${FILENAME}.samples.txt"
