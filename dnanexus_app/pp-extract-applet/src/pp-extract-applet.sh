@@ -65,7 +65,7 @@ main() {
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    dx-jobutil-add-output "${SAMPLES_FILENAME}" "${samples_file}" --class=file
-    dx-jobutil-add-output "${VARS_FILENAME}" "${vars_file}" --class=file
-    dx-jobutil-add-output "${HETS_FILENAME}" "${hets_file}" --class=file
+    dx-jobutil-add-output samples_names "${samples_file}" --class=file
+    dx-jobutil-add-output bcf_vars "${vars_file}" --class=file
+    dx-jobutil-add-output bin_hets "${hets_file}" --class=file
 }
