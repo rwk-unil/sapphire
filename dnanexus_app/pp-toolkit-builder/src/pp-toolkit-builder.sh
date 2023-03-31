@@ -35,7 +35,6 @@ main() {
     # Since we cannot do dx upload --brief to get the ID (because dx build uploads)
     # Note : The dx build --brief doesn't output in the correct format !
     # We need to retrieve the ID ourselves
-    dx ls
     pp_toolkit="$(dx describe pp-extract-applet --json | jq -r .id)"
 
     # Fill in your application code here.
