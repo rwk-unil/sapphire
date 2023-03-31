@@ -34,7 +34,7 @@ main() {
     HETS_FILENAME="${FILENAME}_hets.bin"
 
     # Extract sample list
-    bcftools query --list-samples vcf_bcf_file > "${SAMPLES_FILENAME}" &
+    bcftools query --list-samples ${FILENAME} > "${SAMPLES_FILENAME}" &
     # Extract variants (can take a long time)
     bcftools view -G -Ob "${FILENAME}" -o "${VARS_FILENAME}" &
     # Extract the low PPs
