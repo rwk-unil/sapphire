@@ -51,5 +51,5 @@ main() {
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    dx-jobutil-add-output pp_toolkit "$pp_toolkit" --class=applet
+    dx-jobutil-add-output pp-toolkit "$pp_toolkit" --class=applet
 }
