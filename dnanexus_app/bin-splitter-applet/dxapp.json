@@ -1,0 +1,59 @@
+{
+  "name": "bin-splitter-applet",
+  "title": "PP-Toolkit : Binary File Splitter",
+  "summary": "Splits a PP-Toolkit binary file into smaller ones",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "binary_file_to_split",
+      "label": "Binary file to split",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "split_size",
+      "label": "Split in files with this number of samples",
+      "class": "int",
+      "optional": true,
+      "default": 1000,
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "splitted_binary_files",
+      "label": "Splitted Binary Files",
+      "class": "array:file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 48
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/bin-splitter-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0"
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
