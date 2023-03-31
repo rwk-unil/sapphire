@@ -1,0 +1,51 @@
+{
+  "name": "PP-Extract-applet",
+  "title": "PP Extractor App",
+  "summary": "Extracts heterozygous variants with a PP field below 0.99 and neighbor heterozygous variants to a binary file",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "vcf_bcf_file",
+      "label": "Input VCF or BCF file to extract (should be phased with SHAPEIT5)",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "output_binary_file",
+      "label": "string",
+      "class": "string",
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 48
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/PP-Extract-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0"
+  },
+  "access": {
+    "project": "CONTRIBUTE"
+  },
+  "regionalOptions": {
+    "aws:us-east-1": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
