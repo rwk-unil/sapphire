@@ -32,6 +32,11 @@ main() {
     dx build dnanexus_app/pp-extract-applet
     dx mv pp-extract-applet pp-toolkit
 
+    # Since we cannot do dx upload --brief to get the ID (because dx build uploads)
+    # Note : The dx build --brief doesn't output in the correct format !
+    # We need to retrieve the ID ourselves
+    pp_toolkit=$(dx describe pp-toolkit --json | jq -r .id)
+
     # Fill in your application code here.
     #
     # To report any recognized errors in the correct format in
@@ -51,5 +56,5 @@ main() {
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    dx-jobutil-add-output pp-toolkit "$pp_toolkit" --class=applet
+    dx-jobutil-add-output pp_toolkit "$pp_toolkit" --class=applet
 }
