@@ -1,0 +1,42 @@
+{
+  "name": "pp-toolkit-builder",
+  "title": "PP Toolkit Builder Applet",
+  "summary": "Builds the PP Toolkit applet",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [],
+  "outputSpec": [
+    {
+      "name": "pp_toolkit",
+      "label": "The PP Toolkit",
+      "class": "applet",
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 48
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/pp-toolkit-builder.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0"
+  },
+  "access": {
+    "network": [
+      "*"
+    ]
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
