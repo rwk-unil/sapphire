@@ -1,4 +1,4 @@
-# PP-Extract-applet Developer Readme
+# pp-extract-applet Developer Readme
 
 <!--
 TODO: Please edit this Readme.developer.md file to include information

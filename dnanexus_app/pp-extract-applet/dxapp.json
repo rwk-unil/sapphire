@@ -1,5 +1,5 @@
 {
-  "name": "PP-Extract-applet",
+  "name": "pp-extract-applet",
   "title": "PP Extractor App",
   "summary": "Extracts heterozygous variants with a PP field below 0.99 and neighbor heterozygous variants to a binary file",
   "dxapi": "1.0.0",
@@ -31,7 +31,7 @@
       }
     },
     "interpreter": "bash",
-    "file": "src/PP-Extract-applet.sh",
+    "file": "src/pp-extract-applet.sh",
     "distribution": "Ubuntu",
     "release": "20.04",
     "version": "0"
