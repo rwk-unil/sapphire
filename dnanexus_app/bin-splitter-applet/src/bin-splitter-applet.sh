@@ -36,8 +36,8 @@ main() {
     #VERBOSE="-v"
     VERBOSE="" # TODO
     # -o is a prefix
-    bin_splitter -b "${FILENAME}" -o "${FILENAME}" -n ${split_size} ${VERBOSE}
-    splitted_binaries_array=($(ls "${FILENAME}_"*))
+    bin_splitter -b "${FILENAME}" -o "${FILENAME}_sub" -n ${split_size} ${VERBOSE}
+    splitted_binaries_array=($(ls "${FILENAME}_sub"*))
 
     # Upload the splitted files
     for i in "${!splitted_binaries_array[@]}"; do
