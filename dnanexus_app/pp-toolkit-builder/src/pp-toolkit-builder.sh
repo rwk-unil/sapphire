@@ -19,7 +19,7 @@ main() {
     # Clone and build the tools
     git clone https://rwk-unil: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@github.com/rwk-unil/pp.git
     cd pp
-    prepare_build.sh
+    ./prepare_build.sh
 
     # Copy the tools
     mkdir -p dnanexus_app/pp-extract-applet/resources/usr/bin
