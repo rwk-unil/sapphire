@@ -71,7 +71,7 @@ tag=pp_extract_v1
 echo "dx run with tag : ${tag}"
 command="time run_pp_extract -f ${FILENAME}"
 
-echo "Output file destination : ${DESTINATION}/et_extraction/${CHROMOSOME}"
+echo "Output file destination : ${DESTINATION}/het_extraction/${CHROMOSOME}"
 echo "Command : ${command}"
 
 ask_permission_to_launch
