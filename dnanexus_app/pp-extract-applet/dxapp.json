@@ -18,10 +18,25 @@
   ],
   "outputSpec": [
     {
-      "name": "output_binary_file",
-      "label": "string",
-      "class": "string",
-      "help": ""
+      "name": "samples_names",
+      "label": "Sample Names",
+      "help": "A text file with the sample names in the same order as the input VCF/BCF",
+      "class": "file",
+      "patterns": ["*.txt"]
+    },
+    {
+      "name": "bcf_vars",
+      "label": "BCF with variants only",
+      "help": "The input VCF/BCF without any samples",
+      "class": "file",
+      "patterns": ["*.bcf"]
+    },
+    {
+      "name": "bin_hets",
+      "label": "Het variants in binary format",
+      "help": "Heterozygous variants in binary format",
+      "class": "file",
+      "patterns": ["*.bin"]
     }
   ],
   "runSpec": {
@@ -34,7 +49,10 @@
     "file": "src/pp-extract-applet.sh",
     "distribution": "Ubuntu",
     "release": "20.04",
-    "version": "0"
+    "version": "0",
+    "execDepends": [
+      {"name": "bcftools"}
+    ]
   },
   "access": {
     "project": "CONTRIBUTE"

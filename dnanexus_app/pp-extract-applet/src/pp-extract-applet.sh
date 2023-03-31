@@ -24,8 +24,25 @@ main() {
     # recover the original filenames, you can use the output of "dx describe
     # "$variable" --name".
 
-    dx download "$vcf_bcf_file" -o vcf_bcf_file
+    FILENAME="$(dx describe "$vcf_bcf_file" --json | jq -r .name)"
+    dx download "$vcf_bcf_file" -o "${FILENAME}"
 
+    SAMPLES_FILENAME="${FILENAME}.samples.txt"
+    VARS_FILENAME="${FILENAME}_vars.bcf"
+    HETS_FILENAME="${FILENAME}_hets.bin"
+
+    # Extract sample list
+    bcftools query --list-samples vcf_bcf_file > "${SAMPLES_FILENAME}" &
+    # Extract variants (can take a long time)
+    bcftools view -G -Ob "${FILENAME}" -o "${VARS_FILENAME}" &
+    # Extract the low PPs
+    pp_extract -f "${FILENAME}" -o "${HETS_FILENAME}" &
+    # Wait for the subprocesses to finish
+    wait
+
+    samples_file=$(dx upload "${SAMPLES_FILENAME}" --brief)
+    vars_file=$(dx upload "${VARS_FILENAME}" --brief)
+    hets_file=$(dx upload "${HETS_FILENAME}" --brief)
 
     # Fill in your application code here.
     #
@@ -46,5 +63,7 @@ main() {
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    dx-jobutil-add-output output_binary_file "$output_binary_file" --class=string
+    dx-jobutil-add-output "${SAMPLES_FILENAME}" "${samples_file}" --class=file
+    dx-jobutil-add-output "${VARS_FILENAME}" "${vars_file}" --class=file
+    dx-jobutil-add-output "${HETS_FILENAME}" "${hets_file}" --class=file
 }
