@@ -76,7 +76,7 @@ main() {
     fi
 
     # Hacky way to get project ID number ...
-    PROJECT_ID="$(ls "/mnt/project/${cram_path}/20/" | grep ".cram" | head -n1 | sed -n 's/[0-9]*_\([0-9]*\)_.*$/\1/p')"
+    PROJECT_ID="$(ls "/mnt/project/${cram_path}/20/" | grep ".cram" | head -n1 | sed -n 's/[0-9]*_\([0-9]*\)_.*$/\1/p' 2> /dev/null)"
     if [ -z "${PROJECT_ID}" ]
     then
         dx-jobutil-report-error "Could not extract project ID from cram path ${cram_path}"
@@ -85,13 +85,13 @@ main() {
         echo "PROJECT_ID : ${PROJECT_ID}"
     fi
 
-    CRAM_PATH_ARG="--cram-path \"/mnt/project/${cram_path}\""
+    CRAM_PATH="/mnt/project/${cram_path}"
 
     # Copy the binary file as a new file (will be modyfied in-place by the caller)
     cp "${BINARY_FILENAME}" "${NEW_BINARY_FILE}"
 
-    echo "time phase_caller -f \"${VCF_FILENAME}\" -b \"${NEW_BINARY_FILE}\" -S \"${SAMPLE_FILENAME}\" \"${VERBOSE}\" -I ${PROJECT_ID} -t ${threads} ${CRAM_PATH_ARG}"
-    time phase_caller -f "${VCF_FILENAME}" -b "${NEW_BINARY_FILE}" -S "${SAMPLE_FILENAME}" "${VERBOSE}" -I ${PROJECT_ID} -t ${threads} ${CRAM_PATH_ARG}
+    echo "time phase_caller -f \"${VCF_FILENAME}\" -b \"${NEW_BINARY_FILE}\" -S \"${SAMPLE_FILENAME}\" \"${VERBOSE}\" -I ${PROJECT_ID} -t ${threads} --cram-path \"${CRAM_PATH}\""
+    time phase_caller -f "${VCF_FILENAME}" -b "${NEW_BINARY_FILE}" -S "${SAMPLE_FILENAME}" "${VERBOSE}" -I ${PROJECT_ID} -t ${threads} --cram-path "${CRAM_PATH}"
 
     # Fill in your application code here.
     #
