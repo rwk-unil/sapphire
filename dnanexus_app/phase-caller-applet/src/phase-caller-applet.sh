@@ -17,6 +17,30 @@
 
 main() {
 
+    # dxfuse
+    # Create a manifest file for dxfuse
+    echo "{
+    \"files\" : [],
+    \"directories\" : [
+        {
+        \"proj_id\" : \"$DX_PROJECT_CONTEXT_ID\",
+        \"folder\" : \"/\",
+        \"dirname\" : \"/project\"
+        }
+    ]
+    }" > .dxfuse_manifest.json
+    echo "DX_PROJECT_CONTEXT_ID : ${DX_PROJECT_CONTEXT_ID}"
+
+    # Create a mount point for the project
+    MOUNTDIR=/mnt
+    sudo mkdir -p $MOUNTDIR
+
+    # Mount the current project
+    dxfuse $MOUNTDIR .dxfuse_manifest.json &
+
+    # Wait for mount to start
+    sleep 2
+
     echo "Value of binary_file: '$binary_file'"
     echo "Value of vcf_file_without_samples: '$vcf_file_without_samples'"
     echo "Value of sample_list: '$sample_list'"
