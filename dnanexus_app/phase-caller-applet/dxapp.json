@@ -91,6 +91,9 @@
     "release": "20.04",
     "version": "0"
   },
+  "access": {
+    "project": "VIEW"
+  },
   "regionalOptions": {
     "aws:eu-west-2": {
       "systemRequirements": {
