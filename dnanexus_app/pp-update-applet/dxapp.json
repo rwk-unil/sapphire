@@ -74,7 +74,7 @@
     "version": "0"
   },
   "regionalOptions": {
-    "aws:us-east-1": {
+    "aws:eu-west-2": {
       "systemRequirements": {
         "*": {
           "instanceType": "mem2_ssd1_v2_x2"
