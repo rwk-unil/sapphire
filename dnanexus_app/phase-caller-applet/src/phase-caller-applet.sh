@@ -91,7 +91,7 @@ main() {
     cp "${BINARY_FILENAME}" "${NEW_BINARY_FILE}"
 
     echo "time phase_caller -f \"${VCF_FILENAME}\" -b \"${NEW_BINARY_FILE}\" -S \"${SAMPLE_FILENAME}\" \"${VERBOSE}\" -I ${PROJECT_ID} -t ${threads} --cram-path \"${CRAM_PATH}\""
-    time phase_caller -f "${VCF_FILENAME}" -b "${NEW_BINARY_FILE}" -S "${SAMPLE_FILENAME}" "${VERBOSE}" -I ${PROJECT_ID} -t ${threads} --cram-path "${CRAM_PATH}"
+    time phase_caller -f "${VCF_FILENAME}" -b "${NEW_BINARY_FILE}" -S "${SAMPLE_FILENAME}" ${VERBOSE} -I ${PROJECT_ID} -t ${threads} --cram-path "${CRAM_PATH}"
 
     # Fill in your application code here.
     #
