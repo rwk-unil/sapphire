@@ -27,4 +27,6 @@ cd ..
 git clone https://github.com/facebook/zstd.git
 cd zstd
 make
+make install
+ldconfig
 cd ..
