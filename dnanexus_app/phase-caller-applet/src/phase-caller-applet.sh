@@ -30,11 +30,42 @@ main() {
     # recover the original filenames, you can use the output of "dx describe
     # "$variable" --name".
 
-    dx download "$binary_file" -o binary_file
+    BINARY_FILENAME="$(dx describe "$binary_file" --name)"
+    dx download "$binary_file" -o "${BINARY_FILENAME}"
+    VCF_FILENAME="$(dx describe "$vcf_file_without_samples" --name)"
+    dx download "$vcf_file_without_samples" -o "${VCF_FILENAME}"
+    SAMPLE_FILENAME="$(dx describe "$sample_list" --name)"
+    dx download "$sample_list" -o "${SAMPLE_FILENAME}"
 
-    dx download "$vcf_file_without_samples" -o vcf_file_without_samples
+    if [ "$verbose" = true ]
+    then
+        VERBOSE="-v"
+    else
+        unset VERBOSE
+    fi
 
-    dx download "$sample_list" -o sample_list
+    if ! [ -z "${suffix}" ]
+    then
+        NEW_BINARY_FILE="${BINARY_FILE}_${suffix}.bin"
+    else
+        NEW_BINARY_FILE="${BINARY_FILE}_rephased.bin"
+    fi
+
+    # Hacky way to get project ID number ...
+    PROJECT_ID="$(ls "/mnt/project/${cram_path}/20/" | grep ".cram" | head -n1 | sed -n 's/[0-9]*_\([0-9]*\)_.*$/\1/p')"
+    if [ -z "${PROJECT_ID}" ]
+    then
+        dx-jobutil-report-error "Could not extract project ID from cram path ${cram_path}"
+        exit 1
+    fi
+
+    CRAM_PATH_ARG="--cram-path \"/mnt/project/${cram_path}\""
+
+    # Copy the binary file as a new file (will be modyfied in-place by the caller)
+    cp "${BINARY_FILENAME}" "${NEW_BINARY_FILE}"
+
+    echo "time phase_caller -f \"${VCF_FILENAME}\" -b \"${NEW_BINARY_FILE}\" -S \"${SAMPLE_FILENAME}\" \"${VERBOSE}\" -I ${PROJECT_ID} -t ${threads} ${CRAM_PATH_ARG}"
+    time phase_caller -f "${VCF_FILENAME}" -b "${NEW_BINARY_FILE}" -S "${SAMPLE_FILENAME}" "${VERBOSE}" -I ${PROJECT_ID} -t ${threads} ${CRAM_PATH_ARG}
 
     # Fill in your application code here.
     #
@@ -56,12 +87,12 @@ main() {
     # but you can change that behavior to suit your needs.  Run "dx upload -h"
     # to see more options to set metadata.
 
-    rephased_binary_file=$(dx upload rephased_binary_file --brief)
+    rephased_binary_file=$(dx upload "${NEW_BINARY_FILE}" --brief)
 
     # The following line(s) use the utility dx-jobutil-add-output to format and
     # add output variables to your job's output as appropriate for the output
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    dx-jobutil-add-output rephased_binary_file "$rephased_binary_file" --class=file
+    dx-jobutil-add-output "${NEW_BINARY_FILE}" "$rephased_binary_file" --class=file
 }
