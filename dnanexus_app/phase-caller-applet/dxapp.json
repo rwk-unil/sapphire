@@ -48,7 +48,7 @@
       "label": "Path to CRAM files",
       "class": "string",
       "optional": true,
-      "default": "\"Bulk/Whole genome sequences/Whole genome CRAM files\"",
+      "default": "Bulk/Whole genome sequences/Whole genome CRAM files",
       "help": ""
     },
     {
