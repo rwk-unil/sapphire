@@ -70,9 +70,9 @@ main() {
 
     if ! [ -z "${suffix}" ]
     then
-        NEW_BINARY_FILE="${BINARY_FILE}_${suffix}.bin"
+        NEW_BINARY_FILE="${BINARY_FILENAME}_${suffix}.bin"
     else
-        NEW_BINARY_FILE="${BINARY_FILE}_rephased.bin"
+        NEW_BINARY_FILE="${BINARY_FILENAME}_rephased.bin"
     fi
 
     # Hacky way to get project ID number ...
@@ -81,6 +81,8 @@ main() {
     then
         dx-jobutil-report-error "Could not extract project ID from cram path ${cram_path}"
         exit 1
+    else
+        echo "PROJECT_ID : ${PROJECT_ID}"
     fi
 
     CRAM_PATH_ARG="--cram-path \"/mnt/project/${cram_path}\""
