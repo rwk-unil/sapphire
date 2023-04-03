@@ -34,13 +34,18 @@ main() {
 
     prefix="$(echo ${filenames[1]} | sed 's/_[0-9]*$//g')"
 
-    #VERBOSE="-v"
-    VERBOSE="" # TODO
+    if [ "$verbose" = true ]
+    then
+        VERBOSE="-v"
+    else
+        unset VERBOSE
+    fi
+
     if [ -z "${output_binary_filename}" ]
     then
         output_binary_filename="${prefix}"_merged.bin
     fi
-    bin_merger -b "${prefix}" -o "${output_binary_filename}" "${VERBOSE}"
+    bin_merger -b "${prefix}" -o "${output_binary_filename}" ${VERBOSE}
 
     # Fill in your application code here.
     #
