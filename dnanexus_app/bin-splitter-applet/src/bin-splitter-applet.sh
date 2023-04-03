@@ -35,7 +35,8 @@ main() {
 
     #VERBOSE="-v"
     VERBOSE="" # TODO
-    # -o is a prefix
+    # -o is a prefix, but it still complains if same name as filename because
+    # the bin_splitter can also be used to generate a single file
     bin_splitter -b "${FILENAME}" -o "${FILENAME}_sub" -n ${split_size} ${VERBOSE}
     splitted_binaries_array=($(ls "${FILENAME}_sub"*))
 
