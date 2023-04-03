@@ -1,0 +1,66 @@
+{
+  "name": "bin-merger-applet",
+  "title": "PP-Toolkit : Binary File Merger",
+  "summary": "Merges splitted binary files into one",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "splitted_binary_files",
+      "label": "Splitted Binary Files",
+      "class": "array:file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "output_binary_filename",
+      "label": "Output Binary File",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    },
+    {
+      "name": "verbose",
+      "label": "Be more verbose",
+      "class": "boolean",
+      "optional": true,
+      "default": false,
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "binary_file",
+      "label": "Merged Binary File",
+      "class": "file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 48
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/bin-merger-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0"
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
