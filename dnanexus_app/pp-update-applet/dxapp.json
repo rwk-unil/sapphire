@@ -1,0 +1,85 @@
+{
+  "name": "pp-update-applet",
+  "title": "PP-Toolkit : Update rephased variants and PP values in VCF/BCF",
+  "summary": "Creates a new VCF/BCF file with rephased variants and update PP values",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "original_vcf_file",
+      "label": "Original VCF/BCF file",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rephased_binary_file",
+      "label": "Rephased Binary File (output of PP-Toolkit : Ultralight Phase Caller)",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "verbose",
+      "label": "Be more verbose",
+      "class": "boolean",
+      "optional": true,
+      "default": false,
+      "help": ""
+    },
+    {
+      "name": "output_vcf_filename",
+      "label": "Output VCF/VCF filename",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "rephased_vcf_file",
+      "label": "Rephased VCF/BCF file",
+      "class": "file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rephased_vcf_file_index",
+      "label": "Rephased VCF/BCF index file",
+      "class": "file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 48
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/pp-update-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0"
+  },
+  "regionalOptions": {
+    "aws:us-east-1": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
