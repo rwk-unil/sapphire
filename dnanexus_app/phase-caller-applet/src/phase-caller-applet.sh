@@ -87,6 +87,15 @@ main() {
 
     CRAM_PATH="/mnt/project/${cram_path}"
 
+    # Copy the Reference files
+    WORKDIR=$(pwd)
+    mkdir -p ~/.cache
+    cd ~/.cache
+    curl -L https://github.com/rwk-unil/cram_accessor/releases/download/v1.0/hts-ref.zip -o ./hts-ref.zip > /dev/null 2>&1
+    unzip hts-ref.zip > /dev/null 2>&1
+    rm -f hts-ref.zip
+    cd "${WORKDIR}"
+
     # Copy the binary file as a new file (will be modyfied in-place by the caller)
     cp "${BINARY_FILENAME}" "${NEW_BINARY_FILE}"
 
