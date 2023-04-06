@@ -47,6 +47,7 @@ main() {
 
     # TODO Check if output file name is same as input file name
 
+    echo "Running PP-Update ... this can take a while ..."
     time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE}
     bcftools index "${output_vcf_filename}"
 
