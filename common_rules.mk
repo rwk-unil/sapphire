@@ -13,6 +13,7 @@ endif
 
 # Rules
 all : $(GEN_GIT_REV) $(DEPENDENCIES) $(TARGETS)
+	$(info Finished building $(TARGETS))
 
 gen_git_rev :
 	echo "#define GIT_REVISION 0x$(GIT_REVISION)" > include/git_rev.h
