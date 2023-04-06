@@ -48,6 +48,7 @@ main() {
     # Hacky way to auto extract the region (first encountered in file)
     region=$(bcftools view -H -G "${original_vcf_filename}" | head -n1 | cut -f1)
 
+    echo "Running validation on file ${rephased_vcf_filename} against reference file ${original_vcf_filename} for region ${region}"
     switch_static --validation "${original_vcf_filename}" \
     --estimation "${rephased_vcf_filename}" --frequency "${var_vcf_filenames}" \
     --region "${region}" --output "${output_prefix}"
