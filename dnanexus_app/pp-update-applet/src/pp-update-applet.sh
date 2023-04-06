@@ -27,9 +27,28 @@ main() {
     # recover the original filenames, you can use the output of "dx describe
     # "$variable" --name".
 
-    dx download "$original_vcf_file" -o original_vcf_file
+    VCF_FILENAME="$(dx describe "$original_vcf_file" --name)"
+    dx download "$original_vcf_file" -o "${VCF_FILENAME}"
 
     dx download "$rephased_binary_file" -o rephased_binary_file
+
+    if [ "$verbose" = true ]
+    then
+        VERBOSE="-v"
+    else
+        unset VERBOSE
+    fi
+
+    NEW_VCF_FILE="$(basename ${VCF_FILENAME})_rephased.bcf"
+    if [ -z "${output_vcf_filename}" ]
+    then
+        output_vcf_filename="${NEW_VCF_FILE}"
+    fi
+
+    # TODO Check if output file name is same as input file name
+
+    time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE}
+    bcftools index "${output_vcf_filename}"
 
     # Fill in your application code here.
     #
@@ -51,8 +70,8 @@ main() {
     # but you can change that behavior to suit your needs.  Run "dx upload -h"
     # to see more options to set metadata.
 
-    rephased_vcf_file=$(dx upload rephased_vcf_file --brief)
-    rephased_vcf_file_index=$(dx upload rephased_vcf_file_index --brief)
+    rephased_vcf_file=$(dx upload "${output_vcf_filename}" --brief)
+    rephased_vcf_file_index=$(dx upload "${output_vcf_filename}".* --brief)
 
     # The following line(s) use the utility dx-jobutil-add-output to format and
     # add output variables to your job's output as appropriate for the output
