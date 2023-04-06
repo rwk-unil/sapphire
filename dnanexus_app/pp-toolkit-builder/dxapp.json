@@ -7,8 +7,32 @@
   "inputSpec": [],
   "outputSpec": [
     {
-      "name": "pp_toolkit",
-      "label": "The PP Toolkit",
+      "name": "pp_extract",
+      "label": "PP Toolkit : PP Extractor",
+      "class": "applet",
+      "help": ""
+    },
+    {
+      "name": "bin_splitter",
+      "label": "PP Toolkit : bin splitter",
+      "class": "applet",
+      "help": ""
+    },
+    {
+      "name": "phase_caller",
+      "label": "PP Toolkit : Phase caller",
+      "class": "applet",
+      "help": ""
+    },
+    {
+      "name": "bin_merger",
+      "label": "PP Toolkit : bin merger",
+      "class": "applet",
+      "help": ""
+    },
+    {
+      "name": "pp_update",
+      "label": "PP Toolkit : PP Updater",
       "class": "applet",
       "help": ""
     }
