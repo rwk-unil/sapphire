@@ -71,7 +71,10 @@
     "file": "src/pp-update-applet.sh",
     "distribution": "Ubuntu",
     "release": "20.04",
-    "version": "0"
+    "version": "0",
+    "execDepends": [
+      {"name": "bcftools"}
+    ]
   },
   "regionalOptions": {
     "aws:eu-west-2": {
