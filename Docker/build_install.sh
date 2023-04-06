@@ -14,7 +14,7 @@ cd "${SCRIPTPATH}"
 cd ..
 
 git pull
-make
+make STATIC_BINS=y
 
 chmod +x pp_extractor/pp_extract
 cp pp_extractor/pp_extract /usr/local/bin/
