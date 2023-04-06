@@ -1,0 +1,81 @@
+{
+  "name": "pp-validation-applet",
+  "title": "PP-Toolkit: Validation with external software",
+  "summary": "Validates the rephased VCF/BCF file against the original input file",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "original_vcf_file",
+      "label": "Original VCF/BCF file",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "rephased_vcf",
+      "label": "Rephased VCF/BCF file",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "var_vcf",
+      "label": "VCF/BCF with variants only (and AC/AN)",
+      "class": "file",
+      "optional": true,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "output_prefix",
+      "label": "Output files prefix",
+      "class": "string",
+      "optional": true,
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "output_files",
+      "label": "Output files",
+      "class": "array:file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "hours": 48
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/pp-validation-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0",
+    "execDepends": [
+      {"name": "bcftools"}
+    ]
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
