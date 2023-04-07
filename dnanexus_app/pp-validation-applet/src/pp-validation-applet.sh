@@ -35,7 +35,9 @@ main() {
     if [ -n "$var_vcf" ]
     then
         var_vcf_filename="$(dx describe "$var_vcf" --name)"
-        dx download "$var_vcf" -o var_vcf
+        dx download "$var_vcf" -o "${var_vcf_filename}"
+        # Launch indexing in background
+        bcftools index "${var_vcf_filename}" &
     else
         var_vcf_filename="${original_vcf_filename}"
     fi
@@ -45,13 +47,27 @@ main() {
         output_prefix="${original_vcf_filename}"_
     fi
 
+    echo "Launching indexing..."
+    date
+
+    # Launch indexing in background
+    bcftools index "${original_vcf_filename}" &
+    bcftools index "${rephased_vcf_filename}" &
+
     # Hacky way to auto extract the region (first encountered in file)
     region=$(bcftools view -H -G "${original_vcf_filename}" | head -n1 | cut -f1)
+
+    # Wait for indexing to finish
+    wait
+    echo "Indexing done !"
+    date
 
     echo "Running validation on file ${rephased_vcf_filename} against reference file ${original_vcf_filename} for region ${region}"
     switch_static --validation "${original_vcf_filename}" \
     --estimation "${rephased_vcf_filename}" --frequency "${var_vcf_filenames}" \
     --region "${region}" --output "${output_prefix}"
+
+    date
 
     # List the generated files
     file_array=($(ls "${output_prefix}"*))
