@@ -74,6 +74,13 @@
       "help": ""
     }
   ],
+  "outputSpec": [
+    {
+      "name": "emptyout",
+      "class": "string",
+      "help": ""
+    }
+  ],
   "runSpec": {
     "timeoutPolicy": {
       "*": {
