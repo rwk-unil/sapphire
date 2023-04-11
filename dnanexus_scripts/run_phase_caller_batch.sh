@@ -29,8 +29,7 @@ CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # through the mounting point, setting approx 3 times more threads than cores
 # results in an acceptable CPU usage (threads wait for data over network)
 THREADS_ARG="-t 12"
-DESTINATION="phasing_rare"
-NEW_BIN_TAG="rephased"
+DESTINATION=""
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -111,11 +110,14 @@ then
     echo "This file must be generated with the VCF var and binary file"
     exit 1
 fi
+if [ -z "${DESTINATION}" ]
+then
+    echo "Please specify a destination folder with --destination <path>, different than the input file folder"
+    exit 1
+fi
 
 VCF_FILENAME=$(dx_id_to_path "${VCF_VAR_ID}")
-CHROMOSOME=$(basename $(dx describe --json "${VCF_VAR_ID}" | jq -r '.folder'))
 echo "FILENAME        = ${VCF_FILENAME}"
-echo "CHROMOSOME      = ${CHROMOSOME}"
 BIN_FILENAME=$(dx_id_to_path "${BIN_ID}")
 echo "BIN FILENAME    = ${BIN_FILENAME}"
 SAMPLE_FILENAME=$(dx_id_to_path "${SAMPLE_FILE_ID}")
@@ -158,7 +160,7 @@ LAUNCH_ALL=""
 for split_bin_file in $(dx ls $(dx_id_to_dx_path "${BIN_ID}"))
 do
     INNER_BIN_FILENAME=$(dirname "${BIN_FILENAME}")/"${split_bin_file}"
-    INNER_NEW_BINARY_FILE="$(basename ${INNER_BIN_FILENAME})_${NEW_BIN_TAG}.bin"
+    INNER_NEW_BINARY_FILE="$(basename ${INNER_BIN_FILENAME})"
     command="cp ${INNER_BIN_FILENAME} ${INNER_NEW_BINARY_FILE}; time phase_caller -f ${VCF_FILENAME} -b ${INNER_NEW_BINARY_FILE} ${SAMPLE_FILENAME_ARG} -I ${PROJECT_ID} ${THREADS_ARG} ${SAMPLE_LIST_FILENAME_ARG} ${VERBOSE} ${CRAM_PATH_ARG}"
     echo "${command}"
     if [ -z "${LAUNCH_ALL}" ]
