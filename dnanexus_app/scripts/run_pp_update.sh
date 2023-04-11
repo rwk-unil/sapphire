@@ -25,13 +25,13 @@ key="$1"
 # Command line argument parsing from :
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 case $key in
-#    -f|--filename)
-#    FILENAME="$2"
-#    shift # past argument
-#    shift # past value
-#    ;;
-    -i|--input_id)
-    INPUT_ID="$2"
+    --original-vcf-file)
+    ORIGINAL_VCF_FILE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    --rephased-bin-file)
+    REPHASED_BIN_FILE="$2"
     shift # past argument
     shift # past value
     ;;
@@ -43,36 +43,28 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z "${INPUT_ID}" ]
+if [ -z "${ORIGINAL_VCF_FILE}" ]
 then
-    echo "Specify an input ID with --input_id, -i <actual_input_id>"
+    echo "Specify an input ID with --original-vcf-file <file_id>"
     exit 1
 fi
 
-if [ -z "${DESTINATION}" ]
+if [ -z "${REPHASED_BIN_FILE}" ]
 then
-    echo "Specify an output destination --destination, -d <destination_path>"
-    exit 1
-fi
-
-FILENAME=$(dx describe --json "${INPUT_ID}" | jq -r '.name')
-echo "FILENAME        = ${FILENAME}"
-
-if [ -z "${FILENAME}" ]
-then
-    echo "Cannot get filename..."
+    echo "Specify an input ID with --rephased-bin-file <file_id>"
     exit 1
 fi
 
 echo "Output file destination : ${DESTINATION}"
 
 # Use an array to keep parameters whole (e.g., paths with spaces)
-command=(dx run applets/pp-toolkit/pp-extract-applet \
-    -ivcf_bcf_file=${INPUT_ID} \
+command=(dx run applets/pp-toolkit/pp-update-applet \
+    -ioriginal_vcf_file=${ORIGINAL_VCF_FILE} \
+    -irephased_binary_file=${REPHASED_BIN_FILE} \
     --destination "${DESTINATION}" \
     ${COST_LIMIT_ARG} --instance-type ${INSTANCE} -y \
-    --name "PP-Toolkit : Step 1 - Extract" \
-    --tag "extract")
+    --name "PP-Toolkit : Step 5 - Update" \
+    --tag "update")
 
 echo "${command[@]}"
 
