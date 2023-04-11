@@ -20,6 +20,9 @@ main() {
     echo "Value of original_vcf_file: '$original_vcf_file'"
     echo "Value of rephased_vcf: '$rephased_vcf'"
     echo "Value of var_vcf: '$var_vcf'"
+    echo "Value of original_vcf_file_index: '$original_vcf_file_index'"
+    echo "Value of rephased_vcf_index: '$rephased_vcf_index'"
+    echo "Value of var_vcf_index: '$var_vcf_index'"
     echo "Value of output_prefix: '$output_prefix'"
 
     # The following line(s) use the dx command-line tool to download your file
@@ -30,14 +33,24 @@ main() {
     original_vcf_filename="$(dx describe "$original_vcf_file" --name)"
     dx download "$original_vcf_file" -o "${original_vcf_filename}"
 
+    original_vcf_index_filename="$(dx describe "$original_vcf_file_index" --name)"
+    dx download "$original_vcf_file_index" -o "${original_vcf_index_filename}"
+
     rephased_vcf_filename="$(dx describe "$rephased_vcf" --name)"
     dx download "$rephased_vcf" -o "${rephased_vcf_filename}"
+
+    rephased_vcf_index_filename="$(dx describe "$rephased_vcf_index" --name)"
+    dx download "$rephased_vcf_index" -o "${rephased_vcf_index_filename}"
+    
     if [ -n "$var_vcf" ]
     then
         var_vcf_filename="$(dx describe "$var_vcf" --name)"
         dx download "$var_vcf" -o "${var_vcf_filename}"
+
+        var_vcf_index_filename="$(dx describe "$var_vcf_index" --name)"
+        dx download "$var_vcf_index" -o "${var_vcf_index_filename}"
         # Launch indexing in background
-        bcftools index "${var_vcf_filename}" &
+        #bcftools index "${var_vcf_filename}" &
     else
         var_vcf_filename="${original_vcf_filename}"
     fi
@@ -47,19 +60,19 @@ main() {
         output_prefix="${original_vcf_filename}"_
     fi
 
-    echo "Launching indexing..."
-    date
+    #echo "Launching indexing..."
+    #date
 
     # Launch indexing in background
-    bcftools index "${original_vcf_filename}" &
-    bcftools index "${rephased_vcf_filename}" &
+    #bcftools index "${original_vcf_filename}" &
+    #bcftools index "${rephased_vcf_filename}" &
 
     # Hacky way to auto extract the region (first encountered in file)
     region=$(bcftools view -H -G "${original_vcf_filename}" | head -n1 | cut -f1)
 
     # Wait for indexing to finish
-    wait
-    echo "Indexing done !"
+    #wait
+    #echo "Indexing done !"
     date
 
     echo "Running validation on file ${rephased_vcf_filename} against reference file ${original_vcf_filename} for region ${region}"
