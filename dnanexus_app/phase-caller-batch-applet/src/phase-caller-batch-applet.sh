@@ -50,6 +50,9 @@ main() {
     # Wait for mount to start
     sleep 2
 
+    # THIS DOES NOT WORK BECAUSE APPLETS ARE RUN IN CONTAINERS
+    # So files will not have a path except "/"
+
     dx_id_to_path () {
         FFNAME=$(dx describe --json "$1" | jq -r '.name')
         FFPATH=$(dx describe --json "$1" | jq -r '.folder')
