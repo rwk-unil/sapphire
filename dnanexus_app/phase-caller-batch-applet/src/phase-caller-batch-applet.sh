@@ -118,4 +118,6 @@ main() {
         #dx download "${binary_files[$i]}" -o binary_files-$i
     done
 
+    dx-jobutil-add-output emptyout "done" --class=string
+
 }
