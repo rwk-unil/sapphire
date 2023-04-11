@@ -77,7 +77,7 @@ main() {
 
     echo "Running validation on file ${rephased_vcf_filename} against reference file ${original_vcf_filename} for region ${region}"
     switch_static --validation "${original_vcf_filename}" \
-    --estimation "${rephased_vcf_filename}" --frequency "${var_vcf_filenames}" \
+    --estimation "${rephased_vcf_filename}" --frequency "${var_vcf_filename}" \
     --region "${region}" --output "${output_prefix}"
 
     date
