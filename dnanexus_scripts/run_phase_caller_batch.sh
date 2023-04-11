@@ -80,6 +80,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -d|--destination)
+    DESTINATION="$2"
+    shift
+    shift
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -144,7 +149,7 @@ then
     SAMPLE_LIST_FILENAME_ARG="-l \"${SAMPLE_LIST_FILENAME}\""
 fi
 
-echo "Output file destination : ${DESTINATION}/phase_called/${CHROMOSOME}"
+echo "Output file destination : ${DESTINATION}"
 echo "Instance type : ${INSTANCE}"
 
 echo "This will launch multiple jobs !"
@@ -163,7 +168,7 @@ do
     dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
         ${COST_LIMIT_ARG} --name RephaseCallerBatch \
         -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
-        --destination "${DESTINATION}/phase_called/${CHROMOSOME}" \
+        --destination "${DESTINATION}" \
         --instance-type ${INSTANCE} -y
 done
 
