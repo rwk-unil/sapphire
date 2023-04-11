@@ -8,11 +8,13 @@ then
 fi
 
 # Get the path of this script
-SCRIPTPATH=$(realpath $(dirname "$0"))
+SCRIPTPATH=$(realpath  $(dirname "$0"))
 
 INSTANCE="mem2_ssd1_v2_x2"
-INPUT_ID=""
-DESTINATION=""
+BIN_ID=""
+OFNAME=""
+SPLIT_SIZE="1000"
+DESTINATION="/"
 
 # Source common variables and functions
 source "${SCRIPTPATH}/common.sh"
@@ -25,13 +27,18 @@ key="$1"
 # Command line argument parsing from :
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 case $key in
-#    -f|--filename)
-#    FILENAME="$2"
-#    shift # past argument
-#    shift # past value
-#    ;;
-    -i|--input_id)
-    INPUT_ID="$2"
+    -b|--bin-id)
+    BIN_ID="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -o|--output)
+    OFNAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -n|--split-size)
+    SPLIT_SIZE="$2"
     shift # past argument
     shift # past value
     ;;
@@ -43,36 +50,28 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z "${INPUT_ID}" ]
+if [ -z "${BIN_ID}" ]
 then
-    echo "Specify an input ID with --input_id, -i <actual_input_id>"
+    echo "Specify an input binary file ID with --bin-id <actual_input_id>"
+    echo "This file must be generated from the VCF passed"
     exit 1
 fi
 
-if [ -z "${DESTINATION}" ]
+BIN_FILENAME=$(dx_id_to_path "${BIN_ID}")
+echo "BIN FILENAME    = ${BIN_FILENAME}"
+
+if [ -z "${OFNAME}" ]
 then
-    echo "Specify an output destination --destination, -d <destination_path>"
-    exit 1
+    OFNAME=$(basename "${BIN_FILENAME}")
 fi
 
-FILENAME=$(dx describe --json "${INPUT_ID}" | jq -r '.name')
-echo "FILENAME        = ${FILENAME}"
-
-if [ -z "${FILENAME}" ]
-then
-    echo "Cannot get filename..."
-    exit 1
-fi
-
-echo "Output file destination : ${DESTINATION}"
-
-# Use an array to keep parameters whole (e.g., paths with spaces)
-command=(dx run applets/pp-toolkit/pp-extract-applet \
-    -ivcf_bcf_file=${INPUT_ID} \
+command=(dx run applets/pp-toolkit/bin-splitter-applet \
+    -ibinary_file_to_split=${BIN_ID} -isplit_size=${SPLIT_SIZE}\
     --destination "${DESTINATION}" \
     ${COST_LIMIT_ARG} --instance-type ${INSTANCE} -y \
-    --name "PP-Toolkit : Step 1 - Extract" \
-    --tag "extract")
+    --name "PP-Toolkit : Step 2 - Bin splitter" \
+    --tag "split")
+
 
 echo "${command[@]}"
 
