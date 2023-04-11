@@ -11,3 +11,9 @@ To save the compressed image :
 ```shell
 docker save <tag_name:version> | gzip > <filename.tar.gz>
 ```
+
+To save it faster (with parallel gzip)
+
+```shell
+docker save <tag_name:version> | pigz --fast > <filename.tar.gz>
+```
