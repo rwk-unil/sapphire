@@ -1,6 +1,6 @@
 #/bin/bash
 
-DOCKER_IMAGE=docker/pp_rephase_v1.3.tar.gz
+DOCKER_IMAGE=docker/pp_toolkit_v1.4.tar.gz
 
 if ! command -v jq &> /dev/null
 then
@@ -88,6 +88,11 @@ case $key in
     --verbose)
     VERBOSE="-v"
     shift # no value attached
+    ;;
+    --tag)
+    TAG="$2"
+    shift # past argument
+    shift # past value
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
