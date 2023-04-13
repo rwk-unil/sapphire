@@ -13,6 +13,7 @@ public:
         app.add_option("-e,--end", end, "End sample position (excluded)");
         app.add_option("-p,--progress", progress, "Number of VCF lines to show progress");
         app.add_flag("--pp-from-maf", pp_from_maf, "Genrate PP score from minor allele frequency (MAF)");
+        app.add_option("--maf-threshold", maf_threshold, "MAF threshold for PP score from MAF");
         app.add_option("--fifo-size", fifo_size, "FIFO size (number of hets extracted centered on het of interest)");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
     }
@@ -24,6 +25,7 @@ public:
     size_t end = -1;
     size_t progress = 0;
     bool pp_from_maf = false;
+    float maf_threshold = 0.001;
     size_t fifo_size = 5;
     bool verbose = false;
 };

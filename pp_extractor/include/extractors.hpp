@@ -36,6 +36,9 @@ public:
         pred(PP_THRESHOLD),
         progress(0),
         pp_from_maf(pp_from_maf) {
+        if (pp_from_maf) {
+            std::cout << "The PP score will be generated from MAF" << std::endl;
+        }
     }
 
 
@@ -111,6 +114,7 @@ public:
             }
             float maf = float(AC)/AN;
             synthetic_pp = (maf > MAF_THRESHOLD) ? NAN : maf / 2.0;
+            std::cout << "AC : " << AC << " AN : " << AN << " synth PP " << synthetic_pp << std::endl;
         }
 
         // Extract heterozygous sites and PP
@@ -157,6 +161,11 @@ public:
 
     void set_progress(const size_t progress) {
         this->progress = progress;
+    }
+
+    void set_maf_threshold(const float maf_threhsold) {
+        std::cout << "Setting MAF threshold to " << maf_threhsold << std::endl;
+        MAF_THRESHOLD = maf_threhsold;
     }
 
     void finalize() {
@@ -207,7 +216,7 @@ public:
 
     const size_t FIFO_SIZE;
     const float PP_THRESHOLD;
-    const float MAF_THRESHOLD;
+    float MAF_THRESHOLD;
     float *pp_arr;
     int pp_arr_size;
     size_t start_id;
