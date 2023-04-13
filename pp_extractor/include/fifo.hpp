@@ -37,7 +37,7 @@ public:
     void finalize() {
         // Search for predicate (e.g., small PP) at the end
         for (size_t i = ((items.size() < size) ? 0 : (mid + 1)); i < items.size(); ++i) {
-            if (p(items[mid].item)) {
+            if (p(items[i].item)) {
                 keep();
                 break;
             }
