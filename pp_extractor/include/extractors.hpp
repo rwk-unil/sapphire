@@ -113,8 +113,8 @@ public:
                 AN = *pAN;
             }
             float maf = float(AC)/AN;
-            synthetic_pp = (maf > MAF_THRESHOLD) ? NAN : maf / 2.0;
-            std::cout << "AC : " << AC << " AN : " << AN << " synth PP " << synthetic_pp << std::endl;
+            synthetic_pp = (maf > MAF_THRESHOLD) ? NAN : 0.5 + maf / 2.0;
+            //std::cout << "AC : " << AC << "\tAN : " << AN << "\tsynth PP " << synthetic_pp << std::endl;
         }
 
         // Extract heterozygous sites and PP
@@ -156,6 +156,16 @@ public:
                 printf("\033[A\033[2K");
                 std::cout << "Handled " << bcf_fri.line_num << " VCF entries (lines)" << std::endl;
             }
+        }
+
+        // Free memory
+        if (pAN) {
+            free(pAN);
+            pAN = NULL;
+        }
+        if (pAC) {
+            free(pAC);
+            pAC = NULL;
         }
     }
 

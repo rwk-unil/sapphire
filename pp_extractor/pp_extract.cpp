@@ -64,6 +64,7 @@ int main(int argc, char**argv) {
 
     PPExtractTraversal ppet(start, end, global_app_options.fifo_size,
                             global_app_options.pp_from_maf);
+    ppet.set_maf_threshold(global_app_options.maf_threshold);
     ppet.set_progress(global_app_options.progress);
     ppet.traverse_no_destroy(filename);
     ppet.finalize();
