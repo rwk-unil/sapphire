@@ -1,3 +1,6 @@
 [submodule "xSqueezeIt"]
 	path = xSqueezeIt
 	url = https://github.com/rwk-unil/xSqueezeIt.git
+[submodule "test/cukinia"]
+	path = test/cukinia
+	url = https://github.com/savoirfairelinux/cukinia.git
