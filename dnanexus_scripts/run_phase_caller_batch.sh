@@ -132,7 +132,12 @@ else
     SAMPLE_LIST_FILENAME=""
 fi
 
-tag="phase_caller_v1.2"
+if [ -z "${TAG}" ]
+then
+    tag="phase_caller"
+else
+    tag="${TAG}"
+fi
 echo "dx run with tag : ${tag}"
 
 CRAM_PATH_ARG=""
@@ -157,6 +162,8 @@ echo "Instance type : ${INSTANCE}"
 echo "This will launch multiple jobs !"
 
 LAUNCH_ALL=""
+NUM_JOBS=$(dx ls $(dx_id_to_dx_path "${BIN_ID}") | wc -l)
+echo Expected number of jobs : "${NUM_JOBS}"
 for split_bin_file in $(dx ls $(dx_id_to_dx_path "${BIN_ID}"))
 do
     INNER_BIN_FILENAME=$(dirname "${BIN_FILENAME}")/"${split_bin_file}"
@@ -173,5 +180,4 @@ do
         --destination "${DESTINATION}" \
         --instance-type ${INSTANCE} -y
 done
-
 
