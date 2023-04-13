@@ -16,6 +16,7 @@ public:
         app.add_option("--maf-threshold", maf_threshold, "MAF threshold for PP score from MAF");
         app.add_option("--fifo-size", fifo_size, "FIFO size (number of hets extracted centered on het of interest)");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
+        app.add_flag("--show-number", show_number, "Shows the number extracted");
     }
 
     CLI::App app{"PP Extractor app"};
@@ -28,6 +29,7 @@ public:
     float maf_threshold = 0.001;
     size_t fifo_size = 5;
     bool verbose = false;
+    bool show_number = false;
 };
 
 GlobalAppOptions global_app_options;
@@ -65,6 +67,9 @@ int main(int argc, char**argv) {
     ppet.set_progress(global_app_options.progress);
     ppet.traverse_no_destroy(filename);
     ppet.finalize();
+    if (global_app_options.show_number) {
+        ppet.show_info();
+    }
     ppet.write_to_file(ofname);
 
     std::cout << "Done !" << std::endl;

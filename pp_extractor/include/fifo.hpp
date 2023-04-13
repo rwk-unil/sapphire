@@ -47,6 +47,16 @@ public:
         }
     }
 
+    size_t get_number_kept_with_pred() const {
+        size_t n = 0;
+        for (auto& i : kept_items) {
+            if (p(i)) {
+                n++;
+            }
+        }
+        return n;
+    }
+
     const std::vector<T>& get_kept_items_ref() const {
         return kept_items;
     }

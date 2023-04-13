@@ -175,6 +175,19 @@ public:
         }
     }
 
+    void show_info() {
+        size_t total_kept = 0;
+        size_t total_kept_pred = 0;
+        for (auto& f : fifos) {
+            auto kept_items = f.get_kept_items_ref();
+            total_kept += kept_items.size();
+            total_kept_pred += f.get_number_kept_with_pred();
+        }
+
+        std::cout << "Extracted a total of " << total_kept << " genotypes" << std::endl;
+        std::cout << "From which a total of " << total_kept_pred << " were selected given the predicate" << std::endl;
+    }
+
     void write_to_file(std::string filename) {
         std::fstream ofs(filename, std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
         if (!ofs.is_open()) {
