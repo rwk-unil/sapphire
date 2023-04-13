@@ -12,6 +12,7 @@ SCRIPTPATH=$(realpath  $(dirname "$0"))
 
 FILENAME=""
 REFERENCE=""
+unset -v FIFO_SIZE
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -30,6 +31,11 @@ case $key in
     REFERENCE="$2"
     shift # past argument
     shift # past value
+    ;;
+    --fifo-size)
+    FIFO_SIZE="$2"
+    shift
+    shift
     ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
@@ -51,6 +57,11 @@ then
     exit 1
 fi
 
+if ! [ -z "${FIFO_SIZE}" ]
+then
+    FIFO_ARG=--fifo-size
+fi
+
 echo "FILENAME        = ${FILENAME}"
 echo "REFERENCE       = ${REFERENCE}"
 
@@ -66,7 +77,7 @@ function exit_fail_rm_tmp {
 
 OUTPUTNAME="$(basename "${FILENAME}")".bin
 
-"${SCRIPTPATH}"/../../pp_extractor/pp_extract -f "${FILENAME}" -o ${TMPDIR}/"${OUTPUTNAME}" || { echo "Failed to extract ${FILENAME}"; exit_fail_rm_tmp; }
+"${SCRIPTPATH}"/../../pp_extractor/pp_extract ${FIFO_ARG} ${FIFO_SIZE} -f "${FILENAME}" -o ${TMPDIR}/"${OUTPUTNAME}" || { echo "Failed to extract ${FILENAME}"; exit_fail_rm_tmp; }
 cmp "${REFERENCE}" ${TMPDIR}/"${OUTPUTNAME}" || { echo "[KO] Output file and reference are different"; exit_fail_rm_tmp; }
 
 echo "[OK] The extracted file and reference are the same"
