@@ -38,7 +38,7 @@ public:
         // Search for predicate (e.g., small PP) at the end
         for (size_t i = ((items.size() < size) ? 0 : (mid + 1)); i < items.size(); ++i) {
             if (p(items[i].item)) {
-                keep();
+                keep(i > mid ? i-mid : 0);
                 break;
             }
         }
@@ -56,8 +56,8 @@ private:
         bool kept;
     };
 
-    void keep() {
-        for (size_t i = 0; i < items.size(); ++i) {
+    inline void keep(const size_t offset = 0) {
+        for (size_t i = offset; i < items.size(); ++i) {
             if (!items[i].kept) {
                 kept_items.push_back(items[i].item);
                 items[i].kept = true;
