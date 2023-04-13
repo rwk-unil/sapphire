@@ -51,4 +51,22 @@ constexpr bool operator!=(const HetInfo& lhs, const HetInfo& rhs) {
     return !(lhs == rhs);
 }
 
+class SampleBlock {
+public:
+    static void write_to_stream(std::fstream& ofs, const std::vector<HetInfo>& his, uint32_t id) {
+        const uint32_t mark = 0xd00dc0de;
+        const uint32_t size = his.size();
+        // Write a mark
+        ofs.write(reinterpret_cast<const char*>(&mark), sizeof(uint32_t));
+        // Write the ID
+        ofs.write(reinterpret_cast<const char*>(&id), sizeof(uint32_t));
+        // Write the size
+        ofs.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+        // Write the Het Infos
+        for (auto& hi : his) {
+            hi.to_stream(ofs);
+        }
+    }
+};
+
 #endif /* __HET_INFO_HPP__ */
