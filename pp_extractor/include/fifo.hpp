@@ -8,37 +8,40 @@ public:
         size(size),
         mid(size/2),
         p(p) {
+        if (!(size & 1)) {
+            std::cerr << "FIFO size should be odd ! Adjusting size to " << ++this->size << std::endl;
+            this->mid = this->size/2;
+        }
     }
 
     void insert(T item) {
+        // If the FIFO is empty, fill with "dummy items" (to simplify logic)
+        if (items.size() == 0) {
+            for (size_t i = 0; i < size; ++i) {
+                items.push_back(FIFOItem(item));
+                // Setting this true will make sure "keep" doesn't save them
+                items.back().kept = true;
+            }
+        }
+
+        // Push item at the end
         items.push_back(FIFOItem(item));
 
-        if (items.size() == size) {
-            // When we reach size we need to check for predicate in front
-            for (size_t i = 0; i <= mid; ++i) {
-                // If predicate (e.g., small PP)
-                if (p(items[mid].item)) {
-                    keep();
-                    break;
-                }
-            }
-        } else if (items.size() > size) {
-            // When size is passed, pop front
-            items.pop_front();
+        // Pop the oldest item
+        items.pop_front();
 
-            // If predicate (e.g., small PP)
-            if (p(items[mid].item)) {
-                // Keep the information
-                keep();
-            }
+        // If predicate (e.g., small PP)
+        if (p(items[mid].item)) {
+            // Keep the information
+            keep();
         }
     }
 
     void finalize() {
         // Search for predicate (e.g., small PP) at the end
-        for (size_t i = ((items.size() < size) ? 0 : (mid + 1)); i < items.size(); ++i) {
+        for (size_t i = mid + 1; i < items.size(); ++i) {
             if (p(items[i].item)) {
-                keep(i > mid ? i-mid : 0);
+                keep_end(i-mid);
                 break;
             }
         }
@@ -56,8 +59,17 @@ private:
         bool kept;
     };
 
-    inline void keep(const size_t offset = 0) {
-        for (size_t i = offset; i < items.size(); ++i) {
+    inline void keep_end(size_t start) {
+        for (size_t i = start; i < items.size(); ++i) {
+            if (!items[i].kept) {
+                kept_items.push_back(items[i].item);
+                items[i].kept = true;
+            }
+        }
+    }
+
+    inline void keep() {
+        for (size_t i = 0; i < items.size(); ++i) {
             if (!items[i].kept) {
                 kept_items.push_back(items[i].item);
                 items[i].kept = true;
