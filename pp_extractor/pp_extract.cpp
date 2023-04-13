@@ -19,6 +19,7 @@ public:
         app.add_option("-s,--start", start, "Starting sample position");
         app.add_option("-e,--end", end, "End sample position (excluded)");
         app.add_option("-p,--progress", progress, "Number of VCF lines to show progress");
+        app.add_option("--fifo-size", fifo_size, "FIFO size (number of hets extracted centered on het of interest)");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
     }
 
@@ -28,6 +29,7 @@ public:
     size_t start = 0;
     size_t end = -1;
     size_t progress = 0;
+    size_t fifo_size = 5;
     bool verbose = false;
 };
 
@@ -134,8 +136,8 @@ public:
 
 class PPExtractTraversal : public BcfTraversal {
 public:
-    PPExtractTraversal(size_t start_id, size_t stop_id) :
-        FIFO_SIZE(5),
+    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size) :
+        FIFO_SIZE(fifo_size),
         PP_THRESHOLD(0.99),
         pp_arr(NULL),
         pp_arr_size(0),
@@ -308,9 +310,15 @@ int main(int argc, char**argv) {
         exit(app.exit(CLI::CallForHelp()));
     }
 
+    if (!(global_app_options.fifo_size & 1)) {
+        std::cerr << "Warning the FIFO size must be odd\n";
+        global_app_options.fifo_size++;
+        std::cerr << "FIFO size updated to " << global_app_options.fifo_size << std::endl;
+    }
+
     std::cout << "Extracting...\n" << std::endl;
 
-    PPExtractTraversal ppet(start, end);
+    PPExtractTraversal ppet(start, end, global_app_options.fifo_size);
     ppet.traverse_no_destroy(filename);
     ppet.finalize();
     ppet.write_to_file(ofname);
