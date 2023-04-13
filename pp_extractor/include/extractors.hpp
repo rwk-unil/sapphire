@@ -23,9 +23,10 @@ protected:
 
 class PPExtractTraversal : public BcfTraversal {
 public:
-    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size) :
+    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size, bool pp_from_maf) :
         FIFO_SIZE(fifo_size),
         PP_THRESHOLD(0.99),
+        MAF_THRESHOLD(0.001),
         pp_arr(NULL),
         pp_arr_size(0),
         start_id(start_id),
@@ -33,7 +34,8 @@ public:
         line_counter(0),
         print_counter(0),
         pred(PP_THRESHOLD),
-        progress(0) {
+        progress(0),
+        pp_from_maf(pp_from_maf) {
     }
 
 
@@ -76,6 +78,41 @@ public:
             non_snp = true;
         }
 
+        // We need AC (Allele Count) and AN (Allele Number) for PP from MAF
+        int AC = 0;
+        int* pAC = NULL;
+        int nAC = 0;
+        int AN = 0;
+        int* pAN = NULL;
+        int nAN = 0;
+        float synthetic_pp;
+
+        if (pp_from_maf) {
+            res = bcf_get_info_int32(header, line, "AC", &pAC, &nAC);
+            // If not in the VCF then compute it
+            if (res < 0) {
+                for (size_t i = start_id; i < stop_id; ++i) {
+                    if (bcf_gt_allele(bcf_fri.gt_arr[i*PLOIDY_2]) == 1) {
+                        AC++;
+                    }
+                    if (bcf_gt_allele(bcf_fri.gt_arr[i*PLOIDY_2+1]) == 1) {
+                        AC++;
+                    }
+                }
+            } else {
+                AC = *pAC;
+            }
+            // If not in the VCF then compute it
+            res = bcf_get_info_int32(header, line, "AN", &pAN, &nAN);
+            if (res < 0) {
+                AN = (stop_id - start_id) * PLOIDY_2;
+            } else {
+                AN = *pAN;
+            }
+            float maf = float(AC)/AN;
+            synthetic_pp = (maf > MAF_THRESHOLD) ? NAN : maf / 2.0;
+        }
+
         // Extract heterozygous sites and PP
         for (size_t i = start_id; i < stop_id; ++i) {
             int encoded_a0 = bcf_fri.gt_arr[i*PLOIDY_2];
@@ -88,6 +125,8 @@ public:
                 float pp = NAN; // Assume perfect phasing if there is no PP field
                 if (has_pp) {
                     pp = pp_arr[i];
+                } else if (pp_from_maf) {
+                    pp = synthetic_pp;
                 }
 
                 HetInfo hi(line_counter, encoded_a0, encoded_a1, pp);
@@ -168,6 +207,7 @@ public:
 
     const size_t FIFO_SIZE;
     const float PP_THRESHOLD;
+    const float MAF_THRESHOLD;
     float *pp_arr;
     int pp_arr_size;
     size_t start_id;
@@ -176,6 +216,7 @@ public:
     size_t print_counter;
     const PPPred pred;
     size_t progress;
+    bool pp_from_maf;
     std::vector<uint32_t> number_of_het_sites;
     std::vector<uint32_t> number_of_low_pp_sites;
     std::vector<uint32_t> number_of_snp_low_pp_sites;

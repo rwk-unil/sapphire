@@ -12,6 +12,7 @@ public:
         app.add_option("-s,--start", start, "Starting sample position");
         app.add_option("-e,--end", end, "End sample position (excluded)");
         app.add_option("-p,--progress", progress, "Number of VCF lines to show progress");
+        app.add_flag("--pp-from-maf", pp_from_maf, "Genrate PP score from minor allele frequency (MAF)");
         app.add_option("--fifo-size", fifo_size, "FIFO size (number of hets extracted centered on het of interest)");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
     }
@@ -22,6 +23,7 @@ public:
     size_t start = 0;
     size_t end = -1;
     size_t progress = 0;
+    bool pp_from_maf = false;
     size_t fifo_size = 5;
     bool verbose = false;
 };
@@ -56,7 +58,8 @@ int main(int argc, char**argv) {
 
     std::cout << "Extracting...\n" << std::endl;
 
-    PPExtractTraversal ppet(start, end, global_app_options.fifo_size);
+    PPExtractTraversal ppet(start, end, global_app_options.fifo_size,
+                            global_app_options.pp_from_maf);
     ppet.set_progress(global_app_options.progress);
     ppet.traverse_no_destroy(filename);
     ppet.finalize();
