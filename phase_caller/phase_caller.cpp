@@ -505,7 +505,7 @@ public:
 
         for (auto& h : het_trios) {
             // Sanity check
-            if (!h->self->a0_reads_p->size() && h->self->a1_reads_p->size()) {
+            if (!h->self->a0_reads_p->size() && !h->self->a1_reads_p->size()) {
                 if (global_app_options.verbose) {
                     std::cerr << "No reads mapped to " << h->self->var_info->contig << ":" << h->self->var_info->pos1 << std::endl;
                 }
