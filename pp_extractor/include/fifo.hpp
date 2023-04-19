@@ -1,6 +1,8 @@
 #ifndef __GENERIC_KEEP_FIFO_HPP__
 #define __GENERIC_KEEP_FIFO_HPP__
 
+#include <deque>
+
 template <typename T, class Pred>
 class GenericKeepFifo {
 public:
