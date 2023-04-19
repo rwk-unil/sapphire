@@ -88,7 +88,7 @@ public:
         int AN = 0;
         int* pAN = NULL;
         int nAN = 0;
-        float synthetic_pp;
+        float synthetic_pp = 0;
 
         if (pp_from_maf) {
             res = bcf_get_info_int32(header, line, "AC", &pAC, &nAC);
