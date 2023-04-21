@@ -174,10 +174,15 @@ do
     then
         ask_permission_to_launch_all
     fi
-    dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
-        ${COST_LIMIT_ARG} --name RephaseCallerBatch \
-        -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
-        --destination "${DESTINATION}" \
-        --instance-type ${INSTANCE} -y
+    if [ "${SKIP_JOB}" = "yes" ]
+    then
+        unset SKIP_JOB
+    else
+        dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
+            ${COST_LIMIT_ARG} --name RephaseCallerBatch \
+            -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
+            --destination "${DESTINATION}" \
+            --instance-type ${INSTANCE} -y
+    fi
 done
 
