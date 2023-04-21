@@ -40,13 +40,18 @@ ask_permission_to_launch() {
 
 ask_permission_to_launch_all() {
     while true; do
-        read -p "Do you want to launch on DNANexus? [y/n/a]" yn
+        read -p "Do you want to launch on DNANexus? [y/n/a/e]" yn
         case $yn in
             y)
             echo "Launching !";
             break
             ;;
             n)
+            echo "Skippping !";
+            SKIP_JOB="yes"
+            break
+            ;;
+            e)
             echo "exiting...";
             exit
             ;;
