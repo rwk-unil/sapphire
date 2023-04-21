@@ -78,7 +78,7 @@ public:
         }
         //std::cout << "Samples size : " << samples.size() << std::endl;
         //std::cout << "Found samples : " << std::endl;
-        for (auto& s : samples) std::cout << s.to_string() << std::endl;
+        //for (auto& s : samples) std::cout << s.to_string() << std::endl;
     }
 
     static std::vector<size_t> ids_from_files(std::string& samples_fname, std::string& sub_fname) {
