@@ -110,3 +110,8 @@ if ! [ -z "${COST_LIMIT}" ]
 then
     COST_LIMIT_ARG="--cost-limit ${COST_LIMIT}"
 fi
+
+if [ "${BATCH}" = "yes" ]
+then
+    BATCH_ARG="--batch"
+fi
