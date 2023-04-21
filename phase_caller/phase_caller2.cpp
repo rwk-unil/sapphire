@@ -482,6 +482,41 @@ public:
     const std::vector<VarInfo>& vi;
 };
 
+class Evidence {
+public:
+    Evidence() {
+        std::cerr << "Warning empty evidence created !" << std::endl;
+    }
+
+    Evidence(Hetp* self, Hetp* other) :
+        self(self), other(other)
+    {
+        // Check strand 0 concordance
+        for (auto& s0r : *self->a0_reads_p) {
+            if (other->a0_reads_p->find(s0r) != other->a0_reads_p->end()) {
+                correct_phase_pir++;
+            }
+            if (other->a1_reads_p->find(s0r) != other->a1_reads_p->end()) {
+                reverse_phase_pir++;
+            }
+        }
+        // Check strand 1 concordance
+        for (auto& s1r : *self->a1_reads_p) {
+            if (other->a0_reads_p->find(s1r) != other->a0_reads_p->end()) {
+                reverse_phase_pir++;
+            }
+            if (other->a1_reads_p->find(s1r) != other->a1_reads_p->end()) {
+                correct_phase_pir++;
+            }
+        }
+    }
+
+    Hetp* self = NULL;
+    Hetp* other = NULL;
+    size_t correct_phase_pir = 0;
+    size_t reverse_phase_pir = 0;
+};
+
 class Rephaser {
 public:
     /* Rephase if PP below (strict) < PP_THRESHOLD */
@@ -489,58 +524,41 @@ public:
 
 protected:
 
+#if 0
     // Validates the phase, this requires high PP neighbors
     inline void validated_phase(HetTrio* het, HetTrio* other_het, size_t& correct_phase_pir, size_t& reverse_phase_pir) {
         if (other_het && other_het->self->get_pp() > OTHER_PP_THRESHOLD) {
             check_phase(het, other_het, correct_phase_pir, reverse_phase_pir);
         }
     }
+#endif
 
-    // Simply reports the phase checked
-    inline void check_phase(HetTrio* het, HetTrio* other_het, size_t& correct_phase_pir, size_t& reverse_phase_pir) {
-        if (other_het) {
-            // Check strand 0 concordance
-            for (auto& s0r : *het->self->a0_reads_p) {
-                if (other_het->self->a0_reads_p->find(s0r) != other_het->self->a0_reads_p->end()) {
-                    correct_phase_pir++;
-                }
-                if (other_het->self->a1_reads_p->find(s0r) != other_het->self->a1_reads_p->end()) {
-                    reverse_phase_pir++;
-                }
-            }
-            // Check strand 1 concordance
-            for (auto& s1r : *het->self->a1_reads_p) {
-                if (other_het->self->a0_reads_p->find(s1r) != other_het->self->a0_reads_p->end()) {
-                    reverse_phase_pir++;
-                }
-                if (other_het->self->a1_reads_p->find(s1r) != other_het->self->a1_reads_p->end()) {
-                    correct_phase_pir++;
-                }
-            }
-        }
+    inline void gather_evidence(HetTrio* het, std::vector<Evidence>& evidence, size_t max_dist, size_t max_steps) {
+        look_back(het, evidence, max_dist, max_steps);
+        look_ahead(het, evidence, max_dist, max_steps);
     }
 
-    inline void look_back(HetTrio* het, size_t& correct_phase_pir, size_t& reverse_phase_pir, size_t max_dist) {
+    inline void look_back(HetTrio* het, std::vector<Evidence>& evidence, size_t max_dist, size_t max_steps) {
         HetTrio *prev = het->prev;
-        while (prev) {
+        while (prev && max_steps--) {
             auto distance = DIST(prev->self->var_info->pos1, het->self->var_info->pos1);
             if (distance > max_dist) {
                 return;
             } else {
-                check_phase(het, prev, correct_phase_pir, reverse_phase_pir);
+                evidence.push_back(Evidence(het->self, prev->self));
             }
             prev = prev->prev;
         }
     }
 
-    inline void look_ahead(HetTrio* het, size_t& correct_phase_pir, size_t& reverse_phase_pir, size_t max_dist) {
+    inline void look_ahead(HetTrio* het, std::vector<Evidence>& evidence, size_t max_dist, size_t max_steps) {
         HetTrio *next = het->next;
-        while (next) {
+        while (next && max_steps--) {
             auto distance = DIST(next->self->var_info->pos1, het->self->var_info->pos1);
             if (distance > max_dist) {
                 return;
             } else {
-                check_phase(het, next, correct_phase_pir, reverse_phase_pir);
+                evidence.push_back(Evidence(het->self, next->self));
             }
             next = next->next;
         }
@@ -568,16 +586,15 @@ public:
         stats.num_hets = het_trios.size();
 
         HetTrio* current_het = het_trios.front().get();
-        //HetTrio* first = filter_het_trios(het_trios);
-        //HetTrio* current_het = first;
 
         if (global_app_options.verbose) {
-            std::cout << "There are " << stats.num_hets << " het sites to check" << std::endl;
+            std::cout << "There are " << stats.num_hets << " het sites after initial filter (e.g., non SNP)" << std::endl;
             std::cout << "Starting piling up reads for those hets..." << std::endl;
         }
 
         size_t het_counter = 0;
 
+        /* PILE UP */
         while(current_het) {
             std::string stid = current_het->self->var_info->contig;
             int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
@@ -615,6 +632,7 @@ public:
             }
         }
 
+        /* REPHASE/VALIDATE */
         for (auto& h : het_trios) {
             if (!h->self) continue; // Filtered out
             // Sanity check
@@ -625,28 +643,32 @@ public:
                 stats.no_reads++;
             }
 
-            // Requires to be rephased
-            if (h->self->get_pp() < PP_THRESHOLD) {
+            if (0 /* validate */) {
+                std::vector<Evidence> evidence(0);
+
+                gather_evidence(h.get(), evidence, MAX_DISTANCE, 1 /* single step */);
+
                 if (global_app_options.verbose) {
-                    std::cout << h->self->to_string() << " requires work" << std::endl;
+                    std::cout << "Evidence vector is of size : " << evidence.size() << std::endl;
+
+                    for (auto& e : evidence) {
+                        std::cout << "Evidence relative to : " << e.other->to_string() << std::endl;
+                        std::cout << "Correct phase PIRs : " << e.correct_phase_pir << std::endl;
+                        std::cout << "Reverse phase PIRs : " << e.reverse_phase_pir << std::endl;
+
+                        if (e.correct_phase_pir && e.reverse_phase_pir) {
+                            std::cerr << "Warning ! " << e.correct_phase_pir << " reads confirm the phase and " << e.reverse_phase_pir << " reads say the phase is wrong" << std::endl;
+                            stats.rephase_mixed++;
+                        }
+                    }
                 }
 
-                stats.rephase_tries++;
-
+                // Cumulate over evidence, this could be another algorithm
                 size_t correct_phase_pir = 0;
                 size_t reverse_phase_pir = 0;
-
-                look_back(h.get(), correct_phase_pir, reverse_phase_pir, MAX_DISTANCE);
-                look_ahead(h.get(), correct_phase_pir, reverse_phase_pir, MAX_DISTANCE);
-
-                if (global_app_options.verbose) {
-                    std::cout << "Correct phase PIRs : " << correct_phase_pir << std::endl;
-                    std::cout << "Reverse phase PIRs : " << reverse_phase_pir << std::endl;
-
-                    if (correct_phase_pir && reverse_phase_pir) {
-                        std::cerr << "Warning ! " << correct_phase_pir << " reads confirm the phase and " << reverse_phase_pir << " reads say the phase is wrong" << std::endl;
-                        stats.rephase_mixed++;
-                    }
+                for (auto& e : evidence) {
+                    correct_phase_pir += e.correct_phase_pir;
+                    reverse_phase_pir += e.reverse_phase_pir;
                 }
                 // We need at least to have seen some reads
                 if (correct_phase_pir || reverse_phase_pir) {
@@ -663,6 +685,58 @@ public:
                         std::cout << "This is the read validated entry :" << std::endl;
                         std::cout << h->self->to_string() << std::endl;
                         std::cout << "---" << std::endl;
+                    }
+                }
+            } else /* rephase */ {
+                // Requires to be rephased
+                if (h->self->get_pp() < PP_THRESHOLD) {
+                    stats.rephase_tries++;
+                    if (global_app_options.verbose) {
+                        std::cout << h->self->to_string() << " requires work" << std::endl;
+                    }
+
+                    std::vector<Evidence> evidence(0);
+
+                    gather_evidence(h.get(), evidence, MAX_DISTANCE, 100 /* max steps */);
+
+                    if (global_app_options.verbose) {
+                        std::cout << "Evidence vector is of size : " << evidence.size() << std::endl;
+
+                        for (auto& e : evidence) {
+                            std::cout << "Evidence relative to : " << e.other->to_string() << std::endl;
+                            std::cout << "Correct phase PIRs : " << e.correct_phase_pir << std::endl;
+                            std::cout << "Reverse phase PIRs : " << e.reverse_phase_pir << std::endl;
+
+                            if (e.correct_phase_pir && e.reverse_phase_pir) {
+                                std::cerr << "Warning ! " << e.correct_phase_pir << " reads confirm the phase and " << e.reverse_phase_pir << " reads say the phase is wrong" << std::endl;
+                                stats.rephase_mixed++;
+                            }
+                        }
+                    }
+
+                    // Cumulate over evidence, this could be another algorithm
+                    size_t correct_phase_pir = 0;
+                    size_t reverse_phase_pir = 0;
+                    for (auto& e : evidence) {
+                        correct_phase_pir += e.correct_phase_pir;
+                        reverse_phase_pir += e.reverse_phase_pir;
+                    }
+                    // We need at least to have seen some reads
+                    if (correct_phase_pir || reverse_phase_pir) {
+                        stats.rephase_success++;
+                        if (correct_phase_pir > reverse_phase_pir) {
+                            // Phase is correct
+                            h->self->set_validated_pp(correct_phase_pir);
+                        } else {
+                            // Phase is incorrect
+                            h->self->reverse_phase();
+                            h->self->set_validated_pp(reverse_phase_pir);
+                        }
+                        if (global_app_options.verbose) {
+                            std::cout << "This is the read validated entry :" << std::endl;
+                            std::cout << h->self->to_string() << std::endl;
+                            std::cout << "---" << std::endl;
+                        }
                     }
                 }
             }
@@ -689,6 +763,9 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     HetInfoPtrContainerExt hipce(himm, himm_sample_idx, vi);
     // Hets created from the memory map will directy edit the file on rephase
     hipce.fill_het_info_ext(hets);
+    if (global_app_options.verbose) {
+        std::cout << "Loaded " << hets.size() << " genotypes from file" << std::endl;
+    }
     het_trio_list_from_hets(het_trios, hets);
 
     try {
