@@ -113,6 +113,11 @@ public:
         pp_arr[0] += number_of_reads+1;
     }
 
+    void set_bad_pp(size_t number_of_reads) {
+        // Set a negative value
+        pp_arr[0] = -number_of_reads - pp_arr[0];
+    }
+
     const VarInfo *var_info;
     std::unique_ptr<std::set<std::string> > a0_reads_p;
     std::unique_ptr<std::set<std::string> > a1_reads_p;
@@ -569,6 +574,7 @@ public:
     public:
         size_t rephase_tries = 0;
         size_t rephase_success = 0;
+        size_t rephase_switch = 0;
         size_t rephase_mixed = 0;
         size_t no_reads = 0;
         size_t num_hets = 0;
@@ -678,13 +684,8 @@ public:
                         h->self->set_validated_pp(correct_phase_pir);
                     } else {
                         // Phase is incorrect
-                        h->self->reverse_phase();
-                        h->self->set_validated_pp(reverse_phase_pir);
-                    }
-                    if (global_app_options.verbose) {
-                        std::cout << "This is the read validated entry :" << std::endl;
-                        std::cout << h->self->to_string() << std::endl;
-                        std::cout << "---" << std::endl;
+                        stats.rephase_switch++;
+                        h->self->set_bad_pp(reverse_phase_pir);
                     }
                 }
             } else /* rephase */ {
@@ -715,6 +716,7 @@ public:
                     }
 
                     // Cumulate over evidence, this could be another algorithm
+                    /// @todo check the PP score of the other variants
                     size_t correct_phase_pir = 0;
                     size_t reverse_phase_pir = 0;
                     for (auto& e : evidence) {
@@ -746,6 +748,7 @@ public:
 
         if (global_app_options.verbose) {
             std::cout << "Tried to rephase " << stats.rephase_tries << " het sites, succeeded with " << stats.rephase_success << std::endl;
+            std::cout << "On these " << stats.rephase_success << ", " << stats.rephase_switch << " needed flipping" << std::endl;
         }
     }
 
@@ -766,7 +769,8 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     if (global_app_options.verbose) {
         std::cout << "Loaded " << hets.size() << " genotypes from file" << std::endl;
     }
-    het_trio_list_from_hets(het_trios, hets);
+    //het_trio_list_from_hets(het_trios, hets);
+    het_trio_list_from_hets_filter_distance(het_trios, hets, 1000);
 
     try {
         Rephaser r;
