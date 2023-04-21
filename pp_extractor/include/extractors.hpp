@@ -23,7 +23,7 @@ protected:
 
 class PPExtractTraversal : public BcfTraversal {
 public:
-    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size, bool pp_from_maf) :
+    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size, bool pp_from_maf, bool pp_from_af) :
         FIFO_SIZE(fifo_size),
         PP_THRESHOLD(0.99),
         MAF_THRESHOLD(0.001),
@@ -35,9 +35,16 @@ public:
         print_counter(0),
         pred(PP_THRESHOLD),
         progress(0),
-        pp_from_maf(pp_from_maf) {
+        pp_from_maf(pp_from_maf),
+        pp_from_af(pp_from_af) {
         if (pp_from_maf) {
-            std::cout << "The PP score will be generated from MAF" << std::endl;
+            std::cout << "The PP score will be generated from AC/AN" << std::endl;
+        }
+        if (pp_from_af) {
+            std::cout << "The PP score will be generated from AF" << std::endl;
+        }
+        if (pp_from_maf && pp_from_af) {
+            std::cerr << "Warning both options at the same time are not supported, will use AC/AN" << std::endl;
         }
     }
 
@@ -88,6 +95,9 @@ public:
         int AN = 0;
         int* pAN = NULL;
         int nAN = 0;
+        float AF = 0.0;
+        float* pAF = NULL;
+        int nAF = 0;
         float synthetic_pp = 0;
 
         if (pp_from_maf) {
@@ -115,6 +125,17 @@ public:
             float maf = float(AC)/AN;
             synthetic_pp = (maf > MAF_THRESHOLD) ? NAN : 0.5 + maf / 2.0;
             //std::cout << "AC : " << AC << "\tAN : " << AN << "\tsynth PP " << synthetic_pp << std::endl;
+        } else if (pp_from_af) {
+            // We use this because AC/AN get updated when bcftools subsamples
+            res = bcf_get_info_float(header, line, "AF", &pAF, &nAF);
+            // If not in the VCF
+            if (res < 0) {
+                std::cerr << "Missing AF, setting PP to NaN" << std::endl;
+                synthetic_pp = NAN;
+            } else {
+                AF = *pAF;
+                synthetic_pp = (AF < MAF_THRESHOLD) ? 0.5 : 1.0;
+            }
         }
 
         // Extract heterozygous sites and PP
@@ -129,7 +150,7 @@ public:
                 float pp = NAN; // Assume perfect phasing if there is no PP field
                 if (has_pp) {
                     pp = pp_arr[i];
-                } else if (pp_from_maf) {
+                } else if (pp_from_maf || pp_from_af) {
                     pp = synthetic_pp;
                 }
 
@@ -166,6 +187,10 @@ public:
         if (pAC) {
             free(pAC);
             pAC = NULL;
+        }
+        if (pAF) {
+            free(pAF);
+            pAF = NULL;
         }
     }
 
@@ -249,6 +274,7 @@ public:
     const PPPred pred;
     size_t progress;
     bool pp_from_maf;
+    bool pp_from_af;
     std::vector<uint32_t> number_of_het_sites;
     std::vector<uint32_t> number_of_low_pp_sites;
     std::vector<uint32_t> number_of_snp_low_pp_sites;
