@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream>
 
 class SampleInfo {
 public:
@@ -17,6 +18,12 @@ public:
         name(name),
         cram_file_path(cram_file_path)
     {}
+
+    std::string to_string() const {
+        std::stringstream ss;
+        ss << "Sample idx: " << original_index << " name: " << name << " cram path: " << cram_file_path;
+        return ss.str();
+    }
 
     size_t original_index = -1;
     std::string name;
@@ -33,6 +40,10 @@ std::vector<std::string> tokenize(const std::string& s, const std::string& delim
         pos_start = pos_end + delim_len;
         result.push_back(token);
     }
+    token = s.substr(pos_start);
+    if (token.length()) {
+        result.push_back(token);
+    }
 
     return result;
 }
@@ -44,10 +55,14 @@ public:
         std::ifstream file(sample_filename);
         std::string line;
         size_t i = 0;
+        //std::cout << "File : " << sample_filename << std::endl;
         while (std::getline(file, line)) {
+            //std::cout << "line : " << line << std::endl;
             if (line.length()) {
                 auto tokens = tokenize(line, ",");
+                //std::cout << "Tokens size : " << tokens.size() << std::endl;
                 if (tokens.size() == 1) {
+                    //std::cout << "Pushing line : " << line << std::endl;
                     sample_names.push_back(line); // Same as tokens [0]
                     samples.push_back(SampleInfo(i, line));
                 } else if (tokens.size() > 1) {
@@ -61,6 +76,9 @@ public:
                 i++;
             }
         }
+        //std::cout << "Samples size : " << samples.size() << std::endl;
+        //std::cout << "Found samples : " << std::endl;
+        for (auto& s : samples) std::cout << s.to_string() << std::endl;
     }
 
     static std::vector<size_t> ids_from_files(std::string& samples_fname, std::string& sub_fname) {
