@@ -578,6 +578,11 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     hipce.fill_het_info_ext(hets);
     het_trio_list_from_hets(het_trios, hets);
 
+    if (het_trios.empty()) {
+        std::cerr << "No need to open " << cram_file << " there are no het genotypes to check/rephase for that sample" << std::endl;
+        return;
+    }
+
     try {
         Rephaser r;
         r.rephase(het_trios, cram_file);
