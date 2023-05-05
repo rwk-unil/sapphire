@@ -24,6 +24,7 @@ main() {
     echo "Value of rephased_vcf_index: '$rephased_vcf_index'"
     echo "Value of var_vcf_index: '$var_vcf_index'"
     echo "Value of output_prefix: '$output_prefix'"
+    echo "Value of region: '$region'"
 
     # The following line(s) use the dx command-line tool to download your file
     # inputs to the local file system using variable names for the filenames. To
@@ -67,8 +68,11 @@ main() {
     #bcftools index "${original_vcf_filename}" &
     #bcftools index "${rephased_vcf_filename}" &
 
-    # Hacky way to auto extract the region (first encountered in file)
-    region=$(bcftools view -H -G "${original_vcf_filename}" | head -n1 | cut -f1)
+    if [ -z "${region}" ]
+    then
+        # Hacky way to auto extract the region (first encountered in file)
+        region=$(bcftools view -H -G "${original_vcf_filename}" | head -n1 | cut -f1)
+    fi
 
     # Wait for indexing to finish
     #wait

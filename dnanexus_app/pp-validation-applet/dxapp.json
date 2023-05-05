@@ -71,6 +71,13 @@
       "class": "string",
       "optional": true,
       "help": ""
+    },
+    {
+      "name": "region",
+      "label": "Region to process",
+      "class": "string",
+      "optional": true,
+      "help": ""
     }
   ],
   "outputSpec": [
