@@ -67,6 +67,35 @@ ask_permission_to_launch_all() {
     done
 }
 
+ask_permission_to_launch_message() {
+    while true; do
+        read -p "Do you want to $1? [y/n/a/e]" yn
+        case $yn in
+            y)
+            echo "Launching !";
+            break
+            ;;
+            n)
+            echo "Skippping !";
+            SKIP_JOB="yes"
+            break
+            ;;
+            e)
+            echo "exiting...";
+            exit
+            ;;
+            a)
+            echo "Launching all !";
+            LAUNCH_ALL="yes";
+            break
+            ;;
+            *)
+            echo "unexpected input"
+            ;;
+        esac
+    done
+}
+
 POSITIONAL=()
 while [[ $# -gt 0 ]]
 do
