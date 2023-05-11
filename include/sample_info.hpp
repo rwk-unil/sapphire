@@ -5,6 +5,8 @@
 #include <string>
 #include <sstream>
 
+#include "fs.hpp"
+
 class SampleInfo {
 public:
     SampleInfo(size_t index, const std::string& name) :
@@ -52,6 +54,10 @@ class SampleInfoLoader {
 public:
     SampleInfoLoader(const std::string& sample_filename) {
         if (sample_filename.compare("-") == 0) return;
+        if (!std::filesystem::exists(sample_filename)) {
+            std::cerr << "File " << sample_filename << " does not exist !" << std::endl;
+            throw "missing sample filename";
+        }
         std::ifstream file(sample_filename);
         std::string line;
         size_t i = 0;
