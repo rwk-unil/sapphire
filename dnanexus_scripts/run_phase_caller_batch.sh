@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Example : ./run_phase_caller.sh --vcf-id file-GQ1J7VjJ32gq4jVKXzF0gbXg --bin-id file-GQ1J7VjJ32gpJY68Q4K6B1kF --samples-id file-GQ1J7VjJ32gpj30XggFQ671V --samples-list-id file-GQ2xxQjJYyp15ZVQ6q86GPxf
+# Example : ./run_phase_caller_batch.sh --vcf-id file-GV4GV78JGb8z5YQxFzjGXZ9x --bin-id file-GV4J09QJ7K6GkKj9Z216p36f --samples-id file-GV4GV6jJGb8V3yzkbXgYGfXz --project-id 23193 --instance mem2_ssd1_v2_x4 -d PhasePolishing/step3_phase_calling/chr3 --tag phase_caller_chr3
 
 if ! command -v realpath &> /dev/null
 then
