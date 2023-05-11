@@ -18,7 +18,7 @@
 
 class Data {
 public:
-    Data(size_t vcf_line, float pp, bool switched, size_t  num_pir) :
+    Data(size_t vcf_line, float pp, bool switched, size_t num_pir) :
         vcf_line(vcf_line), pp(pp), switched(switched), num_pir(num_pir)
     {}
 
@@ -54,6 +54,8 @@ int main(int argc, char**argv) {
     app.add_flag("--extra-info", extra, "Output extra information");
     bool more = false;
     app.add_flag("--more", more, "Output more information");
+    bool ac = false;
+    app.add_flag("--ac", ac, "Added allele count field");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -114,15 +116,20 @@ int main(int argc, char**argv) {
             std::cerr << "Requires variant VCF/BCF filename\n";
             exit(app.exit(CLI::CallForHelp()));
         }
+        if (samples_fname.compare("-") == 0) {
+            std::cerr << "Requires samples filename\n";
+            exit(app.exit(CLI::CallForHelp()));
+        }
 
         VarInfoLoader vil(vcf_fname);
         SampleInfoLoader sil_full(samples_fname);
 
-        std::cout << "Sample name, " <<  Data::csv_header() << ", is SNP" << (more ? ", VCF line" : "") <<std::endl;
+        std::cout << "Sample name, " <<  Data::csv_header() << ", is SNP" << (ac ? ", AC" : "") << (more ? ", VCF line" : "") << std::endl;
 
         for (size_t i = 0; i < ids.size(); ++i) {
             for (auto& e : data[i]) {
                 std::cout << sil_full.sample_names[ids[i]] << "," << e.to_string() << "," << vil.vars[e.vcf_line].snp <<
+                (ac ? std::string(",") + std::to_string(vil.vars[e.vcf_line].ac) : "") <<
                 (more ? std::string(",") + vil.vars[e.vcf_line].to_string() : "") << std::endl;
             }
         }
