@@ -45,8 +45,7 @@ int main(int argc, char**argv) {
     CLI11_PARSE(app, argc, argv);
 
     if (filename.compare("-") == 0) {
-        std::cerr << "Requires filename\n";
-        exit(app.exit(CLI::CallForHelp()));
+        std::cerr << "No filename given, will read from stdin\n";
     }
 
     if (ofname.compare("-") == 0) {
