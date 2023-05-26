@@ -1,6 +1,9 @@
 #ifndef __VAR_INFO_HPP__
 #define __VAR_INFO_HPP__
 
+#include <map>
+#include <unordered_map>
+
 #include <bcf_traversal.hpp>
 #include <xcf.hpp>
 
@@ -95,6 +98,28 @@ public:
         VarInfoTraversal vit(vars);
         vit.traverse_no_unpack_no_destroy(vcf_file);
         vit.destroy();
+    }
+
+    std::map<std::string, uint32_t> get_vcf_line_map() {
+        std::map<std::string, uint32_t> map;
+        for (uint32_t i = 0; i < vars.size(); ++i) {
+            const auto& v = vars[i];
+            std::string key = v.contig + std::to_string(v.pos1) + v.ref + v.alt;
+            map[key] = i;
+        }
+
+        return map;
+    }
+
+    std::unordered_map<std::string, uint32_t> get_vcf_line_umap() {
+        std::unordered_map<std::string, uint32_t> map;
+        for (uint32_t i = 0; i < vars.size(); ++i) {
+            const auto& v = vars[i];
+            std::string key = v.contig + std::to_string(v.pos1) + v.ref + v.alt;
+            map[key] = i;
+        }
+
+        return map;
     }
 
     std::vector<VarInfo> vars;
