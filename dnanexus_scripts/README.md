@@ -13,3 +13,4 @@ It is recommended to use the applets rather than the Docker image for most tools
 3) run_phase_caller_batch.sh **only script really necessary**
 4) ~~run_bin_merger.sh~~ TODO
 5) run_pp_update.sh
+6) split_bcf.sh `./split_bcf.sh -f file-<bcf id> -i file-<index id> -c chr1 -m 247000000 -d destination/folder`
