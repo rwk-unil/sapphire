@@ -20,10 +20,10 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
 	apt-get clean && apt-get purge && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Clone Source Code Repository (with read-only token)
+# Clone Source Code Repository
 RUN mkdir -p /usr/src/ && \
     cd /usr/src/ && \
-    git clone https://rwk-unil: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@github.com/rwk-unil/pp.git && \
+    git clone https://github.com/rwk-unil/pp.git && \
     cd /usr/src/pp && \
     git submodule update --init --recursive xSqueezeIt && \
     cd xSqueezeIt && \
