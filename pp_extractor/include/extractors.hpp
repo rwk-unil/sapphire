@@ -125,7 +125,6 @@ public:
         if (search_line_value) /* [[unlikely]] */ {
             // Load global variant file (in scope to release it after, takes some time)
             VarInfoLoader vil(search_in_file);
-            auto map = vil.get_vcf_line_map();
             std::string contig = bcf_hdr_id2name(header, line->rid);
             uint32_t pos1 = line->pos;
             std::string ref = std::string(line->d.allele[0]);
