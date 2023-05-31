@@ -4,7 +4,16 @@
   "summary": "Builds the PP Toolkit applet",
   "dxapi": "1.0.0",
   "version": "0.0.1",
-  "inputSpec": [],
+  "inputSpec": [
+    {
+      "name": "label",
+      "label": "Label to avoid cached builds, write date or something",
+      "class": "string",
+      "optional": true,
+      "default": "default",
+      "help": ""
+    }
+  ],
   "outputSpec": [
     {
       "name": "pp_extract",

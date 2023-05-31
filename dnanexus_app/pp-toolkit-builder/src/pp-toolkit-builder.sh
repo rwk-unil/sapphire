@@ -16,6 +16,8 @@
 # to modify this file.
 
 main() {
+    echo "Value of label: '$label'"
+
     # Clone and build the tools
     git clone https://github.com/rwk-unil/pp.git
     cd pp
