@@ -100,6 +100,16 @@ public:
         vit.destroy();
     }
 
+    uint32_t find_vcf_line(const std::string& contig, const uint32_t pos1, const std::string& ref, const std::string& alt) {
+        for (uint32_t i = 0; i < vars.size(); ++i) {
+            const auto& v = vars[i];
+            if (contig == v.contig && pos1 == v.pos1 && ref == v.ref && alt == v.alt) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     std::map<std::string, uint32_t> get_vcf_line_map() {
         std::map<std::string, uint32_t> map;
         for (uint32_t i = 0; i < vars.size(); ++i) {
