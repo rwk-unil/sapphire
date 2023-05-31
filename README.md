@@ -25,6 +25,5 @@ make install
 ldconfig
 cd ..
 cd ..
-cd pp_extractor
 make
 ```
