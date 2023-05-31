@@ -22,6 +22,12 @@
       "help": ""
     },
     {
+      "name": "pp_extract_split",
+      "label": "PP Toolkit : PP Extractor (split VCF version)",
+      "class": "applet",
+      "help": ""
+    },
+    {
       "name": "bin_splitter",
       "label": "PP Toolkit : bin splitter",
       "class": "applet",

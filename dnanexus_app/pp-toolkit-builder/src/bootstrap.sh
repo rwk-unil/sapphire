@@ -3,6 +3,8 @@
 # Copy the tools
 mkdir -p dnanexus_app/pp-extract-applet/resources/usr/bin
 cp pp_extractor/pp_extract dnanexus_app/pp-extract-applet/resources/usr/bin/
+mkdir -p dnanexus_app/pp-extract-split-applet/resources/usr/bin
+cp pp_extractor/pp_extract dnanexus_app/pp-extract-split-applet/resources/usr/bin/
 mkdir -p dnanexus_app/bin-splitter-applet/resources/usr/bin
 cp bin_tools/bin_splitter dnanexus_app/bin-splitter-applet/resources/usr/bin/
 mkdir -p dnanexus_app/phase-caller-applet/resources/usr/bin
@@ -17,6 +19,7 @@ cp pp_update/pp_update dnanexus_app/pp-update-applet/resources/usr/bin/
 
 # Package the applets
 dx build dnanexus_app/pp-extract-applet
+dx build dnanexus_app/pp-extract-split-applet
 dx build dnanexus_app/bin-splitter-applet
 dx build dnanexus_app/phase-caller-applet
 dx build dnanexus_app/bin-merger-applet
@@ -26,6 +29,7 @@ dx build dnanexus_app/pp-update-applet
 # Note : The dx build --brief doesn't output in the correct format !
 # We need to retrieve the ID ourselves
 pp_extract_applet="$(dx describe pp-extract-applet --json | jq -r .id)"
+pp_extract_split_applet="$(dx describe pp-extract-split-applet --json | jq -r .id)"
 bin_splitter_applet="$(dx describe bin-splitter-applet --json | jq -r .id)"
 phase_caller_applet="$(dx describe phase-caller-applet --json | jq -r .id)"
 bin_merger_applet="$(dx describe bin-merger-applet --json | jq -r .id)"
@@ -51,6 +55,7 @@ pp_update_applet="$(dx describe pp-update-applet --json | jq -r .id)"
 # does.
 
 dx-jobutil-add-output pp_extract "$pp_extract_applet" --class=applet
+dx-jobutil-add-output pp_extract_split "$pp_extract_split_applet" --class=applet
 dx-jobutil-add-output bin_splitter "$bin_splitter_applet" --class=applet
 dx-jobutil-add-output phase_caller "$phase_caller_applet" --class=applet
 dx-jobutil-add-output bin_merger "$bin_merger_applet" --class=applet
