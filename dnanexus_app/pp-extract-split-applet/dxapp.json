@@ -1,0 +1,65 @@
+{
+  "name": "pp-extract-split-applet",
+  "title": "PP Extractor App",
+  "summary": "Extracts heterozygous variants with a PP field below 0.99 and neighbor heterozygous variants to a binary file",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "vcf_bcf_file",
+      "label": "Input VCF or BCF file to extract (should be phased with SHAPEIT5)",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "vars_vcf_bcf_file",
+      "label": "Input VCF or BCF file with variants only to get vcf line info",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "bin_hets",
+      "label": "Het variants in binary format",
+      "help": "Heterozygous variants in binary format",
+      "class": "file",
+      "patterns": ["*.bin"]
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "days": 12
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/pp-extract-split-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0",
+    "execDepends": [
+      {"name": "bcftools"}
+    ]
+  },
+  "access": {
+    "project": "CONTRIBUTE"
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem2_ssd1_v2_x2"
+        }
+      }
+    }
+  }
+}
