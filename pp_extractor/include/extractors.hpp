@@ -8,6 +8,8 @@
 #include "synced_bcf_reader.h"
 #include "bcf_traversal.hpp"
 #include "het_info.hpp"
+#include "var_info.hpp"
+#include "fs.hpp"
 
 constexpr size_t PLOIDY_2 = 2;
 
@@ -35,7 +37,9 @@ public:
         print_counter(0),
         pred(PP_THRESHOLD),
         progress(0),
-        pp_from_maf(pp_from_maf) {
+        pp_from_maf(pp_from_maf),
+        extract_acan(pp_from_maf), // MAF requires AC/AN
+        search_line_value(false) {
         if (pp_from_maf) {
             std::cout << "The PP score will be generated from MAF" << std::endl;
         }
@@ -90,7 +94,7 @@ public:
         int nAN = 0;
         float synthetic_pp = 0;
 
-        if (pp_from_maf) {
+        if (extract_acan) {
             res = bcf_get_info_int32(header, line, "AC", &pAC, &nAC);
             // If not in the VCF then compute it
             if (res < 0) {
@@ -117,6 +121,26 @@ public:
             //std::cout << "AC : " << AC << "\tAN : " << AN << "\tsynth PP " << synthetic_pp << std::endl;
         }
 
+        // This is for split VCF/BCFs
+        if (search_line_value) /* [[unlikely]] */ {
+            // Load global variant file (in scope to release it after, takes some time)
+            VarInfoLoader vil(search_in_file);
+            auto map = vil.get_vcf_line_map();
+            std::string contig = bcf_hdr_id2name(header, line->rid);
+            uint32_t pos1 = line->pos;
+            std::string ref = std::string(line->d.allele[0]);
+            std::string alt = std::string(line->d.allele[1]);
+            line_counter = vil.find_vcf_line(contig, pos1, ref, alt);
+            if (line_counter == -1) {
+                std::cerr << "Could not find VCF record in original VCF variant file " << search_in_file << std::endl;
+                throw "vcf line counter error";
+            }
+            // Do not search next record (for performance), records should be contiguous
+            search_line_value = false;
+            /* To search for all records use get_vcf_line_map() or get_vcf_line_umap()
+             * to generate a map once and do look-ups in the map */
+        }
+
         // Extract heterozygous sites and PP
         for (size_t i = start_id; i < stop_id; ++i) {
             int encoded_a0 = bcf_fri.gt_arr[i*PLOIDY_2];
@@ -131,6 +155,16 @@ public:
                     pp = pp_arr[i];
                 } else if (pp_from_maf) {
                     pp = synthetic_pp;
+                }
+
+                if (AC == 1 && pp >= PP_THRESHOLD) {
+                    /* Edge case for old version of SHAPEIT5 that would score
+                       singletons phased with only one of their parents with
+                       a PP of 1.0, In about 95% of cases the singleton comes
+                       from the other parent if not observed in the known parent
+                       but it could also be a de novo mutation on the known
+                       parent haplotype, these cases should not be scored 1.0 */
+                       pp = 0.97; /* arbitrary value */
                 }
 
                 HetInfo hi(line_counter, encoded_a0, encoded_a1, pp);
@@ -171,6 +205,19 @@ public:
 
     void set_progress(const size_t progress) {
         this->progress = progress;
+    }
+
+    void set_search_line_counter(const std::string& filename) {
+        search_line_value = true;
+        search_in_file = filename;
+        if (!fs::exists(search_in_file)) {
+            std::cerr << "File : " << search_in_file << " does not exist !" << std::endl;
+            throw "File does not exist";
+        }
+    }
+
+    void set_extract_acan() {
+        extract_acan = true;
     }
 
     void set_maf_threshold(const float maf_threhsold) {
@@ -249,11 +296,14 @@ public:
     const PPPred pred;
     size_t progress;
     bool pp_from_maf;
+    bool extract_acan;
     std::vector<uint32_t> number_of_het_sites;
     std::vector<uint32_t> number_of_low_pp_sites;
     std::vector<uint32_t> number_of_snp_low_pp_sites;
     std::vector<uint32_t> number_of_non_snp;
     std::vector<GenericKeepFifo<HetInfo, PPPred> > fifos;
+    bool search_line_value;
+    std::string search_in_file;
 };
 
 #endif /* __EXTRACTORS_HPP__ */
