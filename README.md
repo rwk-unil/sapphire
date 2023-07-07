@@ -1,4 +1,11 @@
-# PP
+# PP-Toolkit
+
+**Phase Polishing Toolkit**
+
+- Improve phased haplotypes with whole genome sequencing reads.
+- Benchmark phased haplotypes with whole genome sequencing reads.
+
+Written to scale with massive population scale data and run on the UK Biobank research access platform (RAP).
 
 ## Build instructions
 
