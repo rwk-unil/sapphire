@@ -658,8 +658,14 @@ private:
             std::lock_guard lk(mutex);
             std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
         } else {
-            // Generate the corresponding cram file path
-            std::string cram_file = cram_filename(sample_name);
+            std::string cram_file;
+            if (sil.samples[sample_idx].cram_file_path.compare("") == 0) {
+                // Generate the corresponding cram file path
+                cram_file = cram_filename(sample_name);
+            } else {
+                // Take cram file path from sample
+                cram_file = sil.samples[sample_idx].cram_file_path;
+            }
 
             std::cout << "Sample idx: " << sample_idx << " name: " << sample_name << " cram path: " << cram_file << std::endl;
             if (!fs::exists(cram_file)) {
