@@ -25,7 +25,7 @@ protected:
 
 class PPExtractTraversal : public BcfTraversal {
 public:
-    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size, bool pp_from_maf) :
+    PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size, bool pp_from_maf, bool pp_from_af) :
         FIFO_SIZE(fifo_size),
         PP_THRESHOLD(0.99),
         MAF_THRESHOLD(0.001),
@@ -38,10 +38,14 @@ public:
         pred(PP_THRESHOLD),
         progress(0),
         pp_from_maf(pp_from_maf),
+        pp_from_af(pp_from_af),
         extract_acan(pp_from_maf), // MAF requires AC/AN
         search_line_value(false) {
         if (pp_from_maf) {
             std::cout << "The PP score will be generated from MAF" << std::endl;
+        }
+        if (pp_from_af) {
+            std::cout << "The PP score will be generated from AF" << std::endl;
         }
     }
 
@@ -92,7 +96,10 @@ public:
         int AN = 0;
         int* pAN = NULL;
         int nAN = 0;
-        float synthetic_pp = 0;
+        float AF = 0.0;
+        float* pAF = NULL;
+        int nAF = 0;
+        float synthetic_pp = 0.0;
 
         if (extract_acan) {
             res = bcf_get_info_int32(header, line, "AC", &pAC, &nAC);
@@ -119,6 +126,22 @@ public:
             float maf = float(AC)/AN;
             synthetic_pp = (maf > MAF_THRESHOLD) ? NAN : 0.5 + maf / 2.0;
             //std::cout << "AC : " << AC << "\tAN : " << AN << "\tsynth PP " << synthetic_pp << std::endl;
+        }
+
+        if (pp_from_af) {
+            res = bcf_get_info_float(header, line, "AF", &pAF, &nAF);
+            if (res < 0) {
+                std::cerr << "Could not get AF info field ! PP set to NaN" << std::endl;
+                synthetic_pp = NAN;
+            } else {
+                AF = *pAF;
+                if (AF > 0.5) {
+                    // Complement to get the minor allele frequency
+                    AF = 1.0 - AF;
+                }
+                synthetic_pp = (AF > MAF_THRESHOLD) ? NAN : 0.5 + AF / 2.0;
+                std::cout << "AF: " << AF << " Synth PP : " << synthetic_pp << std::endl;
+            }
         }
 
         // This is for split VCF/BCFs
@@ -152,7 +175,7 @@ public:
                 float pp = NAN; // Assume perfect phasing if there is no PP field
                 if (has_pp) {
                     pp = pp_arr[i];
-                } else if (pp_from_maf) {
+                } else if (pp_from_maf || pp_from_af) {
                     pp = synthetic_pp;
                 }
 
@@ -199,6 +222,10 @@ public:
         if (pAC) {
             free(pAC);
             pAC = NULL;
+        }
+        if (pAF) {
+            free(pAF);
+            pAF = NULL;
         }
     }
 
@@ -295,6 +322,7 @@ public:
     const PPPred pred;
     size_t progress;
     bool pp_from_maf;
+    bool pp_from_af;
     bool extract_acan;
     std::vector<uint32_t> number_of_het_sites;
     std::vector<uint32_t> number_of_low_pp_sites;
