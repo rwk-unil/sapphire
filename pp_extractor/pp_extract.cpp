@@ -12,7 +12,8 @@ public:
         app.add_option("-s,--start", start, "Starting sample position");
         app.add_option("-e,--end", end, "End sample position (excluded)");
         app.add_option("-p,--progress", progress, "Number of VCF lines to show progress");
-        app.add_flag("--pp-from-maf", pp_from_maf, "Genrate PP score from minor allele frequency (MAF)");
+        app.add_flag("--pp-from-maf", pp_from_maf, "Generate PP score from minor allele frequency (MAF)");
+        app.add_flag("--pp-from-af", pp_from_af, "Generate PP score from allele frequency INFO field");
         app.add_option("--maf-threshold", maf_threshold, "MAF threshold for PP score from MAF");
         app.add_flag("--extract-pp1-singletons", extract_pp1_singletons, "Workaround for singletons with PP of 1.0");
         app.add_option("--fifo-size", fifo_size, "FIFO size (number of hets extracted centered on het of interest)");
@@ -29,6 +30,7 @@ public:
     size_t end = -1;
     size_t progress = 0;
     bool pp_from_maf = false;
+    bool pp_from_af = false;
     float maf_threshold = 0.001;
     bool extract_pp1_singletons = false;
     size_t fifo_size = 5;
@@ -66,9 +68,10 @@ int main(int argc, char**argv) {
     std::cout << "Extracting...\n" << std::endl;
 
     PPExtractTraversal ppet(start, end, global_app_options.fifo_size,
-                            global_app_options.pp_from_maf);
+                            global_app_options.pp_from_maf,
+                            global_app_options.pp_from_af);
 
-    if (global_app_options.pp_from_maf) {
+    if (global_app_options.pp_from_maf || global_app_options.pp_from_af) {
         ppet.set_maf_threshold(global_app_options.maf_threshold);
     }
 
