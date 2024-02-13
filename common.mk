@@ -27,9 +27,9 @@ CXXFLAGS=-O$(OLEVEL) -g -Wall -std=c++17 $(INCLUDE_DIRS) $(CXXEXTRAFLAGS) $(EXTR
 
 ifeq ($(STATIC_BINS),y)
 A_LIBS := $(HTSLIB_PATH)/libhts.a $(ZSTD_PATH)/libzstd.a
-LDLIBS+=-llzma -lbz2 -lz -lm -lcurl -pthread
+LDLIBS+=-llzma -lbz2 -lz -lm -lcurl -lcrypto -ldeflate -pthread
 else
-LDLIBS+=-lhts -lzstd -pthread
+LDLIBS+=-lhts -lzstd -lcrypto -ldeflate -pthread
 endif
 
 LDFLAGS+=-O$(OLEVEL) $(EXTRA_FLAGS)
