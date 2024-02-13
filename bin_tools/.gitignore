@@ -8,5 +8,6 @@ bin_diff
 bin_splitter
 bin_merger
 logs
+vertical_bin_merger
 
 *tmp
