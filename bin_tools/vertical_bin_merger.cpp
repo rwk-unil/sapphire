@@ -40,11 +40,6 @@ int main(int argc, char**argv) {
         exit(app.exit(CLI::CallForHelp()));
     }
 
-    if (bin_fname.compare(bin_ofname) == 0) {
-        std::cerr << "Input and Output files must have different names !" << std::endl;
-        exit(-1);
-    }
-
     uint32_t suffix_number = 0;
     std::vector<std::string> filenames;
     auto file = bin_fname + "_" + std::to_string(suffix_number);
