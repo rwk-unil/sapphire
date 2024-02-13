@@ -1,0 +1,113 @@
+{
+  "name": "xcftools-extract-applet",
+  "title": "XCF Extraction applet",
+  "summary": "Will extract genotypes from XCF file to SAPPHIRE binary format",
+  "dxapi": "1.0.0",
+  "version": "0.0.1",
+  "inputSpec": [
+    {
+      "name": "xcf_bcf_file",
+      "label": "Input XCF BCF file to extract",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "xcf_bcf_idx_file",
+      "label": "Input XCF BCF file index",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "xcf_bin_file",
+      "label": "XCF binary file",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "threads",
+      "label": "Number of threads",
+      "class": "int",
+      "optional": true,
+      "default": 1,
+      "help": ""
+    },
+    {
+      "name": "maf",
+      "label": "Minor Allele Frequency Threshold for selection",
+      "class": "float",
+      "optional": true,
+      "default": 1e-05,
+      "help": ""
+    },
+    {
+      "name": "use_pp",
+      "label": "Use PP value",
+      "class": "boolean",
+      "optional": true,
+      "default": false,
+      "help": ""
+    }
+  ],
+  "outputSpec": [
+    {
+      "name": "sapphire_binary_file",
+      "label": "SAPPHIRE binary file",
+      "class": "file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
+      "name": "logs",
+      "label": "Logs",
+      "class": "file",
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    }
+  ],
+  "runSpec": {
+    "timeoutPolicy": {
+      "*": {
+        "days": 30
+      }
+    },
+    "interpreter": "bash",
+    "file": "src/xcftools-extract-applet.sh",
+    "distribution": "Ubuntu",
+    "release": "20.04",
+    "version": "0",
+    "execDepends": [
+      {"name": "bcftools"}
+    ]
+  },
+  "access": {
+    "network": [
+      "*"
+    ],
+    "project": "CONTRIBUTE"
+  },
+  "regionalOptions": {
+    "aws:eu-west-2": {
+      "systemRequirements": {
+        "*": {
+          "instanceType": "mem3_ssd1_v2_x8"
+        }
+      }
+    }
+  }
+}
