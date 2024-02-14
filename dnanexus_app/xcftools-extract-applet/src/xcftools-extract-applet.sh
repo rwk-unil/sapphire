@@ -20,6 +20,7 @@ main() {
     echo "Value of xcf_bcf_file: '$xcf_bcf_file'"
     echo "Value of xcf_bcf_idx_file: '$xcf_bcf_idx_file'"
     echo "Value of xcf_bin_file: '$xcf_bin_file'"
+    echo "Value of xcf_fam_file: '$xcf_fam_file'"
     echo "Value of threads: '$threads'"
     echo "Value of maf: '$maf'"
     echo "Value of use_pp: '$use_pp'"
@@ -40,6 +41,10 @@ main() {
     BIN_FILENAME="$(dx describe "$xcf_bin_file" --name)"
     echo "XCF BIN Filename : ${BIN_FILENAME}"
     dx download "$xcf_bin_file" -o "${BIN_FILENAME}"
+
+    FAM_FILENAME="$(dx describe "$xcf_fam_file" --name)"
+    echo "XCF FAM Filename : ${FAM_FILENAME}"
+    dx download "$xcf_fam_file" -o "${FAM_FILENAME}"
 
     if ((threads > 1))
     then

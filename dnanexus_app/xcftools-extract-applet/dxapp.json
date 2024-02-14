@@ -36,6 +36,16 @@
       "help": ""
     },
     {
+      "name": "xcf_fam_file",
+      "label": "XCF fam file",
+      "class": "file",
+      "optional": false,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
       "name": "threads",
       "label": "Number of threads",
       "class": "int",
