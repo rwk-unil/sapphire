@@ -68,6 +68,7 @@ main() {
     output=(./"${localodir}"/*)
 
     for i in "${!output[@]}"; do
-        dx-jobutil-add-output output "${output[$i]}" --class=array:file
+        file=$(dx upload "${output[$i]}" --brief)
+        dx-jobutil-add-output output "${file}" --class=array:file
     done
 }
