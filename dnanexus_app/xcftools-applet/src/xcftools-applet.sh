@@ -39,7 +39,7 @@ main() {
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    mkdir "${localodir}"
+    mkdir -p "${localodir}"
     xcftools $arguments
     output=(./"${localodir}"/*)
 
