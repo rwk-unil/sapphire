@@ -1,0 +1,80 @@
+Bootstrap: docker
+From: ubuntu:20.04
+Stage: spython-base
+
+%labels
+MAINTAINER Rick Wertenbroek <rick.wertenbroek@unil.ch>
+%post
+
+
+DEBIAN_FRONTEND=noninteractive
+
+# Install required software and clean as not to make the layer dirty
+apt-get update && apt-get -y upgrade && apt-get install -y \
+apt-utils curl libcurl4-openssl-dev gnupg gcc g++ make autoconf && \
+apt-get clean && apt-get purge
+
+apt-get update && apt-get -y upgrade && apt-get install -y \
+git zlib1g-dev libbz2-dev liblzma-dev && \
+apt-get clean && apt-get purge
+
+apt-get update && apt-get -y upgrade && apt-get install -y \
+bcftools && \
+apt-get clean && apt-get purge
+
+# Clone Source Code Repository
+mkdir -p /usr/src/ && \
+cd /usr/src/ && \
+git clone https://github.com/rwk-unil/pp.git && \
+cd /usr/src/pp && \
+git submodule update --init --recursive xSqueezeIt && \
+cd xSqueezeIt && \
+cd htslib && \
+autoheader && \
+autoconf && \
+automake --add-missing 2>/dev/null || true
+./configure && \
+make && \
+make install && \
+ldconfig && \
+cd .. && \
+git clone https://github.com/facebook/zstd.git && \
+cd zstd && \
+make && \
+cd .. && \
+cd .. && \
+cd pp_extractor && \
+make STATIC_BINS=y && \
+chmod +x pp_extract && \
+cp pp_extract /usr/local/bin/ && \
+chmod +x scripts/run_pp_extract.sh && \
+cp scripts/run_pp_extract.sh /usr/local/bin/run_pp_extract && \
+cd .. && \
+cd phase_caller && \
+make STATIC_BINS=y && \
+chmod +x phase_caller && \
+cp phase_caller /usr/local/bin/ && \
+cd .. && \
+cd pp_update && \
+make STATIC_BINS=y && \
+chmod +x pp_update && \
+cp pp_update /usr/local/bin/ && \
+cd .. && \
+cd bin_tools && \
+make STATIC_BINS=y && \
+chmod +x bin_splitter bin_merger bin_diff analyze_bin bin_compare && \
+cp bin_splitter bin_merger bin_diff analyze_bin bin_compare /usr/local/bin/ && \
+cd /usr/src/ && \
+
+# Work in this temporary directory
+mkdir -p /tmp/work
+cd /tmp/work
+
+%environment
+export DEBIAN_FRONTEND=noninteractive
+%runscript
+cd /tmp/work
+exec /bin/bash echo "Run with the following command : docker run <tag> run_pp_extract [args]" "$@"
+%startscript
+cd /tmp/work
+exec /bin/bash echo "Run with the following command : docker run <tag> run_pp_extract [args]" "$@"

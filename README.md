@@ -112,7 +112,7 @@ The final rephased BCF files are now available and indexed. Congratulations !
 # Note all this is done in the Dockerfile, this is only for manual testing
 
 git submodule update --init --recursive
-cd xSqueezeit
+cd xSqueezeIt
 
 # Clone and build htslib (if you already have htslib set Makefile accordingly and skip)
 cd htslib
