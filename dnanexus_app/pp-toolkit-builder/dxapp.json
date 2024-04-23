@@ -62,7 +62,11 @@
     "file": "src/pp-toolkit-builder.sh",
     "distribution": "Ubuntu",
     "release": "20.04",
-    "version": "0"
+    "version": "0",
+    "execDepends": [
+      {"name": "libssl-dev"},
+      {"name": "libdeflate-dev"}
+    ]
   },
   "access": {
     "network": [
