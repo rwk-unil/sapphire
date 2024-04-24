@@ -19,6 +19,7 @@ public:
         app.add_option("-o,--output", ofname, "Output file name");
         app.add_option("-b,--binary-file", bfname, "Binary file name");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
+        app.add_flag("--no-pp", nopp, "Don't write/update the PP field");
     }
 
     CLI::App app{"PP Update app"};
@@ -26,6 +27,7 @@ public:
     std::string ofname = "-";
     std::string bfname = "-";
     bool verbose = false;
+    bool nopp = false;
 };
 
 GlobalAppOptions global_app_options;
@@ -92,7 +94,7 @@ public:
             if (res > 0) {
                 has_pp = true;
             }
-            if (!has_pp) {
+            if (!has_pp && !global_app_options.nopp) {
                 std::cerr << "Cannot update PP, it is missing from line " << line_counter << std::endl;
                 errors++;
             } else {
@@ -103,11 +105,13 @@ public:
                 } else {
                     for (auto todo : work_line->second.updated_data) {
                         auto idx = todo.first;
-                        auto new_pp = todo.second.pp;
-                        if (pp_arr[idx] != new_pp) {
-                            updated_pp++;
+                        if (!global_app_options.nopp) {
+                            auto new_pp = todo.second.pp;
+                            if (pp_arr[idx] != new_pp) {
+                                updated_pp++;
+                            }
+                            pp_arr[idx] = new_pp;
                         }
-                        pp_arr[idx] = new_pp;
                         // Also update GT
                         if (bcf_fri.gt_arr[idx * PLOIDY_2] != todo.second.a0) {
                             updated_gts++;
@@ -117,7 +121,9 @@ public:
                     }
                 }
                 // Update the record
-                bcf_update_format_float(hdr, line, "PP", pp_arr, pp_arr_size);
+                if (!global_app_options.nopp) {
+                    bcf_update_format_float(hdr, line, "PP", pp_arr, pp_arr_size);
+                }
                 bcf_update_genotypes(hdr, line, bcf_fri.gt_arr, bcf_fri.size_gt_arr);
             }
         }
