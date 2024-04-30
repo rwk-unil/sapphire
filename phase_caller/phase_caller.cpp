@@ -41,6 +41,7 @@ public:
         app.add_option("-e,--end", end, "End sample position (excluded)");
         app.add_option("-t,--num-threads", n_threads, "Number of threads, default is 1, set to 0 for auto");
         app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
+        app.add_flag("-n,--no-number-path", no_number_path, "Don't use number prefix path");
     }
 
     CLI::App app{"Ultralight Phase Caller"};
@@ -54,6 +55,7 @@ public:
     size_t end = -1;
     size_t n_threads = 1;
     bool verbose = false;
+    bool no_number_path = false;
 };
 
 GlobalAppOptions global_app_options;
@@ -642,7 +644,9 @@ private:
 
     inline std::string cram_filename(const std::string& sample_name) const {
         std::string cram_file(global_app_options.cram_path);
-        cram_file += "/" + sample_name.substr(0, 2);
+        if (!global_app_options.no_number_path) {
+            cram_file += "/" + sample_name.substr(0, 2);
+        }
         cram_file += "/" + sample_name + "_" + global_app_options.project_id + "_0_0.cram";
         return cram_file;
     }
