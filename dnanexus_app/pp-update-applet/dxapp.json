@@ -3,7 +3,7 @@
   "title": "PP-Toolkit : Update rephased variants and PP values in VCF/BCF",
   "summary": "Creates a new VCF/BCF file with rephased variants and update PP values",
   "dxapi": "1.0.0",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "inputSpec": [
     {
       "name": "original_vcf_file",
@@ -28,6 +28,14 @@
     {
       "name": "verbose",
       "label": "Be more verbose",
+      "class": "boolean",
+      "optional": true,
+      "default": false,
+      "help": ""
+    },
+    {
+      "name": "nopp",
+      "label": "Do not update PP field",
       "class": "boolean",
       "optional": true,
       "default": false,

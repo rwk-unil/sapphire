@@ -20,6 +20,7 @@ main() {
     echo "Value of original_vcf_file: '$original_vcf_file'"
     echo "Value of rephased_binary_file: '$rephased_binary_file'"
     echo "Value of verbose: '$verbose'"
+    echo "Value of nopp: '$nopp'"
     echo "Value of output_vcf_filename: '$output_vcf_filename'"
 
     # The following line(s) use the dx command-line tool to download your file
@@ -48,7 +49,13 @@ main() {
     # TODO Check if output file name is same as input file name
 
     echo "Running PP-Update ... this can take a while ..."
-    time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE}
+    if [ "$nopp" = true ]
+    then
+       time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE} --no-pp
+    else
+       time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE}
+    fi
+    echo "Indexing output file ..."
     bcftools index "${output_vcf_filename}"
 
     # Fill in your application code here.
