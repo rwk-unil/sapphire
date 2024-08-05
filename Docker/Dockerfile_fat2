@@ -20,22 +20,20 @@ RUN apt-get update && apt-get -y upgrade && apt-get install -y \
 	apt-get clean && apt-get purge && \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# TODO put this as a binary file somewhere on the github repository and download it
 # https://github.com/samtools/htslib/blob/f68c84ff46a63fde05ae2bdf3ebdec568c9c4613/cram/cram_io.c#L2923
-COPY hts-ref.zip /root/.cache/
-
-RUN cd /root/.cache/ && unzip hts-ref.zip && rm -f hts-ref.zip
+RUN curl -LJO https://github.com/rwk-unil/sapphire/releases/download/v1.0.0-paper/hts-ref.zip && \
+	mkdir -p /root/.cache && mv hts-ref.zip /root/.cache/ && cd /root/.cache/ && unzip hts-ref.zip && rm -f hts-ref.zip
 
 # Clone Source Code Repository
 RUN mkdir -p /usr/src/ && \
     cd /usr/src/ && \
-    git clone https://github.com/rwk-unil/pp.git && \
-    cd /usr/src/pp && \
+    git clone https://github.com/rwk-unil/sapphire.git && \
+    cd /usr/src/sapphire && \
     cd Docker && \
     chmod +x *.sh && \
     ./prepare.sh
 
-RUN cd /usr/src/pp/Docker && \
+RUN cd /usr/src/sapphire/Docker && \
     ./build_install.sh
 
 # Work in this temporary directory
