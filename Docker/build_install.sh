@@ -13,6 +13,7 @@ SCRIPTPATH=$(realpath  $(dirname "$0"))
 cd "${SCRIPTPATH}"
 cd ..
 
+# To get the latest version
 git pull
 make STATIC_BINS=y
 

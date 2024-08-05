@@ -12,6 +12,7 @@ SCRIPTPATH=$(realpath  $(dirname "$0"))
 
 cd "${SCRIPTPATH}"
 
+# To get the latest version
 git pull
 
 # Call this script from here so that the script itself can be updated
