@@ -2,6 +2,25 @@
 
 **Smart and Accurate Polishing of Phased Haplotypes Integrating Read Enhancements (SAPPHIRE)**
 
+Paper : *Improving population scale statistical phasing with whole-genome sequencing data*
+
+Link (open-access) : https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011092
+
+If you use SAPPHIRE in your research please cite :
+
+```
+@article{wertenbroek2024improving,
+  title={Improving population scale statistical phasing with whole-genome sequencing data},
+  author={Wertenbroek, Rick and Hofmeister, Robin J and Xenarios, Ioannis and Thoma, Yann and Delaneau, Olivier},
+  journal={PLoS genetics},
+  volume={20},
+  number={7},
+  pages={e1011092},
+  year={2024},
+  publisher={Public Library of Science San Francisco, CA USA}
+}
+```
+
 **Phase Polishing Toolkit**
 
 - Improve phased haplotypes with whole genome sequencing reads.
