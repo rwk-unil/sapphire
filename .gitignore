@@ -61,4 +61,6 @@
 
 *.csv
 
-test*
+bin/**
+
+.dependencies_ready
