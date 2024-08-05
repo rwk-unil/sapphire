@@ -24,6 +24,8 @@ git clone https://github.com/facebook/zstd.git
 cd zstd
 make -j$(nproc)
 cd ..
-
 cd ..
+
+touch .dependencies_ready
+
 make STATIC_BINS=y
