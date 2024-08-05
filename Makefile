@@ -1,4 +1,9 @@
-all :
+all : .dependencies_ready binaries
+
+.dependencies_ready :
+	./setup.sh
+
+binaries :
 	make -C bin_tools
 	make -C pp_extractor
 	make -C phase_caller
@@ -10,4 +15,4 @@ clean :
 	make -C phase_caller clean
 	make -C pp_update clean
 
-.PHONY : all clean
+.PHONY : all binaries clean
