@@ -11,8 +11,11 @@ else
 	endif
 endif
 
+BINARY_PATH=../bin
+TARGET_BINARIES=$(foreach binary,$(TARGETS),$(BINARY_PATH)/$(binary))
+
 # Rules
-all : $(GEN_GIT_REV) $(DEPENDENCIES) $(TARGETS)
+all : $(GEN_GIT_REV) $(DEPENDENCIES) $(TARGETS) $(TARGET_BINARIES)
 	$(info Finished building $(TARGETS))
 
 gen_git_rev :
@@ -21,12 +24,16 @@ gen_git_rev :
 # Link the targets (use implicit built-in rule)
 $(TARGETS) : % : $(XOBJS) %.o $(A_LIBS)
 
+# Copy the binaries to the binary directory
+$(BINARY_PATH)/% : %
+	cp $< $@
+
 # Do not include the depency rules for "clean"
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPENDENCIES)
 endif
 
-# Rule to generate the dependency files
+# Rules to generate the dependency files
 %.d : %.cpp
 	$(CXX) $(INCLUDE_DIRS) -MG -MP -MM -MT '$(@:.d=.o)' $< -MF $@
 %.d : %.c
