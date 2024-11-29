@@ -41,6 +41,8 @@ public:
         app.add_option("-e,--end", end, "End sample position (excluded)");
         app.add_option("-t,--num-threads", n_threads, "Number of threads, default is 1, set to 0 for auto");
         app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
+        app.add_flag("--cram-path-from-samples-file", cram_path_from_samples_file, "Use CRAM path from samples file\n"
+                     "Samples file lines must be ID_NUMBER SAMPLE_NAME CRAM_PATH");
         app.add_flag("-n,--no-number-path", no_number_path, "Don't use number prefix path");
     }
 
@@ -55,6 +57,7 @@ public:
     size_t end = -1;
     size_t n_threads = 1;
     bool verbose = false;
+    bool cram_path_from_samples_file = false;
     bool no_number_path = false;
 };
 
@@ -658,12 +661,17 @@ private:
         // Get sample name
         std::string sample_name = sil.sample_names[sample_idx];
         // Don't try withdrawn samples
-        if (sample_name[0] == 'W') {
+        if (sample_name[0] == 'W' && !global_app_options.cram_path_from_samples_file) {
             std::lock_guard lk(mutex);
             std::cerr << "Withdrawn sample " << sample_name << " will not rephase because sequencing data is not available" << std::endl;
         } else {
-            // Generate the corresponding cram file path
-            std::string cram_file = cram_filename(sample_name);
+            std::string cram_file;
+            if (!global_app_options.cram_path_from_samples_file) {
+                // Generate the corresponding cram file path
+                cram_file = cram_filename(sample_name);
+            } else {
+                cram_file = sil.samples[sample_idx].cram_file_path;
+            }
 
             std::cout << "Sample idx: " << sample_idx << " name: " << sample_name << " cram path: " << cram_file << std::endl;
             if (!fs::exists(cram_file)) {
