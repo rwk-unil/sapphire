@@ -292,7 +292,7 @@ chr17   131213  17:131213:G:C   G       C       .       .       AC=1    Position
 chr17   131543  17:131543:T:C   T       C       .       .       AC=5    Position : 26 0|1 PP : nan
 ```
 
-Let's check the phase with the real sequencing data
+Let's check the phase with the real sequencing data, here we can see that the new phase of genotypes "A" and "C" is coherent with the phase of "B" and "D".
 
 ![Checking phase with alignment data](res/phase_real_data.png)
 
