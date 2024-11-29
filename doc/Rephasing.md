@@ -1,8 +1,10 @@
 # Examples for running SAPPHIRE
 
-Note : The instructions here are not for population-scale but serve as examples on how to rephase specific genotypes, for a number of samples. This can serve as a base for running SAPPHIRE rephasing on genotypes based on conditions chosen by the user.
+Note: The instructions here are not for population-scale but serve as examples on how to rephase specific genotypes, for a number of samples. This can serve as a base for running SAPPHIRE rephasing on genotypes based on conditions chosen by the user.
 
-The instructions for running on the DNANexus platform are on main [README](../README.md).
+Note: If your file is already phased with SHAPEIT5 it will already have the PP (Phasing Probability) confidence score, and you can directly use `pp_extract` to extract low-confidence phased variants to rephase. For population scale projects you can also use minor allele frequency threshold (based on AC/AN in the VCF/BCF) directly. Here we show how to manually set a PP value to extract chosen genotypes.
+
+Note: The instructions for running on the DNANexus platform are on main [README](../README.md).
 
 **Reference documentation for bcftools:** https://samtools.github.io/bcftools/bcftools.html
 

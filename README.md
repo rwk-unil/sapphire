@@ -136,11 +136,15 @@ make
 
 To run the programs locally there is no need to create "applets", "Docker images" etc. The programs can be run directly, you get the options by running the programs with the `-h` flag.
 
+For an example on running SAPPHIRE locally have a look at [Rephasing.md](doc/Rephasing.md) where we rephase all genotypes with an allele frequency of less than 0.01 for 3 samples of the 1000 genomes project.
+
 ### Note for CRAM names for local run
 
-The way the `phase_caller` program searches for CRAM files is very specific (because it had to load thousands of CRAMs from UKB) : CRAM filenames are created from sample IDs and project ID e.g., for sample `1234567` from project `abcdef`, the cram file `<cram-path>/12/1234567_abcdef_0_0.cram` will be loaded. So unless your CRAM files have this path (you can do so with symbolic links for example), the CRAM files will not be found.
+~~The way the `phase_caller` program searches for CRAM files is very specific (because it had to load thousands of CRAMs from UKB) : CRAM filenames are created from sample IDs and project ID e.g., for sample `1234567` from project `abcdef`, the cram file `<cram-path>/12/1234567_abcdef_0_0.cram` will be loaded. So unless your CRAM files have this path (you can do so with symbolic links for example), the CRAM files will not be found.~~
 
-There is a version that allows to load a sample list with the CRAM path directly written inside the sample list file under the branch https://github.com/rwk-unil/pp/tree/phase_caller_generic_no_path the `phase_caller2` program. It is not yet merged into the main branch.
+~~There is a version that allows to load a sample list with the CRAM path directly written inside the sample list file under the branch https://github.com/rwk-unil/pp/tree/phase_caller_generic_no_path the `phase_caller2` program. It is not yet merged into the main branch.~~
+
+You can pass the path to the CRAM files in the sample file to the `phase_caller` with the option `--cram-path-from-samples-files`.
 
 This allows to use a sample list that instead of containing only the sample ID, allows to enter three parameters :
 ```
@@ -156,3 +160,13 @@ So for example for a VCF/BCF with samples `HG001, HG002, HG003, HG004` that got 
 (The index in the binary file follows the order of samples in VCF/BCF so `HG001, HG002, HG003, HG004` would be `0,1,2,3`).
 
 Do not add extra spaces.
+
+You can generate the file from the VCF/BCF file with :
+
+```shell
+bcftools query --list-samples input_file.bcf | \
+        awk '{print NR-1 "," $0 ",CRAM_PATH"}' > \
+        input_file.samples.csv
+```
+
+Then fill the CRAM paths by replacing `CRAM_PATH` by the correct path for each sample.
