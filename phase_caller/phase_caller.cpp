@@ -45,6 +45,7 @@ public:
                      "Samples file lines must be ID_NUMBER,SAMPLE_NAME,CRAM_PATH");
         app.add_flag("-n,--no-number-path", no_number_path, "Don't use number prefix path");
         app.add_option("--min-mapq", min_mapq, "Minimum MAPQ score to consider read for phase calling (default 50)");
+        app.add_flag("--no-filter", no_filter, "Don't filter reads, consider them all for phase calling");
     }
 
     CLI::App app{"Ultralight Phase Caller"};
@@ -58,6 +59,7 @@ public:
     size_t end = -1;
     size_t n_threads = 1;
     int min_mapq = 50;
+    bool no_filter = false;
     bool verbose = false;
     bool cram_path_from_samples_file = false;
     bool no_number_path = false;
@@ -227,6 +229,7 @@ public:
     int min_baseQ;
     int min_mapQ;				// mapQ filter
     bool opened;
+    bool no_filter = false;
 
     DataCaller (int _min_baseQ = 30 /** @todo */,int _min_mapQ = global_app_options.min_mapq) :
         fp(NULL),
@@ -235,7 +238,8 @@ public:
         iter(NULL),
         min_baseQ(_min_baseQ),
         min_mapQ(_min_mapQ),
-        opened(false)
+        opened(false),
+        no_filter(global_app_options.no_filter)
     {
     }
 
@@ -361,6 +365,7 @@ static int pileup_filter(void *data, bam1_t *b) {
     while (1) {
         ret = aux->iter? sam_itr_next(aux->fp, aux->iter, b) : sam_read1(aux->fp, aux->hdr, b);
         if (ret < 0) break;
+        if (aux->no_filter) break;
         if (b->core.flag & (BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP)) continue;
         if (b->core.flag & BAM_FPAIRED) {
             if (!(b->core.flag & BAM_FPROPER_PAIR)) continue;
