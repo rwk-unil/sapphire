@@ -34,11 +34,12 @@ public:
         app.add_option("-f,--file", var_filename, "Input variant file name");
         app.add_option("-b,--binary-file", bin_filename, "Input-Output het binary file name");
         app.add_option("-S,--sample-file", sample_filename, "Sample list file name");
-        app.add_option("-l,--sample-list", sample_list_filename, "Sample to use list file name");
         app.add_option("-I,--project-id", project_id, "UKB Project ID");
         app.add_option("-p,--cram-path", cram_path, "CRAM files path");
-        app.add_option("-s,--start", start, "Starting sample position");
-        app.add_option("-e,--end", end, "End sample position (excluded)");
+        app.add_option("-l,--sample-list", sample_list_filename, "Subsampling: Samples to use list file name\n"
+                       "Subset of file passed with \"-S,--sample-file\"");
+        app.add_option("-s,--start", start, "Subsampling: Sample range starting position");
+        app.add_option("-e,--end", end, "Subsampling: Sample range end position (excluded)");
         app.add_option("-t,--num-threads", n_threads, "Number of threads, default is 1, set to 0 for auto");
         app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
         app.add_flag("--cram-path-from-samples-file", cram_path_from_samples_file, "Use CRAM path from samples file\n"
