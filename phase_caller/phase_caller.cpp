@@ -42,7 +42,7 @@ public:
         app.add_option("-t,--num-threads", n_threads, "Number of threads, default is 1, set to 0 for auto");
         app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
         app.add_flag("--cram-path-from-samples-file", cram_path_from_samples_file, "Use CRAM path from samples file\n"
-                     "Samples file lines must be ID_NUMBER SAMPLE_NAME CRAM_PATH");
+                     "Samples file lines must be ID_NUMBER,SAMPLE_NAME,CRAM_PATH");
         app.add_flag("-n,--no-number-path", no_number_path, "Don't use number prefix path");
     }
 
