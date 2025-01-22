@@ -704,7 +704,10 @@ private:
             }
 
             std::cout << "Sample idx: " << sample_idx << " name: " << sample_name << " cram path: " << cram_file << std::endl;
-            if (!fs::exists(cram_file)) {
+            const std::string http("http"), ftp("ftp");
+            if (cram_file.compare(0, http.size(), http) and
+                cram_file.compare(0, ftp.size(), ftp) and
+                !fs::exists(cram_file)) {
                 std::lock_guard lk(mutex);
                 std::cerr << "Cannot find file " << cram_file << " skipping ..." << std::endl;
             } else {
