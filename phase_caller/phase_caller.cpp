@@ -47,6 +47,11 @@ public:
         app.add_flag("-n,--no-number-path", no_number_path, "Don't use number prefix path");
         app.add_option("--min-mapq", min_mapq, "Minimum MAPQ score to consider read for phase calling (default 50)");
         app.add_flag("--no-filter", no_filter, "Don't filter reads, consider them all for phase calling");
+        app.add_option("--max-distance", max_distance, "Maximum distance to look back and forth for rephasing (default 1000 bp)\n"
+                       "Set this to your library max fragment size / 2\n"
+                       "1000 bp is ok for most short-read libraries");
+        app.add_option("--pp-threshold", pp_threshold, "PP threshold, rephase only extracted variants with PP < threshold (default 1.0)\n"
+                       "Note: The pp_extractor stage already thresholds on PP (< 0.99) during extraction");
     }
 
     CLI::App app{"Ultralight Phase Caller"};
@@ -64,6 +69,8 @@ public:
     bool verbose = false;
     bool cram_path_from_samples_file = false;
     bool no_number_path = false;
+    size_t max_distance = 1000;
+    float pp_threshold = 1.0;
 };
 
 GlobalAppOptions global_app_options;
@@ -411,6 +418,10 @@ class Rephaser {
 public:
     /* Rephase if PP below (strict) < PP_THRESHOLD */
     Rephaser() : PP_THRESHOLD(1.0) {}
+    Rephaser(float pp_threshold, size_t max_distance) :
+        PP_THRESHOLD(pp_threshold),
+        MAX_DISTANCE(max_distance)
+    {}
 
 protected:
     inline void check_phase(HetTrio* het, HetTrio* other_het, size_t& correct_phase_pir, size_t& reverse_phase_pir) {
@@ -597,7 +608,7 @@ void rephase_sample(const std::vector<VarInfo>& vi, HetInfoMemoryMap& himm, cons
     }
 
     try {
-        Rephaser r;
+        Rephaser r(global_app_options.pp_threshold, global_app_options.max_distance);
         r.rephase(het_trios, cram_file);
     } catch (DataCaller::DataCallerError e) {
         return;
