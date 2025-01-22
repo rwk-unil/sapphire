@@ -31,27 +31,27 @@ inline char getBase (int code) {
 class GlobalAppOptions {
 public:
     GlobalAppOptions() {
-        app.add_option("-f,--file", var_filename, "Input variant file name");
-        app.add_option("-b,--binary-file", bin_filename, "Input-Output het binary file name");
-        app.add_option("-S,--sample-file", sample_filename, "Sample list file name");
-        app.add_option("-I,--project-id", project_id, "UKB Project ID");
-        app.add_option("-p,--cram-path", cram_path, "CRAM files path");
-        app.add_option("-l,--sample-list", sample_list_filename, "Subsampling: Samples to use list file name\n"
-                       "Subset of file passed with \"-S,--sample-file\"");
+        app.add_option("-f,--file", var_filename, "Input variant file name (VCF/BCF) without samples for performance");
+        app.add_option("-b,--binary-file", bin_filename, "Input-Output het binary file name (binary)");
+        app.add_option("-S,--sample-file", sample_filename, "Sample list file name (text)\n");
+        app.add_option("-I,--project-id", project_id, "Path: UKB Project ID - for auto path generation");
+        app.add_option("-p,--cram-path", cram_path, "Path: CRAM files path - for auto path generation");
+        app.add_flag("-n,--no-number-path", no_number_path, "Path: Don't use number prefix path");
+        app.add_flag("--cram-path-from-samples-file", cram_path_from_samples_file, "Path: Use CRAM path from samples file\n"
+                     "    Samples file lines must be ID_NUMBER,SAMPLE_NAME,CRAM_PATH\n");
+        app.add_option("-l,--sample-list", sample_list_filename, "Subsampling: Samples to use list file name (text)\n"
+                       "    Subset of file passed with \"-S,--sample-file\"");
         app.add_option("-s,--start", start, "Subsampling: Sample range starting position");
         app.add_option("-e,--end", end, "Subsampling: Sample range end position (excluded)");
-        app.add_option("-t,--num-threads", n_threads, "Number of threads, default is 1, set to 0 for auto");
-        app.add_flag("-v,--verbose", verbose, "Verbose mode, display more messages");
-        app.add_flag("--cram-path-from-samples-file", cram_path_from_samples_file, "Use CRAM path from samples file\n"
-                     "Samples file lines must be ID_NUMBER,SAMPLE_NAME,CRAM_PATH");
-        app.add_flag("-n,--no-number-path", no_number_path, "Don't use number prefix path");
-        app.add_option("--min-mapq", min_mapq, "Minimum MAPQ score to consider read for phase calling (default 50)");
-        app.add_flag("--no-filter", no_filter, "Don't filter reads, consider them all for phase calling");
-        app.add_option("--max-distance", max_distance, "Maximum distance to look back and forth for rephasing (default 1000 bp)\n"
-                       "Set this to your library max fragment size / 2\n"
-                       "1000 bp is ok for most short-read libraries");
-        app.add_option("--pp-threshold", pp_threshold, "PP threshold, rephase only extracted variants with PP < threshold (default 1.0)\n"
-                       "Note: The pp_extractor stage already thresholds on PP (< 0.99) during extraction");
+        app.add_option("--min-mapq", min_mapq, "Caller: Minimum MAPQ score to consider read for phase calling (default 50)");
+        app.add_flag("--no-filter", no_filter, "Caller: Don't filter reads, consider them all for phase calling");
+        app.add_option("--max-distance", max_distance, "Caller: Maximum distance to look back and forth for rephasing (default 1000 bp)\n"
+                       "    Set this to your library max fragment size / 2\n"
+                       "    1000 bp is ok for most short-read libraries");
+        app.add_option("--pp-threshold", pp_threshold, "Caller: PP threshold, rephase only extracted variants with PP < threshold (default 1.0)\n"
+                       "    Note: The pp_extractor stage already thresholds on PP (< 0.99) during extraction");
+        app.add_option("-t,--num-threads", n_threads, "Perf: Number of threads, default is 1, set to 0 for auto");
+        app.add_flag("-v,--verbose", verbose, "Other: Verbose mode, display more messages");
     }
 
     CLI::App app{"Ultralight Phase Caller"};
