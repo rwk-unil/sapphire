@@ -370,17 +370,28 @@ public:
 static int pileup_filter(void *data, bam1_t *b) {
     DataCaller *aux = (DataCaller*) data;
     int ret;
+    /* Iterate over reads from the SAM iterator */
     while (1) {
-        ret = aux->iter? sam_itr_next(aux->fp, aux->iter, b) : sam_read1(aux->fp, aux->hdr, b);
+        /* Get next read from SAM iterator if exists, otherwise open file to create iterator */
+        ret = aux->iter ? sam_itr_next(aux->fp, aux->iter, b) : sam_read1(aux->fp, aux->hdr, b);
+        /* If error break and return error code */
         if (ret < 0) break;
+        /* If no filter return directly */
         if (aux->no_filter) break;
+        /* If read unmapped, secondary read, QC fail, or duplicate continue (i.e., ignore read) */
         if (b->core.flag & (BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP)) continue;
+        /* If this is a paired read */
         if (b->core.flag & BAM_FPAIRED) {
+            /* If the two reads don't form a proper pair continue (i.e., ignore read) */
             if (!(b->core.flag & BAM_FPROPER_PAIR)) continue;
+            /* If the mate is unmapped continue (i.e., ignore read) */
             if (b->core.flag & BAM_FMUNMAP) continue;
+            /* If both paired reads are in the same direction continue (i.e., ignore read) */
             if ((b->core.flag & BAM_FREVERSE) == (b->core.flag & BAM_FMREVERSE)) continue;
         }
+        /* If the read mapping quality (MAPQ) is below threshold continue (i.e., ignore read) */
         if ((int)b->core.qual < aux->min_mapQ) continue;
+        /* Return */
         break;
     }
     return ret;
