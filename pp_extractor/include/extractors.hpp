@@ -140,7 +140,7 @@ public:
                     AF = 1.0 - AF;
                 }
                 synthetic_pp = (AF > MAF_THRESHOLD) ? NAN : 0.5 + AF / 2.0;
-                std::cout << "AF: " << AF << " Synth PP : " << synthetic_pp << std::endl;
+                //std::cout << "AF: " << AF << " Synth PP : " << synthetic_pp << std::endl;
             }
         }
 
