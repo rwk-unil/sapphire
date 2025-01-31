@@ -10,10 +10,11 @@
 #include <map>
 #include <sys/mman.h>
 
-#include "compression.hpp"
 #include "fs.hpp"
 #include "het_info.hpp"
 #include "var_info.hpp"
+
+const uint32_t ENDIANNESS = 0xaabbccdd;
 
 class HetInfoMemoryMap {
 public:
