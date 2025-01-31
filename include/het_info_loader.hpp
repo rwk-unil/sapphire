@@ -249,6 +249,24 @@ public:
             }
         }
 
+        /* Switch phase of all genotypes, this is for switching vertically split
+         * files that require to be switched during ligation, this should be
+         * extremely fast */
+        void switch_phase() {
+            /* The reason we use "int" here is to be coherent with HTSLIB */
+            static_assert(sizeof(int) == sizeof(uint32_t), "int should be of same size than uint32_t");
+            for (size_t i = 0; i < size; ++i) {
+                int *gt_arr = (int*)start_pos+i*Iterator_type::skip()+1;
+                int a0 = bcf_gt_allele(gt_arr[0]);
+                int a1 = bcf_gt_allele(gt_arr[1]);
+
+                /* First allele is always unphased per VCF/BCF standard.
+                 * Therefore, we can't just switch the values directly */
+                gt_arr[0] = bcf_gt_unphased(a1);
+                gt_arr[1] = bcf_gt_phased(a0);
+            }
+        }
+
     protected:
         HetInfoMemoryMap& parent;
     public:
