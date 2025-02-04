@@ -105,6 +105,10 @@ public:
                 } else {
                     for (auto todo : work_line->second.updated_data) {
                         auto idx = todo.first;
+                        // If the PP is defined and smaller than 1.0 or bigger than 1.9 (rephased), it was a rephase target
+                        if (!std::isnan(todo.second.pp) and ((todo.second.pp < 1.0) or (todo.second.pp > 1.9))) {
+                            rephase_targets++;
+                        }
                         if (!global_app_options.nopp) {
                             auto new_pp = todo.second.pp;
                             if (pp_arr[idx] != new_pp) {
@@ -138,9 +142,10 @@ public:
     }
 
     void print_stats() const {
-        std::cout << "Updated entries : " << updated_pp << std::endl;
-        std::cout << "Rephased GTs    : " << updated_gts << std::endl;
-        std::cout << "Errors          : " << errors << std::endl;
+        std::cout << "Rephase targets    : " << rephase_targets << std::endl;
+        std::cout << "Updated PP entries : " << updated_pp << std::endl;
+        std::cout << "Rephased GTs       : " << updated_gts << std::endl;
+        std::cout << "Errors             : " << errors << std::endl;
     }
 
 protected:
@@ -149,6 +154,7 @@ protected:
     float* pp_arr;
     int pp_arr_size;
 
+    size_t rephase_targets = 0;
     size_t updated_pp = 0;
     size_t updated_gts = 0;
     size_t errors = 0;
