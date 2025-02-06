@@ -325,7 +325,7 @@ public:
         n_bases_total++;
         for (int i = 0 ; i < n_plp ; ++i) {
             const bam_pileup1_t *p = v_plp + i;
-            if (p->is_del || p->is_refskip || p->indel == 1) {
+            if (p->is_del || p->is_refskip || p->indel != 0) {
                 n_bases_indel++;
                 continue;
             } else {
