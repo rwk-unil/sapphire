@@ -53,6 +53,7 @@ public:
                        "    Note: The pp_extractor stage already thresholds on PP (< 0.99) during extraction");
         app.add_option("-t,--num-threads", n_threads, "Perf: Number of threads, default is 1, set to 0 for auto");
         app.add_flag("-v,--verbose", verbose, "Other: Verbose mode, display more messages");
+        app.add_flag("--indels", indels, "[Experimental] Include indels in rephasing");
     }
 
     CLI::App app{"Ultralight Phase Caller"};
@@ -73,6 +74,7 @@ public:
     bool no_number_path = false;
     size_t max_distance = 1000;
     float pp_threshold = 1.0;
+    bool indels = false;
 };
 
 GlobalAppOptions global_app_options;
@@ -95,12 +97,32 @@ public:
         return var_info->snp;
     }
 
-    char get_allele0() const {
+    inline char get_allele0() const {
         return bcf_gt_allele(gt_arr[0]) ? var_info->alt[0] : var_info->ref[0];
     }
 
-    char get_allele1() const {
+    inline char get_allele1() const {
         return bcf_gt_allele(gt_arr[1]) ? var_info->alt[0] : var_info->ref[0];
+    }
+
+    inline bool allele0_is_ref() const {
+        return bcf_gt_allele(gt_arr[0]) == 0;
+    }
+
+    inline bool allele1_is_ref() const {
+        return bcf_gt_allele(gt_arr[1]) == 0;
+    }
+
+    inline bool allele0_is_alt() const {
+        return bcf_gt_allele(gt_arr[0]) != 0;
+    }
+
+    inline bool allele1_is_alt() const {
+        return bcf_gt_allele(gt_arr[1]) != 0;
+    }
+
+    int get_indel_signed_length() const {
+        return (int)var_info->alt.length() - (int)var_info->ref.length();
     }
 
     // Very inefficient, but used only for debug
@@ -211,7 +233,7 @@ void het_trio_list_from_hets(std::vector<std::unique_ptr<HetTrio> >& het_trios, 
     HetTrio* prev = NULL;
     for (size_t i = 0; i < hets.size(); ++i) {
         // Filter out non SNPs
-        if (!hets[i]->is_snp()) {
+        if (!global_app_options.indels and !hets[i]->is_snp()) {
             continue;
         }
         het_trios.push_back(std::make_unique<HetTrio>(prev, hets[i].get(), (HetTrio*)NULL));
@@ -322,18 +344,25 @@ public:
     }
 
     void pileup_reads(const bam_pileup1_t * v_plp, int n_plp, Hetp* het) {
-        n_bases_total++;
-        for (int i = 0 ; i < n_plp ; ++i) {
-            const bam_pileup1_t *p = v_plp + i;
-            if (p->is_del || p->is_refskip || p->indel != 0) {
-                n_bases_indel++;
-                continue;
-            } else {
+        if constexpr (DEBUG_SHOW_PILEUP) {
+            std::cout << het->var_info->to_string() << std::endl;
+        }
+
+        if (het->is_snp()) {
+            for (int i = 0 ; i < n_plp ; ++i) {
+                const bam_pileup1_t *p = v_plp + i;
+                n_bases_total++;
+
+                if (p->is_del || p->is_refskip || p->indel != 0) {
+                    n_bases_indel++;
+                    continue;
+                }
+
                 char base = getBase(bam_seqi(bam_get_seq(p->b), p->qpos));
                 char qual = (char)bam_get_qual(p->b)[p->qpos];
 
                 if (qual < min_baseQ) {
-                    n_bases_lowqual ++;
+                    n_bases_lowqual++;
                     continue;
                 }
 
@@ -344,17 +373,117 @@ public:
                     std::cout << "Read name : " << bam_get_qname(p->b) << " position : " << p->qpos << " base : " << base << std::endl;
                 }
 
-                if (base != a0 && base != a1) {
-                    n_bases_mismatch ++;
-                    continue;
-                }
-
                 if (base == a0) {
                     // Read that has a0
                     het->a0_reads_p->insert(std::string(bam_get_qname(p->b)));
                 } else if (base == a1) {
                     // Read that has a1
                     het->a1_reads_p->insert(std::string(bam_get_qname(p->b)));
+                } else {
+                    // The read doesn't match any of the two variants, should not occur
+                    n_bases_mismatch++;
+                }
+            }
+        } else { // Non SNP (indels and SVs)
+            size_t ref_len = het->var_info->ref.length();
+            size_t alt_len = het->var_info->alt.length();
+
+            // If it is a SV or complex rearrangement it will have special chars
+            if ((het->var_info->alt.find('<') != std::string::npos) or
+                (het->var_info->alt.find('>') != std::string::npos) or
+                (het->var_info->alt.find('[') != std::string::npos) or
+                (het->var_info->alt.find(']') != std::string::npos) or
+                (het->var_info->alt.find(':') != std::string::npos) or
+                (het->var_info->alt.find('*') != std::string::npos) or
+                (het->var_info->alt.find('.') != std::string::npos) or
+                (het->var_info->alt.find(',') != std::string::npos)) {
+                // Note that the expressions above could be written with .contains() in C++23
+                if constexpr (DEBUG_SHOW_PILEUP) {
+                    std::cout << "SVs and complex rearrangements not supported for the moment" << std::endl;
+                }
+                return;
+            } else if (alt_len == ref_len) {
+                // This case should not happen, this check is just in case
+                if constexpr (DEBUG_SHOW_PILEUP) {
+                    std::cout << "ALT and REF are of same length and not SNP" << std::endl;
+                }
+                return;
+            } else if (ref_len != 1 and alt_len != 1) {
+                // This case should not happen, variant doesn't follow VCF 4.2 specs 5.2.2 and 5.2.3 ignore
+                if constexpr (DEBUG_SHOW_PILEUP) {
+                    std::cout << "ALT and REF both diff than length 1" << std::endl;
+                }
+                return;
+            } else { // Small indels
+                int indel = het->get_indel_signed_length();
+
+                for (int i = 0 ; i < n_plp ; ++i) {
+                    const bam_pileup1_t *p = v_plp + i;
+                    char base = getBase(bam_seqi(bam_get_seq(p->b), p->qpos));
+                    char qual = (char)bam_get_qual(p->b)[p->qpos];
+                    n_bases_total++;
+
+                    if constexpr (DEBUG_SHOW_PILEUP) {
+                        std::cout << "Read name : " << bam_get_qname(p->b) << " position : " << p->qpos << " base : " << base << " is_del : "
+                                  << p->is_del << " is_refskip : " << p->is_refskip << " indel : " << p->indel << std::endl;
+                    }
+
+                    if (p->is_del || p->is_refskip) {
+                        continue;
+                    }
+
+                    if (p->indel != 0) { // Handle indel case
+                        // Check the indel length and type
+                        if (p->indel != indel) {
+                            n_indel_mismatch++;
+                            continue;
+                        }
+
+                        // Here the read matches the indel
+                        if (het->allele0_is_alt()) {
+                            het->a0_reads_p->insert(std::string(bam_get_qname(p->b)));
+                            if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " - a0 alt read" << std::endl;
+                        } else if (het->allele1_is_alt()) {
+                            het->a1_reads_p->insert(std::string(bam_get_qname(p->b)));
+                            if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " - a1 alt read" << std::endl;
+                        } else {
+                            // Should not happen
+                        }
+                    } else { // Else it is a read without the indel
+                        if (qual < min_baseQ) {
+                            n_bases_lowqual++;
+                            if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " lowqual ref read" << std::endl;
+                            continue;
+                        }
+
+                        // This gets the first base, for both insertions and deletions
+                        // For deletions, reference will only check first base and not all
+                        // There might be an SNP at the position in the sequencing data
+                        // but since all variants were normalized to bi-allelic only the
+                        // reads that match the exact case will be used and the multi-allelic site
+                        // will be handlded in two separate cases, this is no problem, but it
+                        // will increase the "n_bases_missmatch" and "n_indel_mismatch" counters.
+                        char a0 = het->get_allele0();
+                        char a1 = het->get_allele1();
+
+                        if (het->allele0_is_ref()) {
+                            if (base == a0) {
+                                het->a0_reads_p->insert(std::string(bam_get_qname(p->b)));
+                                if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " - a0 ref read" << std::endl;
+                            } else {
+                                n_bases_mismatch++;
+                                if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " mismatch ref read" << std::endl;
+                            }
+                        } else if (het->allele1_is_ref()) {
+                            if (base == a1) {
+                                het->a1_reads_p->insert(std::string(bam_get_qname(p->b)));
+                                if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " - a1 ref read" << std::endl;
+                            } else {
+                                n_bases_mismatch++;
+                                if constexpr (DEBUG_SHOW_PILEUP) std::cout << het->to_string() << " mismatch ref read" << std::endl;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -367,6 +496,7 @@ public:
     size_t n_bases_total = 0;
     size_t n_bases_lowqual = 0;
     size_t n_bases_mismatch = 0;
+    size_t n_indel_mismatch = 0;
 };
 
 static int pileup_filter(void *data, bam1_t *b) {
