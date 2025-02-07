@@ -44,6 +44,7 @@ public:
         app.add_option("-s,--start", start, "Subsampling: Sample range starting position");
         app.add_option("-e,--end", end, "Subsampling: Sample range end position (excluded)");
         app.add_option("--min-mapq", min_mapq, "Caller: Minimum MAPQ score to consider read for phase calling (default 50)");
+        app.add_option("--min-baseq", min_baseq, "Caller: Mininum QV score to consider a base in a read for phase calling (default 30)");
         app.add_flag("--no-filter", no_filter, "Caller: Don't filter reads, consider them all for phase calling");
         app.add_option("--max-distance", max_distance, "Caller: Maximum distance to look back and forth for rephasing (default 1000 bp)\n"
                        "    Set this to your library max fragment size / 2\n"
@@ -65,6 +66,7 @@ public:
     size_t end = -1;
     size_t n_threads = 1;
     int min_mapq = 50;
+    int min_baseq = 30;
     bool no_filter = false;
     bool verbose = false;
     bool cram_path_from_samples_file = false;
@@ -239,7 +241,7 @@ public:
     bool opened;
     bool no_filter = false;
 
-    DataCaller (int _min_baseQ = 30 /** @todo */,int _min_mapQ = global_app_options.min_mapq) :
+    DataCaller (int _min_baseQ = global_app_options.min_baseq, int _min_mapQ = global_app_options.min_mapq) :
         fp(NULL),
         hdr(NULL),
         idx(NULL),
@@ -861,6 +863,11 @@ int main(int argc, char**argv) {
         opt.n_threads = std::thread::hardware_concurrency();
         std::cerr << "Setting number of threads to " << opt.n_threads << std::endl;
     }
+
+    std::cout << "Running SAPPHIRE Phase Caller" << std::endl;
+    std::cout << "Min MAPQ: " << global_app_options.min_mapq << std::endl;
+    std::cout << "Min Base QV: " << global_app_options.min_baseq << std::endl;
+    std::cout << "Read filter is : " << (global_app_options.no_filter ? "OFF" : "ON") << std::endl;
 
     PhaseCaller pc(opt.var_filename, opt.bin_filename, opt.sample_filename, opt.sample_list_filename, opt.n_threads);
     pc.rephase_orchestrator_multi_thread();
