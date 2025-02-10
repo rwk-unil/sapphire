@@ -28,6 +28,11 @@ If you use SAPPHIRE in your research please cite :
 
 Written to scale with massive population scale data and run on the UK Biobank research access platform (RAP).
 
+## News - Feb. 2025
+
+- INDELs are now supported by SAPPHIRE.
+- New options for long read sequencing technology.
+
 ## Pipeline Diagram
 
 ![SAPPHIRE Pipeline](diagrams/pipeline.drawio.png)
@@ -140,10 +145,6 @@ For an example on running SAPPHIRE locally have a look at [Rephasing.md](doc/Rep
 
 ### Note for CRAM names for local run
 
-~~The way the `phase_caller` program searches for CRAM files is very specific (because it had to load thousands of CRAMs from UKB) : CRAM filenames are created from sample IDs and project ID e.g., for sample `1234567` from project `abcdef`, the cram file `<cram-path>/12/1234567_abcdef_0_0.cram` will be loaded. So unless your CRAM files have this path (you can do so with symbolic links for example), the CRAM files will not be found.~~
-
-~~There is a version that allows to load a sample list with the CRAM path directly written inside the sample list file under the branch https://github.com/rwk-unil/pp/tree/phase_caller_generic_no_path the `phase_caller2` program. It is not yet merged into the main branch.~~
-
 You can pass the path to the CRAM files in the sample file to the `phase_caller` with the option `--cram-path-from-samples-files`.
 
 This allows to use a sample list that instead of containing only the sample ID, allows to enter three parameters :
@@ -170,3 +171,35 @@ bcftools query --list-samples input_file.bcf | \
 ```
 
 Then fill the CRAM paths by replacing `CRAM_PATH` by the correct path for each sample.
+
+### Long read support
+
+SAPPHIRE is compatible with long read technology. As the default settings of the phase caller are best suited for short reads, if you run SAPPHIRE with long reads, please pass the following parameters to the `phase_caller` program.
+
+``` shell
+# Disable the per-base quality filter.
+# Non-matching bases will be ignored by default.
+# As a consensus phase call vote is performed,
+# the chance of a spurious base call affecting phase is extremely low.
+--min-baseq 0
+
+# Set the distance threshold to 100 kilo-bases.
+# The phase caller will consider variants 100kb before and after the
+# current genotype being rephased.
+--max-distance 100000
+```
+
+More information on the options is available in the phase caller help menu:
+
+```
+./phase_caller -h
+
+...
+
+  --min-mapq INT              Caller: Minimum MAPQ score to consider read for phase calling (default 50)
+  --min-baseq INT             Caller: Mininum QV score to consider a base in a read for phase calling (default 30)
+  --no-filter                 Caller: Don't filter reads, consider them all for phase calling
+  --max-distance UINT         Caller: Maximum distance to look back and forth for rephasing (default 1000 bp)
+                                  Set this to your library max fragment size / 2
+                                  1000 bp is ok for most short-read libraries
+```
