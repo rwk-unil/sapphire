@@ -36,7 +36,7 @@ public:
         app.add_flag("--show-number", show_number, "Shows the number extracted");
     }
 
-    CLI::App app{"PP Extractor app"};
+    CLI::App app{"BCF add line app"};
     std::string filename = "-";
     std::string ofname = "-";
     size_t progress = 0;
