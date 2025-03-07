@@ -23,6 +23,35 @@ protected:
     float pp_threshold;
 };
 
+class VcfIdLineMapper : public BcfTraversal {
+public:
+    VcfIdLineMapper() {}
+
+    virtual void handle_bcf_file_reader() override {
+        id_line_map.clear();
+        line_num = 0;
+    }
+
+    virtual void handle_bcf_line() override {
+        auto line = bcf_fri.line;
+
+        std::string uid = uid_from_bcf_line(line);
+        const bool ok = id_line_map.insert({uid, line_num}).second;
+        if (!ok) {
+            std::cout << "Duplicate entry with UID : " << uid << std::endl;
+        }
+        line_num++;
+    }
+
+    static inline
+    std::string uid_from_bcf_line(const bcf1_t * const line) {
+        std::string uid = std::string(line->d.id) + "_" + line->d.allele[0] + "_" + line->d.allele[1];
+        return uid;
+    }
+
+    size_t line_num = 0;
+    std::unordered_map<std::string, size_t> id_line_map;
+};
 class PPExtractTraversal : public BcfTraversal {
 public:
     PPExtractTraversal(size_t start_id, size_t stop_id, size_t fifo_size, bool pp_from_maf, bool pp_from_af) :
@@ -40,6 +69,7 @@ public:
         pp_from_maf(pp_from_maf),
         pp_from_af(pp_from_af),
         extract_acan(pp_from_maf), // MAF requires AC/AN
+        line_counter_from_map(false),
         search_line_value(false) {
         if (pp_from_maf) {
             std::cout << "The PP score will be generated from MAF" << std::endl;
@@ -49,6 +79,21 @@ public:
         }
     }
 
+    void use_map(const std::string& line_map_vcf) {
+        line_counter_from_map = true;
+        std::cout << "Creating the UID to VCF line mapper from " << line_map_vcf << std::endl;
+        const auto start{std::chrono::steady_clock::now()};
+        vcf_id_line_mapper.traverse(line_map_vcf);
+        const auto end{std::chrono::steady_clock::now()};
+        const std::chrono::duration<double> elapsed_seconds{end - start};
+        std::cout << "Done! Elapsed time: " << elapsed_seconds.count() << std::endl;
+
+        /*
+        size_t i = 0;
+        for (auto it = vcf_id_line_mapper.id_line_map.begin(); it != vcf_id_line_mapper.id_line_map.end() && i < 20; ++it, ++i)
+            std::cout << ' ' << it->first << " => " << it->second << '\n';
+        */
+    }
 
     virtual void handle_bcf_file_reader() override {
         number_of_het_sites.clear();
@@ -161,6 +206,14 @@ public:
             search_line_value = false;
             /* To search for all records use get_vcf_line_map() or get_vcf_line_umap()
              * to generate a map once and do look-ups in the map */
+        }
+
+        if (line_counter_from_map) {
+            try {
+                line_counter = vcf_id_line_mapper.id_line_map.at(VcfIdLineMapper::uid_from_bcf_line(line));
+            } catch (...) {
+                throw "vcf line counter error";
+            }
         }
 
         // Extract heterozygous sites and PP
@@ -324,6 +377,7 @@ public:
     bool pp_from_maf;
     bool pp_from_af;
     bool extract_acan;
+    bool line_counter_from_map;
     std::vector<uint32_t> number_of_het_sites;
     std::vector<uint32_t> number_of_low_pp_sites;
     std::vector<uint32_t> number_of_snp_low_pp_sites;
@@ -331,6 +385,7 @@ public:
     std::vector<GenericKeepFifo<HetInfo, PPPred> > fifos;
     bool search_line_value;
     std::string search_in_file;
+    VcfIdLineMapper vcf_id_line_mapper;
 };
 
 #endif /* __EXTRACTORS_HPP__ */

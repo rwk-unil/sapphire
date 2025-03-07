@@ -20,6 +20,7 @@ public:
         app.add_option("--main-var-vcf", main_var_vcf, "Main var VCF if input file is split VCF");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
         app.add_flag("--show-number", show_number, "Shows the number extracted");
+        app.add_flag("--map-from-main-var-vcf", map_from_main_var_vcf, "Use the UID of the variant in the main var VCF");
     }
 
     CLI::App app{"PP Extractor app"};
@@ -36,6 +37,7 @@ public:
     size_t fifo_size = 5;
     bool verbose = false;
     bool show_number = false;
+    bool map_from_main_var_vcf = false;
 };
 
 GlobalAppOptions global_app_options;
@@ -65,8 +67,6 @@ int main(int argc, char**argv) {
         std::cerr << "FIFO size updated to " << global_app_options.fifo_size << std::endl;
     }
 
-    std::cout << "Extracting...\n" << std::endl;
-
     PPExtractTraversal ppet(start, end, global_app_options.fifo_size,
                             global_app_options.pp_from_maf,
                             global_app_options.pp_from_af);
@@ -82,6 +82,12 @@ int main(int argc, char**argv) {
     if (global_app_options.extract_pp1_singletons) {
         ppet.set_extract_acan();
     }
+
+    if (global_app_options.map_from_main_var_vcf) {
+        ppet.use_map(global_app_options.main_var_vcf);
+    }
+
+    std::cout << "Extracting...\n" << std::endl;
 
     ppet.set_progress(global_app_options.progress);
 
