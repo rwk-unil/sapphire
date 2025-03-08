@@ -9,6 +9,10 @@ then
     exit 1
 fi
 
+dx_id_to_name () {
+    echo "$(dx describe --json "$1" | jq -r '.name')"
+}
+
 dx_id_to_path () {
     FFNAME=$(dx describe --json "$1" | jq -r '.name')
     FFPATH=$(dx describe --json "$1" | jq -r '.folder')
@@ -17,6 +21,10 @@ dx_id_to_path () {
 
 dx_id_to_dx_path () {
     echo $(dx describe --json "$1" | jq -r '.folder')
+}
+
+path_to_dx_id () {
+    echo "$(dx describe --json "$1" | jq -r '.id')"
 }
 
 ask_permission_to_launch() {
