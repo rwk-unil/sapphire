@@ -75,16 +75,14 @@ int main(int argc, char**argv) {
         ppet.set_maf_threshold(global_app_options.maf_threshold);
     }
 
-    if (global_app_options.main_var_vcf != "") {
-        ppet.set_search_line_counter(global_app_options.main_var_vcf);
-    }
-
     if (global_app_options.extract_pp1_singletons) {
         ppet.set_extract_acan();
     }
 
     if (global_app_options.map_from_main_var_vcf) {
         ppet.use_map(global_app_options.main_var_vcf);
+    } else if (global_app_options.main_var_vcf != "") {
+        ppet.set_search_line_counter(global_app_options.main_var_vcf);
     }
 
     std::cout << "Extracting...\n" << std::endl;

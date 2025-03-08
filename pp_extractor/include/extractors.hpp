@@ -45,7 +45,7 @@ public:
 
     static inline
     std::string uid_from_bcf_line(const bcf1_t * const line) {
-        std::string uid = std::string(line->d.id) + "_" + line->d.allele[0] + "_" + line->d.allele[1];
+        std::string uid = std::to_string(line->pos) + "_" + std::string(line->d.id) + "_" + line->d.allele[0] + "_" + line->d.allele[1];
         return uid;
     }
 
