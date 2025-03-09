@@ -50,6 +50,8 @@ echo "Temporary directory : ${TMPDIR}"
 # Sort the array based on the chromosomal start position, sep "_.-" with NF-4 because it ends with _chr.start-stop.bcf_hets.bin
 array=($(ls "${BIN_PATH}"/*.bin | awk -F'[_.-]' '{print $(NF-4), $0}' | sort -n | cut -d' ' -f2-))
 
+out_dir=$(pwd)
+
 # Create symlinks (in sorted order) in temporary directory with naming convention for the merger
 cd ${TMPDIR}
 i=0
@@ -68,4 +70,4 @@ done
 ls -l
 
 # Do the vertical bin merge
-vertical_bin_merger -b "${prefix}".bin -o ~/"${prefix}".bin
+vertical_bin_merger -b "${prefix}".bin -o "${out_dir}"/"${prefix}".bin
