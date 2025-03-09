@@ -27,3 +27,5 @@ chmod +x phase_caller/phase_caller
 cp phase_caller/phase_caller /usr/local/bin
 chmod +x pp_update/pp_update
 cp pp_update/pp_update /usr/local/bin
+chmod +x bin_tools/vertical_bin_merger
+cp bin_tools/vertical_bin_merger /usr/local/bin
