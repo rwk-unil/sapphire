@@ -19,7 +19,6 @@ public:
         app.add_option("--fifo-size", fifo_size, "FIFO size (number of hets extracted centered on het of interest)");
         app.add_option("--main-var-vcf", main_var_vcf, "Main var VCF if input file is split VCF");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
-        app.add_flag("--show-number", show_number, "Shows the number extracted");
         app.add_flag("--map-from-main-var-vcf", map_from_main_var_vcf, "Use the UID of the variant in the main var VCF");
     }
 
@@ -93,9 +92,8 @@ int main(int argc, char**argv) {
     ppet.traverse_no_destroy(filename);
     ppet.finalize();
 
-    if (global_app_options.show_number) {
-        ppet.show_info();
-    }
+    ppet.show_info();
+
     ppet.write_to_file(ofname);
 
     std::cout << "Done !" << std::endl;
