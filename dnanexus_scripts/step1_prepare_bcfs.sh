@@ -27,8 +27,8 @@ key="$1"
 # Command line argument parsing from :
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 case $key in
-    --step1-path)
-    STEP1_PATH="$2"
+    --step0-path)
+    STEP0_PATH="$2"
     shift # past argument
     shift # past value
     ;;
@@ -55,13 +55,13 @@ esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-if [ -z "${STEP1_PATH}" ]
+if [ -z "${STEP0_PATH}" ]
 then
-    echo "Specify the step1 path with --step1-path <actual_path_at_chromosome_level>"
+    echo "Specify the step0 path with --step0-path <actual_path_at_chromosome_level>"
     exit 1
 fi
 
-echo "PATH            = ${STEP1_PATH}"
+echo "PATH            = ${STEP0_PATH}"
 
 if [ -z "${TAG}" ]
 then
@@ -77,7 +77,7 @@ LAUNCH_ALL=""
 
 position=0
 
-for filename in $(dx ls ${STEP1_PATH})
+for filename in $(dx ls ${STEP0_PATH})
 do
     # Skip if file ends with .csi
     if [[ $filename == *.csi ]]
@@ -85,7 +85,7 @@ do
         continue
     fi
     echo "File to prepare : ${filename}"
-    file_with_path="${STEP1_PATH}/${filename}"
+    file_with_path="${STEP0_PATH}/${filename}"
     echo ${file_with_path}
     file_id=$(path_to_dx_id ${file_with_path})
     idx_with_path="${file_with_path}.csi"
