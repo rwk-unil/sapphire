@@ -23,6 +23,12 @@ dx_id_to_dx_path () {
     echo $(dx describe --json "$1" | jq -r '.folder')
 }
 
+dx_id_to_dx_path_and_name () {
+    FFNAME=$(dx describe --json "$1" | jq -r '.name')
+    FFPATH=$(dx describe --json "$1" | jq -r '.folder')
+    echo "${FFPATH}/${FFNAME}"
+}
+
 path_to_dx_id () {
     echo "$(dx describe --json "$1" | jq -r '.id')"
 }
