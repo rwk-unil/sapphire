@@ -7,7 +7,7 @@
   "inputSpec": [
     {
       "name": "original_vcf_file",
-      "label": "Original VCF/BCF file",
+      "label": "Original VCF/BCF file (if region split also provide file below)",
       "class": "file",
       "optional": false,
       "patterns": [
@@ -16,8 +16,18 @@
       "help": ""
     },
     {
+      "name": "main_variant_vcf_file",
+      "label": "(Optional) Main variant VCF/BCF file with line numbers for split update",
+      "class": "file",
+      "optional": true,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
+    },
+    {
       "name": "rephased_binary_file",
-      "label": "Rephased Binary File (output of PP-Toolkit : Ultralight Phase Caller)",
+      "label": "Rephased (Merged) Binary File",
       "class": "file",
       "optional": false,
       "patterns": [

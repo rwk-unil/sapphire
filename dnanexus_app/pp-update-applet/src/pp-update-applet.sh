@@ -22,11 +22,21 @@ main() {
     echo "Value of verbose: '$verbose'"
     echo "Value of nopp: '$nopp'"
     echo "Value of output_vcf_filename: '$output_vcf_filename'"
+    echo "Value of main_variant_vcf_file: '$main_variant_vcf_file'"
 
     # The following line(s) use the dx command-line tool to download your file
     # inputs to the local file system using variable names for the filenames. To
     # recover the original filenames, you can use the output of "dx describe
     # "$variable" --name".
+
+    MAIN_VAR_ARG=""
+    if [ ! -z "${main_variant_vcf_file}" ]
+    then
+        echo "Will use the main variant file ${main_variant_vcf_file}"
+
+        dx download "$main_variant_vcf_file" -o var_file.bcf
+        MAIN_VAR_ARG="--main-var-vcf var_file.bcf"
+    fi
 
     VCF_FILENAME="$(dx describe "$original_vcf_file" --name)"
     dx download "$original_vcf_file" -o "${VCF_FILENAME}"
@@ -51,9 +61,9 @@ main() {
     echo "Running PP-Update ... this can take a while ..."
     if [ "$nopp" = true ]
     then
-       time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE} --no-pp
+       time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE} ${MAIN_VAR_ARG} --no-pp
     else
-       time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE}
+       time pp_update -f "${VCF_FILENAME}" -o "${output_vcf_filename}" -b rephased_binary_file ${VERBOSE} ${MAIN_VAR_ARG}
     fi
     echo "Indexing output file ..."
     bcftools index "${output_vcf_filename}"
