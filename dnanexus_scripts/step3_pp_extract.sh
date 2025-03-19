@@ -34,12 +34,12 @@ case $key in
     shift # past argument
     shift # past value
     ;;
-    --extract-applet-id)
+    --applet)
     APPLET_ID="$2"
     shift
     shift
     ;;
-    --step2-var-id)
+    --step2-var)
     BCF_VAR_ID="$2"
     shift
     shift
@@ -65,13 +65,13 @@ fi
 
 if [ -z "${BCF_VAR_ID}" ]
 then
-    echo "Please provide the ID of the BCF with the variants from step2 with --step2-var-id <ID>"
+    echo "Please provide the path or ID of the BCF with the variants from step2 with --step2-var <ID>"
     exit 1
 fi
 
 if [ -z "${APPLET_ID}" ]
 then
-    echo "Please provide the ID of pp-extract-split-applet with --extract-applet-id <ID>"
+    echo "Please provide the ID of pp-extract-split-applet with --applet <ID>"
     exit 1
 fi
 
