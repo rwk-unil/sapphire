@@ -12,7 +12,7 @@ fi
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
-INSTANCE="mem2_ssd1_v2_x2"
+INSTANCE="mem1_ssd1_v2_x36"
 
 # Source common variables and functions
 source "${SCRIPTPATH}/common.sh"
@@ -91,6 +91,7 @@ if [ "${SKIP_JOB}" = "yes" ]
 then
     unset SKIP_JOB
 else
+    dx mkdir -p "${DESTINATION}"
     script=$(dx upload "${SCRIPTPATH}"/s2_script.sh --path ${DESTINATION}/s2_script.sh --brief)
     DESTINATION="${DESTINATION}/SAPPHIRE_step2/${CHROMOSOME}"
     dx run swiss-army-knife -icmd="${command}" \
