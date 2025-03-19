@@ -70,7 +70,7 @@ fi
 
 if [ -z "${APPLET_ID}" ]
 then
-    echo "Please provide the ID or path of bin-splitter-applet with --split-applet <value>"
+    echo "Please provide the ID or path of bin-splitter-applet with --applet <value>"
     exit 1
 fi
 
