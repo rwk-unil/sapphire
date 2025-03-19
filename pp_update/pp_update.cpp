@@ -18,6 +18,7 @@ public:
         app.add_option("-f,--file", filename, "Input file name");
         app.add_option("-o,--output", ofname, "Output file name");
         app.add_option("-b,--binary-file", bfname, "Binary file name");
+        app.add_option("--main-var-vcf", main_var_vcf, "Main var VCF if input file is split VCF");
         app.add_flag("-v,--verbose", verbose, "Will show progress and other messages");
         app.add_flag("--no-pp", nopp, "Don't write/update the PP field");
     }
@@ -26,6 +27,7 @@ public:
     std::string filename = "-";
     std::string ofname = "-";
     std::string bfname = "-";
+    std::string main_var_vcf = "";
     bool verbose = false;
     bool nopp = false;
 };
@@ -86,6 +88,25 @@ public:
             exit(-1); // Change this
         }
 
+        // This is for split VCF/BCFs
+        if (search_line_value) /* [[unlikely]] */ {
+            // Load global variant file (in scope to release it after, takes some time)
+            VarInfoLoader vil(search_in_file);
+            std::string contig = bcf_hdr_id2name(header, line->rid);
+            uint32_t pos1 = line->pos;
+            std::string ref = std::string(line->d.allele[0]);
+            std::string alt = std::string(line->d.allele[1]);
+            line_counter = vil.find_vcf_line(contig, pos1, ref, alt);
+            if (line_counter == -1) {
+                std::cerr << "Could not find VCF record in original VCF variant file " << search_in_file << std::endl;
+                throw "vcf line counter error";
+            }
+            // Do not search next record (for performance), records should be contiguous
+            search_line_value = false;
+            /* To search for all records use get_vcf_line_map() or get_vcf_line_umap()
+             * to generate a map once and do look-ups in the map */
+        }
+
         // If there is work to do
         if (auto work_line = work.find(line_counter); work_line != work.end()) {
             bool has_pp = false;
@@ -144,6 +165,15 @@ public:
         line_counter++;
     }
 
+    void set_search_line_counter(const std::string& filename) {
+        search_line_value = true;
+        search_in_file = filename;
+        if (!fs::exists(search_in_file)) {
+            std::cerr << "File : " << search_in_file << " does not exist !" << std::endl;
+            throw "File does not exist";
+        }
+    }
+
     void print_stats() const {
         std::cout << "Rephase targets              : " << rephase_targets << std::endl;
         std::cout << "With phase informative reads : " << number_with_pir << std::endl;
@@ -157,6 +187,9 @@ protected:
     size_t line_counter;
     float* pp_arr;
     int pp_arr_size;
+
+    bool search_line_value = false;
+    std::string search_in_file;
 
     size_t rephase_targets = 0;
     size_t number_with_pir = 0;
@@ -191,7 +224,7 @@ int main(int argc, char**argv) {
         exit(app.exit(CLI::CallForHelp()));
     }
 
-    std::cout << "Generating workload ..." << std::endl;
+    std::cout << "Generating workload..." << std::endl;
 
     HetInfoMemoryMap himm(bfname);
     std::map<size_t, VCFLineWork> work;
@@ -200,6 +233,11 @@ int main(int argc, char**argv) {
     std::cout << "Updating...\n" << std::endl;
 
     PPUpdateTransformer pput(work);
+
+    if (global_app_options.main_var_vcf != "") {
+        pput.set_search_line_counter(global_app_options.main_var_vcf);
+    }
+
     pput.transform(filename, ofname);
 
     std::cout << "Done !" << std::endl;
