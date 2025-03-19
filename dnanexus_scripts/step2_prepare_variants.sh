@@ -91,7 +91,10 @@ if [ "${SKIP_JOB}" = "yes" ]
 then
     unset SKIP_JOB
 else
-    dx mkdir -p "${DESTINATION}"
+    if [ ! -z "${DESTINATION}" ]
+    then
+        dx mkdir -p "${DESTINATION}"
+    fi
     script=$(dx upload "${SCRIPTPATH}"/s2_script.sh --path ${DESTINATION}/s2_script.sh --brief)
     DESTINATION="${DESTINATION}/SAPPHIRE_step2/${CHROMOSOME}"
     dx run swiss-army-knife -icmd="${command}" \
