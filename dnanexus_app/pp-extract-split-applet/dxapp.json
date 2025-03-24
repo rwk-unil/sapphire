@@ -24,6 +24,16 @@
         "*"
       ],
       "help": ""
+    },
+    {
+      "name": "maf_threshold",
+      "label": "(Optional) MAF threshold e.g., 0.001, for extraction (instead of using PP)",
+      "class": "string",
+      "optional": true,
+      "patterns": [
+        "*"
+      ],
+      "help": ""
     }
   ],
   "outputSpec": [

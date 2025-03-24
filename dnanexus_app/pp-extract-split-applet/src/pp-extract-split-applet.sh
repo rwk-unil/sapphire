@@ -19,11 +19,20 @@ main() {
 
     echo "Value of vcf_bcf_file: '$vcf_bcf_file'"
     echo "Value of vars_vcf_bcf_file: '$vars_vcf_bcf_file'"
+    echo "Value of maf_threshold: '$maf_threshold'"
 
     # The following line(s) use the dx command-line tool to download your file
     # inputs to the local file system using variable names for the filenames. To
     # recover the original filenames, you can use the output of "dx describe
     # "$variable" --name".
+
+    MAF_ARG=""
+    if [ ! -z "${maf_threshold}" ]
+    then
+        echo "Will use MAF threshold : ${maf_threshold}"
+
+        MAF_ARG="--pp-from-maf --maf-threshold ${maf_threshold}"
+    fi
 
     FILENAME="$(dx describe "$vcf_bcf_file" --name)"
     echo "Filename : ${FILENAME}"
@@ -36,7 +45,7 @@ main() {
     HETS_FILENAME="${FILENAME}_hets.bin"
 
     # Extract the low PPs
-    pp_extract -f "${FILENAME}" -o "${HETS_FILENAME}" --extract-pp1-singletons --main-var-vcf "${VARS_FILENAME}"
+    pp_extract -f "${FILENAME}" -o "${HETS_FILENAME}" ${MAF_ARG} --extract-pp1-singletons -v --main-var-vcf "${VARS_FILENAME}"
 
     hets_file=$(dx upload "${HETS_FILENAME}" --brief)
 
