@@ -20,6 +20,7 @@ source "${SCRIPTPATH}/common.sh"
 STEP0_PATH=""
 APPLET_ID=""
 BCF_VAR_ID=""
+MAF_THRESHOLD=""
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -49,6 +50,11 @@ case $key in
     shift
     shift
     ;;
+    --maf-threshold)
+    MAF_THRESHOLD="$2"
+    shift
+    shift
+    ;;
     *)    # unknown option
     POSITIONAL+=("$1") # save it in an array for later
     shift # past argument
@@ -73,6 +79,12 @@ if [ -z "${APPLET_ID}" ]
 then
     echo "Please provide the ID of pp-extract-split-applet with --applet <ID>"
     exit 1
+fi
+
+MAF_ARG=""
+if [ ! -z "$MAF_THRESHOLD" ]
+then
+    MAF_ARG="-imaf_threshold=${MAF_THRESHOLD}"
 fi
 
 echo "PATH            = ${STEP0_PATH}"
@@ -132,7 +144,7 @@ do
     then
         unset SKIP_JOB
     else
-        dx run "${APPLET_ID}" -ivcf_bcf_file="${file_id_to_extract}" -ivars_vcf_bcf_file=${BCF_VAR_ID} \
+        dx run "${APPLET_ID}" -ivcf_bcf_file="${file_id_to_extract}" -ivars_vcf_bcf_file=${BCF_VAR_ID} ${MAF_ARG} \
             ${COST_LIMIT_ARG} --name "Step3: Extract PP ${chr}_${start}_${stop}" \
             --tag "${tag}" \
             --destination "${inner_dest}" --priority normal \
