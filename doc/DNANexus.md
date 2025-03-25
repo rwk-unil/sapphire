@@ -2,7 +2,34 @@
 
 The different scripts for the pipeline can be run from a regular Linux/Mac or Windows with WSL, they can also be run from a ttyd instance on DNANexus.
 
+## Overview of the new (2025) SAPPHIRE pipeline
+
+![SAPPHIRE Pipeline](../diagrams/SAPPHIRE_pipeline.drawio.png)
+
 Why is this pipeline so complicated ? Mainly because of scalability, to be able to rephase hundreds of thousands of samples on possibly billions of variants sites by using their WGS data, the work has to be split at many stages in different ways.
+
+The previous pipeline as presented in the [paper](https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1011092) was simpler but because the extraction and update stages were done whole-chromosome, these stages could take more than a week (e.g., update whole chromosome 2 took 7 days and 14 hours). The new pipeline allows to reduce the extraction and update stage processing time by parallelizing them over 1Mbp regions and the final stage concatenates everything and indexes the final file.
+
+This table shows the time and total cost for phase polishing chromosome 22 with 200,031 samples (`"Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c22_b0_v1.vcf.gz"`)
+
+| **CHR22 - 200,031 samples** | **Number of jobs**    | **Time**      | **Total Cost** | **Notes**                                                                |
+|-----------------------------|-----------------------|---------------|----------------|--------------------------------------------------------------------------|
+| Step0: Split VCF/BCF        | Chr len / 1Mbp = 51   | < 2h per job  | 0.88 £         | Longer because input was .vcf.gz                                         |
+| Step1: Prepare BCF          | Chr len / 1Mbp = 51   | < 45m per job | 0.40 £         |                                                                          |
+| Step2: Prepare variants     | 1                     | 15m           | 0.24 £         | Was launched with high priority, price should be lower                   |
+| Step3: PP Extract           | Chr len / 1Mbp = 51   | < 20m per job | 0.18 £         |                                                                          |
+| Step4: Merge regions        | 1                     | 15m           | 0.0046 £       |                                                                          |
+| Step5: Split Binary         | 1                     | 6m            | 0.0018 £       |                                                                          |
+| Step6: Phase                | #Samples / 1000 = 201 | < 1h per job  | 13.32 £        | Because of the many jobs needed, jobs get relaunched with high priority |
+| Step7: Merge binary         | 1                     | 6m            | 0.0018 £       |                                                                          |
+| Step8: PP Update            | Chr len / 1Mbp = 51   | < 51m per job | 0.60 £         |                                                                          |
+| Step9: Concat final BCF     | 1                     | 3h21          | 0.30 £         |                                                                          |
+|                             |                       |               |                |                                                                          |
+| All steps                   | -                     | < 1 day       | **15.93 £**    | The total time will depend on how many jobs can be launched in parallel  |
+
+As chromosome 22 has about 1.6% of bases of the whole genome, we can estimate the whole genome cost for the 200k release as : 1/(1.6/100) * 16 £ = 1,000 £.
+
+Rephasing the whole 200k dataset with the previous pipeline did cost less (570 £) than the estimated 1000 £, but could take more than a week per chromosome, as here the jobs are parallelized over 1Mbp regions the stages, time per stage is approximately constant (except phasing and concat stages).
 
 ## Preparations
 
