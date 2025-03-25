@@ -81,7 +81,7 @@ Here you can choose which CRAM file release you will be using by providing a UK 
 (A the path locations should be the subdirectories that starts with the two first numbers of the sample IDs).
 
 ```shell
-/generate_cram_paths.sh --cram-path "Bulk/DRAGEN WGS/Whole genome CRAM files (DRAGEN) [500k release]" --destination SAPPHIRE
+./generate_cram_paths.sh --cram-path "Bulk/DRAGEN WGS/Whole genome CRAM files (DRAGEN) [500k release]" --destination SAPPHIRE
 ```
 
 Alternatives could be `"Bulk/GATK and GraphTyper WGS/Whole genome GATK CRAM files and indices [500k release]/"` for example.
