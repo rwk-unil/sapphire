@@ -90,7 +90,7 @@ Alternatives could be `"Bulk/GATK and GraphTyper WGS/Whole genome GATK CRAM file
 
 If jobs fail, which could happen when instances don't have enough storage for example, it is possible to change the instance type with `--instance` e.g., `--instance mem2_ssd3_v2_x2`
 
-Normally, only step9 generates a large file (as large as the original VCF/BCF), and it will fail within a few minutes if there is not enough space.
+Normally, only step9 generates a large file (as large as the original VCF/BCF), and it will fail within a few minutes if there is not enough space. If an instance fails and the error message is `std::bad_alloc`, it means the instance ran out of memory (RAM).
 
 The instances have been selected to be the cheapest possible to run the phase polishing for the UK Biobank 200k release, for the 500k release the storage of some instances may not be enough.
 
@@ -313,7 +313,7 @@ Because updating a whole BCF for a whole chromosome for hundreds of thousands of
 
 Finally we will concatenate the updated non-overlapping BCF files to generate the final whole-chromosome BCF file.
 
-**Make sure all the files bcfs from next step are generated, this is a concat of the file of step8, if files are missing it will concat only what is present**
+**Make sure all the files bcfs from next step are generated, this is a concat of the files of step8, if files are missing it will concat only what is present**
 
 Note: This step requires an instance with enough storage for the final BCF file, it should be roughly the same size as the original file used as input to the SAPPHIRE pipeline. By default `mem2_ssd2_v2_x2` is used which has 160~GB of storage.
 
