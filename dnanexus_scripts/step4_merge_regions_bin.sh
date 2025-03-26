@@ -101,7 +101,7 @@ then
     unset SKIP_JOB
 else
     dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; /usr/src/pp/bin_tools/scripts/region_merge_helper_script.sh --path /mnt/project/${STEP3_PATH}" \
-        ${COST_LIMIT_ARG} --name "Step4: Merge regions" \
+        ${COST_LIMIT_ARG} --name "Step4: Merge regions ${CHROMOSOME}" \
         -iimage_file="${DOCKER}" --tag "${tag}" \
         --destination "${DESTINATION}" --priority normal \
         --instance-type ${INSTANCE} -y

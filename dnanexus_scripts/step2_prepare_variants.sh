@@ -101,7 +101,7 @@ else
         -iin=${script} \
         ${array[@]} \
         -imount_inputs=true \
-        ${COST_LIMIT_ARG} --name "Step2: Prepare Variant BCF" \
+        ${COST_LIMIT_ARG} --name "Step2: Prepare Variant BCF ${CHROMOSOME}" \
         --tag "${tag}" \
         --destination "${DESTINATION}" --priority normal \
         --instance-type ${INSTANCE} -y
