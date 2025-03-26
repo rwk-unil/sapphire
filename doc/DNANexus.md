@@ -46,7 +46,7 @@ Please run `dx login` to login
 
 Please run `dx select` to select the correct project before running the scripts
 
-In this guide we will use a destination folder named `SAPPHIRE` within our project. If you want to change this, update the `--destionation` arguments for all scripts below, as steps depend on the previous steps, don't move files, changes names, destinations etc. Please don't use spaces in the destination path.
+In this guide we will use a destination folder named `SAPPHIRE` within our project. If you want to change this, update the `--destination` arguments for all scripts below, as steps depend on the previous steps, don't move files, changes names, destinations etc. Please don't use spaces in the destination path.
 
 Warning: For all steps check that the jobs did finish successfully before running the next step. If some jobs fail relaunch them. If there is a persisting issue, solve it. If you need help, open an issue on the github page.
 
@@ -67,7 +67,7 @@ dx run $(dx build dnanexus_app/pp-toolkit-builder --destination SAPPHIRE/ | jq -
 For some steps a prebuilt docker image is used, this image for example, holds all the reference sequences (human genome assembly) for the CRAM files so that they don't need to be dowloaded during job execution.
 
 ```shell
-./upload_docker_image.sh --destination SAPPHIRE
+./dnanexus_scripts/upload_docker_image.sh --destination SAPPHIRE
 ```
 
 Will ask to launch a job that downloads the docker image and uploads it in the DNANexus project in the destination folder.
@@ -81,7 +81,7 @@ Here you can choose which CRAM file release you will be using by providing a UK 
 (A the path locations should be the subdirectories that starts with the two first numbers of the sample IDs).
 
 ```shell
-./generate_cram_paths.sh --cram-path "Bulk/DRAGEN WGS/Whole genome CRAM files (DRAGEN) [500k release]" --destination SAPPHIRE
+./dnanexus_scripts/generate_cram_paths.sh --cram-path "Bulk/DRAGEN WGS/Whole genome CRAM files (DRAGEN) [500k release]" --destination SAPPHIRE
 ```
 
 Alternatives could be `"Bulk/GATK and GraphTyper WGS/Whole genome GATK CRAM files and indices [500k release]/"` for example.
@@ -99,6 +99,12 @@ Check the rate card : https://20779781.fs1.hubspotusercontent-na1.net/hubfs/2077
 For price and resource information, and select another instance if needed.
 
 # Phase polishing of a population chromosome
+
+Go in the script directory :
+
+```shell
+cd dnanexus_scripts
+```
 
 The input VCF/BCF file should be phased (preferably with SHAPEIT5) and indexed with `bcftools index`
 
