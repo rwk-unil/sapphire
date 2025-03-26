@@ -12,7 +12,7 @@ fi
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
-INSTANCE="mem2_ssd1_v2_x2"
+INSTANCE="mem3_ssd1_v2_x2"
 
 # Source common variables and functions
 source "${SCRIPTPATH}/common.sh"
