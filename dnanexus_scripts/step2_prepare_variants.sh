@@ -103,7 +103,7 @@ else
         -imount_inputs=true \
         ${COST_LIMIT_ARG} --name "Step2: Prepare Variant BCF ${CHROMOSOME}" \
         --tag "${tag}" \
-        --destination "${DESTINATION}" --priority normal \
+        --destination "${DESTINATION}" --priority high \
         --instance-type ${INSTANCE} -y
 fi
 

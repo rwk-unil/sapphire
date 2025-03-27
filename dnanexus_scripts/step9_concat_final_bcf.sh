@@ -12,7 +12,7 @@ fi
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
-INSTANCE="mem2_ssd2_v2_x2"
+INSTANCE="mem3_ssd3_x2"
 
 # Source common variables and functions
 source "${SCRIPTPATH}/common.sh"
@@ -102,6 +102,6 @@ else
         -imount_inputs=true \
         ${COST_LIMIT_ARG} --name "Step9: Concat Final BCF ${CHROMOSOME}" \
         --tag "${tag}" \
-        --destination "${DESTINATION}" --priority normal \
+        --destination "${DESTINATION}" --priority high \
         --instance-type ${INSTANCE} -y
 fi
