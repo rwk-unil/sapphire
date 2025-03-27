@@ -323,18 +323,12 @@ Finally we will concatenate the updated non-overlapping BCF files to generate th
 
 **Make sure all the files bcfs from next step are generated, this is a concat of the files of step8, if files are missing it will concat only what is present**
 
-Note: This step requires an instance with enough storage for the final BCF file, it should be roughly the same size as the original file used as input to the SAPPHIRE pipeline. By default `mem2_ssd2_v2_x2` is used which has 160~GB of storage.
-
-If more is needed chose one from : https://20779781.fs1.hubspotusercontent-na1.net/hubfs/20779781/Product%20Team%20Folder/Rate%20Cards/BiobankResearchAnalysisPlatform_Rate%20Card_Current.pdf
-
-And use `--instance` as argument to the script to specify another instance, e.g., `--instance mem2_ssd2_v2_x16`
-
 ```shell
 ./step9_concat_final_bcf.sh --step8-path SAPPHIRE/SAPPHIRE_step8/chr22 \
         --chromosome chr22 --destination SAPPHIRE
 ```
 
-Note: If for some reason you prefer a `vcf.gz` file, it is preferable to convert the `.bcf` files from step8 to `.vcf.gz`, index them, and naive concat them (sorted by chromosomal region) to produce the final `vcf.gz` rather than converting the `.bcf` from step9.
+Note: If for some reason you prefer a `vcf.gz` file, it is faster to convert the `.bcf` files from step8 to `.vcf.gz`, index them, and naive concat them (sorted by chromosomal region) to produce the final `vcf.gz` rather than converting the `.bcf` from step9.
 
 # You Are Done !
 
