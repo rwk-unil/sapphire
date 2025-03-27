@@ -12,7 +12,7 @@ fi
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
-INSTANCE="mem2_ssd1_v2_x4"
+INSTANCE="mem3_ssd1_v2_x4"
 THREADS_ARG="-t 12"
 
 # Source common variables and functions
