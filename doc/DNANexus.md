@@ -142,7 +142,7 @@ By default the commands will use the destination folder `SAPPHIRE` and put resul
 - **Important** Make sure a step has fully completed successfully on the DNANexus platform before launching the next step. (you can annotate the command files to keep track of the advancements).
 - Steps for different chromosomes are independent and can be run in parallel.
 - A more detailed breakdown of each step is documented below.
-- Some steps generate a lot of jobs, some other not, as shown in the overview above.
+- To get an idea of runtime and number of jobs check the overview above.
 
 # Documentation for all steps with chromosome 22 as an example
 
