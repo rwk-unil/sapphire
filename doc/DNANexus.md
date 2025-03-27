@@ -277,7 +277,7 @@ Because for each batch more than 2,000 files need to be mapped (1,000 CRAMs, 1,0
 
 For some reason the `dx run` command sometimes get stuck after submitting a job, if it is stuck for more than a minute or so, and you didn't launch all jobs with `a` when asked, you can interrupt it with ctrl-c and the job should still be submitted, it is just that the response from `dx run` didn't yet arrive.
 
-The phasing itself should take 1-3h per 1000 sample job.
+The phasing itself should take 1-4h per 1000 sample job.
 
 ## Step7 Merge the binary files
 
