@@ -139,7 +139,7 @@ By default the commands will use the destination folder `SAPPHIRE` and put resul
 ## Running the steps
 
 - You should run the steps in the command file e.g., `commands_chr22.md` from the `dnanexus_scripts` folder.
-- **Important** Make sure a step has fully completed successfully on the DNANexus platform before launching the next step. (you can annotate the command files to keep track of the advancements).
+- **Important:** Make sure a step has fully completed successfully on the DNANexus platform before launching the next step. (you can annotate the command files to keep track of the advancements).
 - Steps for different chromosomes are independent and can be run in parallel.
 - A more detailed breakdown of each step is documented below.
 - To get an idea of runtime and number of jobs check the overview above.
