@@ -42,13 +42,12 @@ If something else is missing please open an issue and I'll add it to the documen
 Please note that all scripts below will use the DNANexus CLI tool `dx`.
 For the scripts to work the dx CLI tool should have the correct project selected and the user should be logged in. (already done if running from ttyd instance)
 
-Please run `dx login` to login
+- Please run `dx login` to login
+- Please run `dx select` to select the correct project before running the scripts
 
-Please run `dx select` to select the correct project before running the scripts
+In this guide we will use a **destination** folder named `SAPPHIRE`. If you want to change this, update the `--destination` arguments for all scripts below, as steps depend on the previous steps, don't move files, changes names, destinations etc. Please don't use spaces in the destination path.
 
-In this guide we will use a destination folder named `SAPPHIRE` within our project. If you want to change this, update the `--destination` arguments for all scripts below, as steps depend on the previous steps, don't move files, changes names, destinations etc. Please don't use spaces in the destination path.
-
-Warning: For all steps check that the jobs did finish successfully before running the next step. If some jobs fail relaunch them. If there is a persisting issue, solve it. If you need help, open an issue on the github page.
+**Warning:** For all steps check that the jobs did finish successfully before running the next step. If some jobs fail relaunch them. If there is a persisting issue, solve it. If you need help, open an issue on the github page.
 
 ### Create and run the PP-Toolkit builder
 
@@ -236,7 +235,8 @@ This merges the extracted variants from the overlapping chunks to a single binar
 Provide the path of step3 and the docker image path (or ID)
 
 ```shell
-./step4_merge_regions_bin.sh --step3-path SAPPHIRE/SAPPHIRE_step3/chr22 --docker SAPPHIRE/pp_toolkit_v1.4.tar.gz --chromosome chr22 --destination SAPPHIRE
+./step4_merge_regions_bin.sh --step3-path SAPPHIRE/SAPPHIRE_step3/chr22 --docker SAPPHIRE/pp_toolkit_v1.4.tar.gz \
+        --chromosome chr22 --destination SAPPHIRE
 ```
 
 ## Step5 Split the binary file into batches of samples
@@ -246,7 +246,8 @@ Provide the path of step3 and the docker image path (or ID)
 Because for each sample a CRAM file is accessed this should be split into smaller batches, this step splits the population level binary files into smaller batches of samples (1,000 samples per batch).
 
 ```shell
-./step5_split_binary.sh --binary-file SAPPHIRE/SAPPHIRE_step4/chr22/ukb20279_c22_b0_v1.vcf.gz.bin --applet SAPPHIRE/bin-splitter-applet --chromosome chr22 --destination SAPPHIRE
+./step5_split_binary.sh --binary-file SAPPHIRE/SAPPHIRE_step4/chr22/ukb20279_c22_b0_v1.vcf.gz.bin \
+        --applet SAPPHIRE/bin-splitter-applet --chromosome chr22 --destination SAPPHIRE
 ```
 
 ## Step6 Run the SAPPHIRE phase caller
@@ -258,7 +259,8 @@ The phase caller requires to be launched on each batch of 1000 samples (each spl
 Before we launch the phase caller we need to prepare a file that links the samples in the VCF to their CRAM file.
 
 ```shell
-./step6a_generate_sample_list.sh --vcf "Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c22_b0_v1.vcf.gz" --cram-list SAPPHIRE/cram_paths.csv --chromosome chr22 --destination SAPPHIRE
+./step6a_generate_sample_list.sh --vcf "Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c22_b0_v1.vcf.gz" \
+        --cram-list SAPPHIRE/cram_paths.csv --chromosome chr22 --destination SAPPHIRE
 ```
 
 To do the actual phasing provide the path of step5, the variant file ID generated in step2, the sample list generated above, the cram path file generated during the initial preparations, the docker image uploaded in the preparations, and the destination.
