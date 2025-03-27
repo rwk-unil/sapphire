@@ -138,7 +138,7 @@ do
         unset SKIP_JOB
     else
         dx run swiss-army-knife -icmd="${command}" \
-            -iin=${VCF_VAR_ID} -iin=${VCF_IDX_ID} \
+            -iin="${VCF_VAR_ID}" -iin="${VCF_IDX_ID}" \
             -imount_inputs=true \
             ${COST_LIMIT_ARG} --name "Step0: Split BCF ${CHROMOSOME}_${position}" \
             --tag "${tag}" \

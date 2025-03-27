@@ -89,7 +89,7 @@ Alternatives could be `"Bulk/GATK and GraphTyper WGS/Whole genome GATK CRAM file
 
 If jobs fail, which could happen when instances don't have enough storage for example, it is possible to change the instance type with `--instance` e.g., `--instance mem2_ssd3_v2_x2`
 
-Normally, only step9 generates a large file (as large as the original VCF/BCF), and it will fail within a few minutes if there is not enough space. If an instance fails and the error message is `std::bad_alloc`, it means the instance ran out of memory (RAM).
+Normally, only step9 generates a large file (as large as the original VCF/BCF), and it will fail within a few minutes if there is not enough space. If an instance fails and the error message is `std::bad_alloc` or `OOM`, it means the instance ran out of memory (RAM).
 
 The instances have been selected to be the cheapest possible to run the phase polishing for the UK Biobank 200k release, for the 500k release the storage of some instances may not be enough.
 
@@ -117,6 +117,34 @@ Which has the associated index :
 
 Note: The scripts below will ask to launch the jobs, you can choose `y` to launch a job, `n` to skip a job, `a` to launch all or `e` to exit.
 This makes it possible to double check the job parameters before launch.
+
+## Generate the steps for the chromosome
+
+As each chromosome will have to go through each step of the SAPPHIRE pipeline (documented below), there is a helper script that generates a markdown file with all commands to avoid manually having to adapt them from the documentation below.
+
+```shell
+./generate_command_list.sh --vcf "Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c22_b0_v1.vcf.gz" --vcf-idx "Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c22_b0_v1.vcf.gz.tbi" --chromosome chr22
+```
+
+This will generate the `commands_chr22.md` file in the `dnanexus_scripts` directory. It will contain all steps that have to be launched manually for the chromosome. Please make sure all jobs of a given step are finished successfully before launching the next step. You can annotate these files to keep track of which steps are completed and what to launch next.
+
+You can use this script to generate the commands for any chromosome e.g., chr1 :
+
+```shell
+./generate_command_list.sh --vcf "Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c1_b0_v1.vcf.gz" --vcf-idx "Bulk/Previous WGS releases/GATK and GraphTyper WGS/SHAPEIT Phased VCFs/ukb20279_c1_b0_v1.vcf.gz.tbi" --chromosome chr1
+```
+
+By default the commands will use the destination folder `SAPPHIRE` and put results inside as `SAPPHIRE/SAPPHIRE_STEPX/chrN`, if you want to use another destination the `.generate_command_list.sh` script accepts the `--destination` parameter (spaces not supported in destination folder name). The destination should match the one used in the preparations above (or adapt the individual commands).
+
+## Running the steps
+
+- You should run the steps in the command file e.g., `commands_chr22.md` from the `dnanexus_scripts` folder.
+- **Important** Make sure a step has fully completed successfully on the DNANexus platform before launching the next step. (you can annotate the command files to keep track of the advancements).
+- Steps for different chromosomes are independent and can be run in parallel.
+- A more detailed breakdown of each step is documented below.
+- Some steps generate a lot of jobs, some other not, as shown in the overview above.
+
+# Documentation for all steps with chromosome 22 as an example
 
 ## Step0 Split input BCF/VCF file into overlapping chunks
 
