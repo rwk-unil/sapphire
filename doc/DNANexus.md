@@ -87,15 +87,13 @@ Alternatives could be `"Bulk/GATK and GraphTyper WGS/Whole genome GATK CRAM file
 
 ### Notes
 
-If jobs fail, which could happen when instances don't have enough storage for example, it is possible to change the instance type with `--instance` e.g., `--instance mem2_ssd3_v2_x2`
+If jobs fail, which could happen when instances don't have enough RAM or storage for example, it is possible to change the instance type with `--instance` e.g., `--instance mem2_ssd3_v2_x2`
 
-Normally, only step9 generates a large file (as large as the original VCF/BCF), and it will fail within a few minutes if there is not enough space. If an instance fails and the error message is `std::bad_alloc` or `OOM`, it means the instance ran out of memory (RAM).
+If an instance fails and the error message is `std::bad_alloc` it means the instance ran out of memory (RAM).
 
-The instances have been selected to be the cheapest possible to run the phase polishing for the UK Biobank 200k release, for the 500k release the storage of some instances may not be enough.
+The instances have been selected to be able to run the phase polishing for the UK Biobank 200k release, for the 500k release the storage of some instances may not be enough.
 
-Check the rate card : https://20779781.fs1.hubspotusercontent-na1.net/hubfs/20779781/Product%20Team%20Folder/Rate%20Cards/BiobankResearchAnalysisPlatform_Rate%20Card_Current.pdf
-
-For price and resource information, and select another instance if needed.
+Check the rate card : https://20779781.fs1.hubspotusercontent-na1.net/hubfs/20779781/Product%20Team%20Folder/Rate%20Cards/BiobankResearchAnalysisPlatform_Rate%20Card_Current.pdf for price and resource information, and select another instance if needed.
 
 # Phase polishing of a population chromosome
 
