@@ -69,7 +69,8 @@ main() {
     then
         # Don't bother with multi-threading
         echo "single thread"
-        xcftools view -i "${VCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
+        #xcftools view -i "${VCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
+        xcftools view -i "${VCF_FILENAME}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
     else
         echo "Running with ${threads} threads"
         fail=0
@@ -77,10 +78,21 @@ main() {
         #echo $threads
         #echo $increment
         #echo $end_position
+
+        echo "Adding line numbers to XCF BCF file : $(date)"
+        # Add line numbers
+        bcf_add_line -f "${VCF_FILENAME}" -o "${VCF_FILENAME}.line"
+        # Replace original file
+        mv "${VCF_FILENAME}.line" "${VCF_FILENAME}"
+        echo "Indexing XCF BCF file : $(date)"
+        # Index file
+        bcftools index -f "${VCF_FILENAME}"
+
         for (( i=0 ; position < end_position; position+=increment, i++))
         do
             echo "${chromosome}:$((position))-$((position+increment+overlap))"
-            xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${VCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
+            #xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${VCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
+            xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${VCF_FILENAME}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
             pids[$i]=$!
         done
 
@@ -121,7 +133,6 @@ main() {
     # to see more options to set metadata.
 
     mv ${directory}/${OFNAME} ${OFNAME}
-
     sapphire_bin=$(dx upload ${OFNAME} --brief)
 
     # The following line(s) use the utility dx-jobutil-add-output to format and
