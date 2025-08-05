@@ -323,6 +323,22 @@ public:
         return counter;
     }
 
+    size_t count_all_snps_with_pir(float threshold, const std::vector<VarInfo>& vi) {
+        size_t counter = 0;
+        // For each sample
+        for (size_t i = 0; i < num_samples; ++i) {
+            std::vector<HetInfo> v;
+            // For each het site in dataset
+            fill_het_info(v, i);
+            for (auto hi : v) {
+                if (vi[hi.vcf_line].snp && !std::isnan(hi.pp) && hi.pp < threshold) {
+                    counter++;
+                }
+            }
+        }
+        return counter;
+    }
+
     size_t count_all_snps_below_threshold_that_can_be_linked_within(float threshold, const std::vector<VarInfo>& vi, size_t dist, bool snp_nei_req = true) {
         size_t counter = 0;
         // For each sample
@@ -338,7 +354,7 @@ public:
                     size_t lower_bound = j < 2 ? 0 : j-2;
                     size_t upper_bound = j < v.size()-2 ? j+2 : v.size();
                     // For each neighbor
-                    for (size_t k = lower_bound; k <= upper_bound; ++k) {
+                    for (size_t k = lower_bound; k < upper_bound; ++k) {
                         // Don't check variant with itself
                         if (k == j) continue;
                         auto& nei = v[k];
