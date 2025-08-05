@@ -148,5 +148,5 @@ main() {
     # class.  Run "dx-jobutil-add-output -h" for more information on what it
     # does.
 
-    dx-jobutil-add-output ${OFNAME} "$sapphire_bin" --class=file
+    dx-jobutil-add-output sapphire_bin ${sapphire_bin} --class=file
 }
