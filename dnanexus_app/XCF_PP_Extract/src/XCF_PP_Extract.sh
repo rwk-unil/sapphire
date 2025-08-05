@@ -31,11 +31,17 @@ main() {
     XCF_BCF_FILENAME="$(dx describe "$xcf_bcf" --name)"
     dx download "$xcf_bcf" -o "${XCF_BCF_FILENAME}"
     XCF_BCF_IDX_FILENAME="$(dx describe "$xcf_bcf_idx" --name)"
-    dx download "$xcf_bcf_idx" -o XCF_BCF_IDX_FILENAME
+    dx download "$xcf_bcf_idx" -o "${XCF_BCF_IDX_FILENAME}"
     XCF_BIN_FILENAME="$(dx describe "$xcf_bin" --name)"
-    dx download "$xcf_bin" -o XCF_BIN_FILENAME
+    dx download "$xcf_bin" -o "${XCF_BIN_FILENAME}"
     XCF_FAM_FILENAME="$(dx describe "$xcf_fam" --name)"
-    dx download "$xcf_fam" -o XCF_FAM_FILENAME
+    dx download "$xcf_fam" -o "${XCF_FAM_FILENAME}"
+
+    echo "Downloaded:"
+    echo "${XCF_BCF_FILENAME}"
+    echo "${XCF_BCF_IDX_FILENAME}"
+    echo "${XCF_BIN_FILENAME}"
+    echo "${XCF_FAM_FILENAME}"
 
     threads=$(nproc)
     overlap=2000
@@ -47,6 +53,8 @@ main() {
     chromosome=$(bcftools index -s ${XCF_BCF_FILENAME} | tail -n 1 | cut -f 1) || \
         { echo failed to get chromosome; exit 1; }
     vcf_basename=$(basename "${XCF_BCF_FILENAME}")
+
+    echo "Chromosome: ${chromosome}, end position: ${end_position}"
 
     if [ -z "$OFNAME" ]
     then
@@ -69,8 +77,8 @@ main() {
     then
         # Don't bother with multi-threading
         echo "single thread"
-        #xcftools view -i "${VCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
-        xcftools view -i "${VCF_FILENAME}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
+        #xcftools view -i "${XCF_BCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
+        xcftools view -i "${XCF_BCF_FILENAME}" -o "${directory}/${OFNAME}" --log "${directory}/${OFNAME}.log" -Obs
     else
         echo "Running with ${threads} threads"
         fail=0
@@ -81,18 +89,18 @@ main() {
 
         echo "Adding line numbers to XCF BCF file : $(date)"
         # Add line numbers
-        bcf_add_line -f "${VCF_FILENAME}" -o "${VCF_FILENAME}.line"
+        bcf_add_line -f "${XCF_BCF_FILENAME}" -o "${XCF_BCF_FILENAME}.line"
         # Replace original file
-        mv "${VCF_FILENAME}.line" "${VCF_FILENAME}"
+        mv "${XCF_BCF_FILENAME}.line" "${XCF_BCF_FILENAME}"
         echo "Indexing XCF BCF file : $(date)"
         # Index file
-        bcftools index -f "${VCF_FILENAME}"
+        bcftools index -f --threads ${threads} "${XCF_BCF_FILENAME}"
 
         for (( i=0 ; position < end_position; position+=increment, i++))
         do
             echo "${chromosome}:$((position))-$((position+increment+overlap))"
-            #xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${VCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
-            xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${VCF_FILENAME}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
+            #xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${XCF_BCF_FILENAME}" -m "${maf}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
+            xcftools view --line-from-vcf -r "${chromosome}:$((position))-$((position+increment+overlap))" -i "${XCF_BCF_FILENAME}" -o "${directory}/${OFNAME}_$i" --log "${directory}/${OFNAME}_$i.log" -Obs > /dev/null 2>&1 &
             pids[$i]=$!
         done
 
