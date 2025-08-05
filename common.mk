@@ -29,7 +29,7 @@ ifeq ($(STATIC_BINS),y)
 A_LIBS := $(HTSLIB_PATH)/libhts.a $(ZSTD_PATH)/libzstd.a
 LDLIBS+=-llzma -lbz2 -lz -lm -lcurl -pthread
 else
-LDLIBS+=-lhts -lzstd -pthread
+LDLIBS+=-lhts -pthread
 endif
 
 LDFLAGS+=-O$(OLEVEL) $(EXTRA_FLAGS)
