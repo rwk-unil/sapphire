@@ -221,7 +221,7 @@ do
     echo "Destination: ${inner_dest}"
 
     INNER_NEW_BINARY_FILE="${prefix}.rephased.bin_sub_${idx}"
-    command="cp ${filename} ${INNER_NEW_BINARY_FILE}; time phase_caller ${INDELS} -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} --cram-path-from-samples-file"
+    command="cp ${filename} ${INNER_NEW_BINARY_FILE}; time phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} ${INDELS} --cram-path-from-samples-file"
     echo "Command : ${command}"
 
     if [ -z "${LAUNCH_ALL}" ]
