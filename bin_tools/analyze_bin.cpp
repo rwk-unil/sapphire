@@ -18,7 +18,7 @@
 int main(int argc, char**argv) {
     CLI::App app{"Binary file analysis utility app"};
     std::string filename = "-";
-    app.add_option("-f,--file", filename, "Input file name");
+    app.add_option("-f,--file", filename, "Input VCF/BCF file name");
     std::string bfname = "-";
     app.add_option("-b,--binary", bfname, "Binary file name");
     bool compute_stats = false;
