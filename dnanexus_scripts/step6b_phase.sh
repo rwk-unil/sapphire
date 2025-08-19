@@ -12,8 +12,9 @@ fi
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
-INSTANCE="mem3_ssd1_v2_x4"
+INSTANCE="mem2_ssd1_v2_x4"
 THREADS_ARG="-t 12"
+PRIORITY="high"
 
 # Source common variables and functions
 source "${SCRIPTPATH}/common.sh"
@@ -258,7 +259,7 @@ do
             ' | dx run swiss-army-knife -f - \
             ${COST_LIMIT_ARG} --name "Step6: Phase ${CHROMOSOME} batch ${idx}" \
             --tag "${tag}" \
-            --destination "${inner_dest}" --priority normal \
+            --destination "${inner_dest}" --priority "${PRIORITY}" \
             --instance-type ${INSTANCE} -y --brief &
         pids+=($!)
 
