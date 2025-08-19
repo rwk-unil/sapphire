@@ -64,3 +64,5 @@
 bin/**
 
 .dependencies_ready
+
+*.patch
