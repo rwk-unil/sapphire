@@ -59,7 +59,7 @@ public:
         }
     }
 
-    void fill_internal_data_from_files() {
+    void fill_internal_data_from_files(bool show_all) {
         /* For all samples */
         for (const auto& sample_idx : ids) {
             data.push_back({});
@@ -78,7 +78,7 @@ public:
             }
 
             for (size_t i = 0; i < orig_hi.size(); ++i) {
-                if (!std::isnan(orig_hi.at(i).pp) && orig_hi.at(i).pp < 0.99) {
+                if (show_all || (!std::isnan(orig_hi.at(i).pp) && orig_hi.at(i).pp < 0.99)) {
                     data.back().emplace_back(Data(
                         orig_hi.at(i).vcf_line,
                         orig_hi.at(i).pp,
@@ -187,6 +187,8 @@ int main(int argc, char**argv) {
     app.add_flag("--ac", ac, "Added allele count field");
     size_t ac_threshold = 0;
     app.add_option("--ac-threshold", ac_threshold, "AC threshold filtering value (0 means no filtering)");
+    bool show_all = false;
+    app.add_flag("--show-all", show_all, "Show all extracted variants, even common");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -202,7 +204,7 @@ int main(int argc, char**argv) {
 
     BinDiffExtractor bde(bin1_fname, bin2_fname, vcf_fname, samples_fname, sub_fname);
 
-    bde.fill_internal_data_from_files();
+    bde.fill_internal_data_from_files(show_all);
 
     if (ac_threshold) {
         bde.print_csv_filter_ac(ac_threshold);
