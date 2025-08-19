@@ -286,6 +286,13 @@ public:
             error += cram_file;
             throw DataCallerError(error);
         }
+        if (hts_set_opt(fp, CRAM_OPT_REQUIRED_FIELDS, (SAM_FLAG | SAM_POS | SAM_MAPQ | SAM_CIGAR | SAM_SEQ | SAM_QUAL | SAM_AUX)) < 0) {
+            /* Could not set flags, but we don't care */
+            std::cerr << "Could not set CRAM OPT REQUIRED FIELDS for " << cram_file << std::endl;
+        }
+        if (hts_set_opt(fp, CRAM_OPT_DECODE_MD, 0) < 0) {
+            /* */
+        }
         idx = sam_index_load(fp, std::string(cram_file + ".crai").c_str());
         if (!idx) {
             throw DataCallerError(std::string("Failed to load index file"));
@@ -724,9 +731,7 @@ public:
 
         dc.close();
 
-        if (global_app_options.verbose) {
-            std::cout << "Tried to rephase " << stats.rephase_tries << " het sites, succeeded with " << stats.rephase_success << std::endl;
-        }
+        std::cout << cram_file << ": Tried to rephase " << stats.rephase_tries << " het sites, succeeded with " << stats.rephase_success << std::endl;
     }
 
     const float PP_THRESHOLD;
