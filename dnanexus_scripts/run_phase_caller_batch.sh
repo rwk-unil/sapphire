@@ -181,7 +181,7 @@ do
         dx run swiss-army-knife -icmd="/usr/src/pp/Docker/update_pp.sh; ${command}" \
             ${COST_LIMIT_ARG} --name RephaseCallerBatch \
             -iimage_file="${DOCKER_IMAGE}" --tag "${tag}" \
-            --destination "${DESTINATION}" \
+            --destination "${DESTINATION}" --priority high \
             --instance-type ${INSTANCE} -y
     fi
 done

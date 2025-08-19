@@ -30,7 +30,7 @@ CRAM_PATH="/mnt/project/Bulk/Whole genome sequences/Whole genome CRAM files"
 # results in an acceptable CPU usage (threads wait for data over network)
 THREADS_ARG="-t 12"
 DESTINATION="phasing_rare"
-NEW_BIN_TAG="rephased"
+NEW_BIN_TAG=""
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -75,6 +75,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -d|--destination)
+    DESTINATION="$2"
+    shift
+    shift
+    ;;
     --threads)
     THREADS_ARG="-t $2"
     shift # past argument
@@ -104,6 +109,11 @@ if [ -z "${SAMPLE_FILE_ID}" ]
 then
     echo "Specify an input ID with --samples-id <actual_input_id>"
     echo "This file must be generated with the VCF var and binary file"
+    exit 1
+fi
+if [ -z "${DESTINATION}" ]
+then
+    echo "Please specify a destination folder with --destination <path>, different than the input file folder"
     exit 1
 fi
 
