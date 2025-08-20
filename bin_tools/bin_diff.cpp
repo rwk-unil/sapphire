@@ -110,7 +110,7 @@ public:
 
             for (size_t i = 0; i < ids.size(); ++i) {
                 for (auto& e : data[i]) {
-                    std::cout << sil_full.sample_names[ids[i]] << "," << e.to_string() << "," << vil.vars[e.vcf_line].snp <<
+                    std::cout << sil_full.sample_names[himm_original.get_orig_idx_of_nth(ids[i])] << "," << e.to_string() << "," << vil.vars[e.vcf_line].snp <<
                     (ac ? std::string(",") + std::to_string(vil.vars[e.vcf_line].ac) : "") <<
                     std::string(",") + std::to_string(e.a0) + "|" + std::to_string(e.a1) <<
                     (more ? std::string(",") + vil.vars[e.vcf_line].to_string() : "") << std::endl;
@@ -147,7 +147,7 @@ public:
         for (size_t i = 0; i < ids.size(); ++i) {
             for (auto& e : data[i]) {
                 if (vil.vars[e.vcf_line].ac <= ac_threshold) {
-                    std::cout << sil_full.sample_names[ids[i]] << "," << e.to_string() << "," << vil.vars[e.vcf_line].snp <<
+                    std::cout << sil_full.sample_names[himm_original.get_orig_idx_of_nth(ids[i])] << "," << e.to_string() << "," << vil.vars[e.vcf_line].snp <<
                     (ac ? std::string(",") + std::to_string(vil.vars[e.vcf_line].ac) : "") <<
                     std::string(",") + std::to_string(e.a0) + "|" + std::to_string(e.a1) <<
                     (more ? std::string(",") + vil.vars[e.vcf_line].to_string() : "") << std::endl;

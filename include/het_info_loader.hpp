@@ -291,6 +291,18 @@ public:
         }
     }
 
+    size_t count_all_vars() {
+        size_t counter = 0;
+        // For each sample
+        for (size_t i = 0; i < num_samples; ++i) {
+            std::vector<HetInfo> v;
+            // For each het site in dataset
+            fill_het_info(v, i);
+            counter += v.size();
+        }
+        return counter;
+    }
+
     size_t count_all_vars_below_threshold(float threshold) {
         size_t counter = 0;
         // For each sample
@@ -301,6 +313,26 @@ public:
             for (auto hi : v) {
                 if (!std::isnan(hi.pp) && hi.pp < threshold) {
                     counter++;
+                }
+            }
+        }
+        return counter;
+    }
+
+    size_t count_all_vars_initially_below_threshold(float threshold) {
+        size_t counter = 0;
+        // For each sample
+        for (size_t i = 0; i < num_samples; ++i) {
+            std::vector<HetInfo> v;
+            // For each het site in dataset
+            fill_het_info(v, i);
+            for (auto hi : v) {
+                if (!std::isnan(hi.pp)) {
+                    if (hi.pp < threshold) {
+                        counter++;
+                    } else if (hi.pp > 1.0) { /* Fractional part could be compared to threshold */
+                        counter++;
+                    }
                 }
             }
         }

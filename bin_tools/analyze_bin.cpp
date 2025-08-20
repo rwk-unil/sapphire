@@ -46,12 +46,16 @@ int main(int argc, char**argv) {
         const float PP_THRESHOLD = 0.99;
         const size_t DIST_THRESHOLD = 750;
         auto low_pp_count = himm.count_all_vars_below_threshold(PP_THRESHOLD);
+        auto initial_low_pp_count = himm.count_all_vars_initially_below_threshold(PP_THRESHOLD);
         auto low_pp_snps = himm.count_all_snps_below_threshold(PP_THRESHOLD, vars.vars);
         auto solvable_low_pp_snps = himm.count_all_snps_below_threshold_that_can_be_linked_within(PP_THRESHOLD, vars.vars, DIST_THRESHOLD);
         auto maybe_solvable_low_pp_snps = himm.count_all_snps_below_threshold_that_can_be_linked_within(PP_THRESHOLD, vars.vars, DIST_THRESHOLD, false);
         auto rephased_snps = himm.count_rephased_variants();
+        auto all = himm.count_all_vars();
 
         std::cout << "For " << himm.num_samples << " samples :" << std::endl;
+        std::cout << "There are " << all << " variants" << std::endl;
+        std::cout << "With initially " << initial_low_pp_count << " low PP variants" << std::endl;
         std::cout << "There are " << low_pp_count << " low PP variants" << std::endl;
         std::cout << "of which " << low_pp_snps << " are SNPs : "
                   << low_pp_snps * 100.0 / low_pp_count << "%" << std::endl;
