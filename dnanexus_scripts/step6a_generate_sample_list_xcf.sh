@@ -88,7 +88,7 @@ else
 fi
 
 
-# Generate sample list with bcftool query
+# Get the sample list from the XCF FAM file (first field)
 # And generate list with information per sample in the list, sorted as in the list, with CRAM info
 # This second file will be used to launch the phase caller jobs
 # And create a file for the phase caller itself
