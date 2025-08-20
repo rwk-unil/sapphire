@@ -293,7 +293,7 @@ public:
         if (hts_set_opt(fp, CRAM_OPT_DECODE_MD, 0) < 0) {
             /* */
         }
-        idx = sam_index_load(fp, std::string(cram_file + ".crai").c_str());
+        idx = hts_idx_load(cram_file.c_str(), HTS_IDX_NONE);
         if (!idx) {
             throw DataCallerError(std::string("Failed to load index file"));
         }
