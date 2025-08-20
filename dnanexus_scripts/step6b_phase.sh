@@ -27,6 +27,7 @@ SPLIT_SIZE=1000
 SAMPLE_LIST=""
 CRAM_PATH_FILE=""
 INDELS=""
+NOFILTER=""
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -72,6 +73,10 @@ case $key in
     ;;
     --indels)
     INDELS="--indels"
+    shift
+    ;;
+    --no-filter)
+    NOFILTER="--no-filter"
     shift
     ;;
     -d|--destination)
@@ -222,7 +227,7 @@ do
     echo "Destination: ${inner_dest}"
 
     INNER_NEW_BINARY_FILE="${prefix}.rephased.bin_sub_${idx}"
-    command="cp ${filename} ${INNER_NEW_BINARY_FILE}; time phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} ${INDELS} --cram-path-from-samples-file"
+    command="cp ${filename} ${INNER_NEW_BINARY_FILE}; time phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} ${INDELS} ${NOFILTER} --cram-path-from-samples-file"
     echo "Command : ${command}"
 
     if [ -z "${LAUNCH_ALL}" ]
