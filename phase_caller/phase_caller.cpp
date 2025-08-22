@@ -649,6 +649,15 @@ public:
         HetTrio* current_het = het_trios.front().get();
 
         while(current_het) {
+            // Do not pileup if they are too far away from neighbors as the pileup will not be used
+            //std::cout << "evaluating " current_het->self->to_string() << std::endl;
+            if ((current_het->prev == NULL || (current_het->distance_to_prev() > MAX_DISTANCE)) &&
+                (current_het->next == NULL || (current_het->distance_to_next() > MAX_DISTANCE))) {
+                //std::cout << "skipping - " << current_het->self->to_string() << std::endl;
+                current_het = current_het->next;
+                continue;
+            }
+
             std::string stid = current_het->self->var_info->contig;
             int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
 
