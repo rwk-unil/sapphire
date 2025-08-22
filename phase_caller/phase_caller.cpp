@@ -286,6 +286,7 @@ public:
             error += cram_file;
             throw DataCallerError(error);
         }
+#if 0
         if (hts_set_opt(fp, CRAM_OPT_REQUIRED_FIELDS, (SAM_FLAG | SAM_POS | SAM_MAPQ | SAM_CIGAR | SAM_SEQ | SAM_QUAL | SAM_AUX)) < 0) {
             /* Could not set flags, but we don't care */
             std::cerr << "Could not set CRAM OPT REQUIRED FIELDS for " << cram_file << std::endl;
@@ -293,6 +294,7 @@ public:
         if (hts_set_opt(fp, CRAM_OPT_DECODE_MD, 0) < 0) {
             /* */
         }
+#endif
         idx = sam_index_load(fp, cram_file.c_str());
         if (!idx) {
             throw DataCallerError(std::string("Failed to load index file"));
