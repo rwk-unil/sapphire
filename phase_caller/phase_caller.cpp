@@ -653,9 +653,9 @@ public:
             int target_tid = sam_hdr_name2tid(dc.hdr, stid.c_str());
 
             /* The iterator is really important for performance */
-            /** @todo Not sure about the boundaries around the iterator though ... this could be reduced*/
+            /** @todo Not sure about the boundaries around the iterator though ... this could be reduced */
             /* This will create an iterator that is used for the pileup instead of going through all the reads */
-            dc.jump(stid, current_het->self->var_info->pos1 - 300, current_het->self->var_info->pos1 + 300);
+            dc.jump(stid, current_het->self->var_info->pos1 - 2, current_het->self->var_info->pos1 + 2);
 
             /* Init the pileup with the pileup function, it will use an iterator instead of reading all recs from file */
             const bam_pileup1_t *v_plp;
