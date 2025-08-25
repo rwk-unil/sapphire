@@ -12,8 +12,9 @@ fi
 # Get the path of this script
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
-INSTANCE="mem3_ssd1_v2_x4"
-THREADS_ARG="-t 12"
+INSTANCE="mem2_ssd1_v2_x4"
+THREADS_ARG="-t 16"
+PRIORITY="normal"
 
 # Source common variables and functions
 source "${SCRIPTPATH}/common.sh"
@@ -25,6 +26,10 @@ BCF_VAR_ID=""
 SPLIT_SIZE=1000
 SAMPLE_LIST=""
 CRAM_PATH_FILE=""
+INDELS=""
+NOFILTER=""
+#RUNNABLE="swiss-army-knife"
+RUNNABLE="applet-J2F0Y28JVPP5ZVXJBgF8V3pB"
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -68,8 +73,21 @@ case $key in
     KEEP_TRACK_IN_FILE="y"
     shift
     ;;
+    --indels)
+    INDELS="--indels"
+    shift
+    ;;
+    --no-filter)
+    NOFILTER="--no-filter"
+    shift
+    ;;
     -d|--destination)
     DESTINATION="$2"
+    shift
+    shift
+    ;;
+    --priority)
+    PRIORITY="$2"
     shift
     shift
     ;;
@@ -127,7 +145,7 @@ LAUNCH_ALL=""
 
 TMPDIR=temporary_files
 mkdir -p "${TMPDIR}"
-TACKING_FILE="${TMPDIR}/${CHROMOSOME}_tracking_file.txt"
+TRACKING_FILE="${TMPDIR}/${CHROMOSOME}_tracking_file.txt"
 
 TEST=$(ls "${TMPDIR}"/cram_paths_for_samples.csv)
 if [ -z "${TEST}" ]
@@ -176,7 +194,7 @@ do
 
     if [[ "${KEEP_TRACK_IN_FILE}" == "y" ]]
     then
-        if grep -qF "${filename}" "${TRACKING_FILE}"
+        if grep -qwF "${filename}" "${TRACKING_FILE}"
         then
             echo "${filename} already in tracking file, skipping..."
             continue
@@ -219,10 +237,15 @@ do
 
     # Command
     #command="cp ${filename} ${INNER_NEW_BINARY_FILE}; time phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} --cram-path-from-samples-file"
-    command="echo \"\$(date): downloading HTS REF\" && curl -LJO https://github.com/rwk-unil/sapphire/releases/download/v1.0.0-paper/hts-ref.zip && \
-	mkdir -p ~/.cache && mv hts-ref.zip ~/.cache/ && cd ~/.cache/ && unzip hts-ref.zip && rm -f hts-ref.zip && cd && \
-    git clone https://github.com/rwk-unil/sapphire.git && cd sapphire && sed -i 's/-lzstd//g' common.mk; make && cp phase_caller/phase_caller ~/ && cd ~/out/out/ && \
-    cp ${filename} ${INNER_NEW_BINARY_FILE}; time ~/phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} --cram-path-from-samples-file"
+    #command="echo \"\$(date): downloading HTS REF\" && curl -LJO https://github.com/rwk-unil/sapphire/releases/download/v1.0.0-paper/hts-ref.zip && \
+	#mkdir -p ~/.cache && mv hts-ref.zip ~/.cache/ && cd ~/.cache/ && unzip hts-ref.zip && rm -f hts-ref.zip && cd && \
+    #git clone https://github.com/rwk-unil/sapphire.git && cd sapphire && sed -i 's/-lzstd//g' common.mk; make && cp phase_caller/phase_caller ~/ && cd ~/out/out/ && \
+    #cp ${filename} ${INNER_NEW_BINARY_FILE}; time ~/phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} ${INDELS} ${NOFILTER} --cram-path-from-samples-file"
+    # The dx download is for the HTS REF from within the platform, else copy the curl command above
+    command="echo \"\$(date): downloading HTS REF\" && dx download file-J2Z7KbjJ7pQjfBBfgqgPPYQV && \
+	mkdir -p ~/.cache && mv hts-ref.zip ~/.cache/ && pushd ~/.cache/ && unzip hts-ref.zip > /dev/null && rm -f hts-ref.zip && popd && \
+    dx download INTERVENE_PHASING:/csgdata/rick/phase_caller_97768d8_static && mv phase_caller_97768d8_static phase_caller && chmod +x phase_caller && mv phase_caller /usr/bin/ && echo \"\$(date)\" && \
+    cp ${filename} ${INNER_NEW_BINARY_FILE}; time phase_caller -n -f $(dx_id_to_name ${VCF_VAR_ID}) -b ${INNER_NEW_BINARY_FILE} -S $(dx_id_to_name ${SAMPLE_FILE_ID}) ${THREADS_ARG} ${VERBOSE} ${INDELS} ${NOFILTER} --cram-path-from-samples-file"
     echo "Command : ${command}"
 
     if [ -z "${LAUNCH_ALL}" ]
@@ -249,10 +272,10 @@ do
                     + [{ "$dnanexus_link": { "project": $projectid, "id": $fbcfid } }]
                     + [{ "$dnanexus_link": { "project": $projectid, "id": $fsampleid } }])
             }
-            ' | dx run swiss-army-knife -f - \
+            ' | dx run "${RUNNABLE}" -f - \
             ${COST_LIMIT_ARG} --name "Step6: Phase ${CHROMOSOME} batch ${idx}" \
             --tag "${tag}" \
-            --destination "${inner_dest}" --priority normal \
+            --destination "${inner_dest}" --priority "${PRIORITY}" \
             --instance-type ${INSTANCE} -y --brief --allow-ssh &
         pids+=($!)
 
