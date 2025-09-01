@@ -158,12 +158,10 @@ fi
 VCF_VAR_ID=$(path_to_dx_id "${BCF_VAR_ID}") || { echo "Failed to get variant file ID"; exit 1; }
 SAMPLE_FILE_ID=$(path_to_dx_id "${SAMPLE_LIST}") || { echo "Failed to get sample file ID"; exit 1; }
 PROJECT_ID=$(dx describe "${BCF_VAR_ID}" --json | jq -r ".project") || { echo "Failed to get project ID"; exit 1; }
-DOCKER_ID=$(path_to_dx_id "${DOCKER_IMAGE}") || { echo "Failed to get Docker ID"; exit 1; }
 
 echo "Variant file ID: ${VCF_VAR_ID}"
 echo "Sample file ID: ${SAMPLE_FILE_ID}"
 echo "Project ID: ${PROJECT_ID}"
-echo "Docker ID: ${DOCKER_ID}"
 
 if [ -z "${VCF_VAR_ID}" ]
 then
@@ -176,10 +174,6 @@ fi
 if [ -z "${PROJECT_ID}" ]
 then
     echo "Failed to get project ID"; exit 1
-fi
-if [ -z "${DOCKER_ID}" ]
-then
-    echo "Failed to get Docker ID"; exit 1
 fi
 
 pids=()
@@ -213,6 +207,7 @@ do
 
     #echo "File index is ${idx}"
 
+    echo "SPLIT_SIZE : ${SPLIT_SIZE}"
     start=$((idx * SPLIT_SIZE + 1))
     stop=$(((idx + 1) * SPLIT_SIZE))
 
