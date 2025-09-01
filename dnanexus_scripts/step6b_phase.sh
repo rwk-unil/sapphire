@@ -13,7 +13,7 @@ fi
 SCRIPTPATH=$(realpath  $(dirname "$0"))
 
 INSTANCE="mem2_ssd1_v2_x4"
-THREADS_ARG="-t 12"
+THREADS_ARG="-t 14"
 PRIORITY="high"
 
 # Source common variables and functions
@@ -138,7 +138,7 @@ LAUNCH_ALL=""
 
 TMPDIR=temporary_files
 mkdir -p "${TMPDIR}"
-TACKING_FILE="${TMPDIR}/${CHROMOSOME}_tracking_file.txt"
+TRACKING_FILE="${TMPDIR}/${CHROMOSOME}_tracking_file.txt"
 
 TEST=$(ls "${TMPDIR}"/cram_paths_for_samples.csv)
 if [ -z "${TEST}" ]
@@ -187,7 +187,7 @@ do
 
     if [[ "${KEEP_TRACK_IN_FILE}" == "y" ]]
     then
-        if grep -qF "${filename}" "${TRACKING_FILE}"
+        if grep -qwF "${filename}" "${TRACKING_FILE}"
         then
             echo "${filename} already in tracking file, skipping..."
             continue
