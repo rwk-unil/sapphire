@@ -120,7 +120,7 @@ do
     echo "New XCF filename : ${NEW_XCF_FILENAME}"
     echo "Destination: ${inner_dest}"
 
-    command="ls; dx download INTERVENE_PHASING:/csgdata/rick/xcftools_4a87d20 && mv xcftools_4a87d20 xcftools && chmod +x xcftools && mv xcftools /usr/bin/ && \
+    command="ls; dx download INTERVENE_PHASING:/csgdata/rick/xcftools_5bc3112 && mv xcftools_5bc3112 xcftools && chmod +x xcftools && mv xcftools /usr/bin/ && \
             xcftools view --threads \$(nproc) -i ${XCF_BCF_FILENAME} --sapphire-bin ${SAPPHIRE_BIN_FILENAME} -Osb -o ${NEW_XCF_FILENAME}"
 
     echo "Command : ${command}"
