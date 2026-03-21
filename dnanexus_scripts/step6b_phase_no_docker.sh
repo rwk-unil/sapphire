@@ -86,6 +86,11 @@ case $key in
     shift
     shift
     ;;
+    -t|--threads)
+    THREADS_ARG="-t $2"
+    shift
+    shift
+    ;;
     --priority)
     PRIORITY="$2"
     shift
@@ -147,11 +152,12 @@ TMPDIR=temporary_files
 mkdir -p "${TMPDIR}"
 TRACKING_FILE="${TMPDIR}/${CHROMOSOME}_tracking_file.txt"
 
-TEST=$(ls "${TMPDIR}"/cram_paths_for_samples.csv)
+TEST=$(ls "${TMPDIR}/${CHROMOSOME}_cram_paths_for_samples.csv")
 if [ -z "${TEST}" ]
 then
     cd "${TMPDIR}"
-    dx download "${CRAM_PATH_FILE}" || { echo "Failed to download ${CRAM_PATH_FILE}"; exit 1; }
+    dx download -f "${CRAM_PATH_FILE}" || { echo "Failed to download ${CRAM_PATH_FILE}"; exit 1; }
+    mv $(basename "${CRAM_PATH_FILE}") "${CHROMOSOME}_cram_paths_for_samples.csv"
     cd ..
 fi
 
@@ -176,6 +182,7 @@ then
     echo "Failed to get project ID"; exit 1
 fi
 
+counter=0
 pids=()
 for filename in $(dx ls "${STEP5_PATH}")
 do
@@ -198,7 +205,7 @@ do
     echo "File to rephase : ${filename}"
     file_with_path="${STEP5_PATH}/${filename}"
     echo ${file_with_path}
-    echo "Complete variant file : $(dx_id_to_dx_path_and_name ${BCF_VAR_ID})"
+    #echo "Complete variant file : $(dx_id_to_dx_path_and_name ${BCF_VAR_ID})"
 
     # Extract the prefix (everything before _bin_sub_)
     prefix="${filename%.bin_sub_*}"
@@ -213,8 +220,8 @@ do
 
     #echo "Start ${start} Stop ${stop}"
 
-    cram_array=($(sed -n "${start},${stop}p" "${TMPDIR}"/cram_paths_for_samples.csv | cut -d, -f 4))
-    cram_index_array=($(sed -n "${start},${stop}p" "${TMPDIR}"/cram_paths_for_samples.csv | cut -d, -f 8))
+    cram_array=($(sed -n "${start},${stop}p" "${TMPDIR}/${CHROMOSOME}_cram_paths_for_samples.csv" | cut -d, -f 4))
+    cram_index_array=($(sed -n "${start},${stop}p" "${TMPDIR}/${CHROMOSOME}_cram_paths_for_samples.csv" | cut -d, -f 8))
     # Concat the arrays
     idx_array=( "${cram_array[@]}" "${cram_index_array[@]}" )
     #echo "${cram_array[@]}"
@@ -274,8 +281,9 @@ do
             --instance-type ${INSTANCE} -y --brief --allow-ssh &
         pids+=($!)
 
-        echo "Job submitted"
+        echo "Job ${counter} submitted"
         echo
+        counter=$((counter+1))
 
         if [[ "${KEEP_TRACK_IN_FILE}" == "y" ]]
         then
